@@ -7,24 +7,24 @@ const str = @import("str.zig");
 const RocStr = str.RocStr;
 const ALIGN = 2 * @alignOf(usize);
 
+const TRACE_ALLOC = false;
+
 const MEM_BASE = 0x19A0;
 const MEM_SIZE = 58976;
 const MEM: *[MEM_SIZE]u8 = @ptrFromInt(MEM_BASE);
 // We allocate memory to max alignment for simplicity.
 const MEM_CHUNK_SIZE = ALIGN;
 var free_set = std.bit_set.ArrayBitSet(u64, MEM_SIZE / MEM_CHUNK_SIZE).initFull();
-const Allocation = struct { start: u16, end: u16 };
-const MAX_ALLOCATIONS = 100;
-comptime {
-    assert(MAX_ALLOCATIONS < MEM_SIZE / MEM_CHUNK_SIZE);
-}
-// TODO: Wrap all this memory stuff in a nice struct with methods.
-var allocations: [MAX_ALLOCATIONS]Allocation = undefined;
-var alloc_count: usize = 0;
 
 // TODO: other roc_ functions.
-export fn roc_alloc(size: usize, alignment: u32) callconv(.C) *anyopaque {
+export fn roc_alloc(requested_size: usize, alignment: u32) callconv(.C) *anyopaque {
     _ = alignment;
+    // Leave extra space to store allocation size.
+    if (TRACE_ALLOC) {
+        w4.tracef("alloc -> requested size %d", requested_size);
+    }
+    const size = requested_size + MEM_CHUNK_SIZE;
+
     var chunk_size: usize = 0;
     var start_index: usize = 0;
     var current_index: usize = 0;
@@ -40,18 +40,20 @@ export fn roc_alloc(size: usize, alignment: u32) callconv(.C) *anyopaque {
         @panic("ran out of memory");
     }
 
-    // TODO: double check this range is correct. I think the end may be off by 1.
-    const range = .{ .start = start_index, .end = (current_index + 1) };
+    const exclusive_end_index = current_index + 1;
+    const range = .{ .start = start_index, .end = exclusive_end_index };
+    if (TRACE_ALLOC) {
+        w4.tracef("alloc -> start %d, end %d", start_index, exclusive_end_index);
+    }
     free_set.setRangeValue(range, false);
 
-    const addr = MEM_BASE + start_index * MEM_CHUNK_SIZE;
-    if (alloc_count >= MAX_ALLOCATIONS) {
-        @panic("Hit the maximum number of allocations");
-    }
-    allocations[alloc_count] = .{ .start = @intCast(range.start), .end = @intCast(range.end) };
-    alloc_count += 1;
+    const size_addr = MEM_BASE + start_index * MEM_CHUNK_SIZE;
+    const data_addr = size_addr + MEM_CHUNK_SIZE;
 
-    return @ptrFromInt(addr);
+    const size_ptr: *usize = @ptrFromInt(size_addr);
+    size_ptr.* = chunk_size;
+
+    return @ptrFromInt(data_addr);
 }
 
 export fn roc_realloc(old_ptr: *anyopaque, new_size: usize, old_size: usize, alignment: u32) callconv(.C) ?*anyopaque {
@@ -70,20 +72,18 @@ export fn roc_realloc(old_ptr: *anyopaque, new_size: usize, old_size: usize, ali
 
 export fn roc_dealloc(c_ptr: *anyopaque, alignment: u32) callconv(.C) void {
     _ = alignment;
-    const addr = @intFromPtr(c_ptr);
-    const start_index = (addr - MEM_BASE) / MEM_CHUNK_SIZE;
-    var i: usize = 0;
-    while (i < alloc_count) : (i += 1) {
-        if (allocations[i].start == start_index) {
-            const range = .{ .start = start_index, .end = allocations[i].end };
-            free_set.setRangeValue(range, true);
+    const data_addr = @intFromPtr(c_ptr);
+    const size_addr = data_addr - MEM_CHUNK_SIZE;
+    const size_ptr: *usize = @ptrFromInt(size_addr);
+    const size = size_ptr.*;
 
-            alloc_count -= 1;
-            allocations[i] = allocations[alloc_count];
-            return;
-        }
+    const start_index = (size_addr - MEM_BASE) / MEM_CHUNK_SIZE;
+    const exclusive_end_index = start_index + size / MEM_CHUNK_SIZE + 1;
+    if (TRACE_ALLOC) {
+        w4.tracef("free -> start %d, end %d", start_index, exclusive_end_index);
     }
-    @panic("attempted to free memory that was not allocated");
+    const range = .{ .start = start_index, .end = exclusive_end_index };
+    free_set.setRangeValue(range, true);
 }
 
 export fn roc_panic(msg: *RocStr, tag_id: u32) callconv(.C) void {
