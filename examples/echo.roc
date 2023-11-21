@@ -7,8 +7,10 @@ app "echo"
 
 main : Str -> Str
 main = \s -> 
-    if s == "MARCO" then
-        "POLO"
-    else
-        s
+    text =
+        if s == "MARCO" then
+            "POLO"
+        else
+            s
+    "This is a string\nthat definitely will\nbe long enough to\nforce an allocation\nalso \(text)"
 
