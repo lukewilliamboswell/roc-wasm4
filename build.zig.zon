@@ -1,0 +1,6 @@
+.{
+    .name = "roc-wasm4-games",
+    .version = "0.1.0",
+    .paths = .{"README.md"},
+    .dependencies = .{},
+}
