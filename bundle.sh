@@ -16,6 +16,3 @@ rm -rf platform/*.tar.br
 # Build for wasm32
 rm -rf zig-out/
 zig build
- 
-# Run usign wasm4 runtime
-w4 run zig-out/lib/wasm4.wasm
