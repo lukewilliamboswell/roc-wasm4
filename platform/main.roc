@@ -13,21 +13,21 @@ platform "wasm-4"
 #     update : Model -> Task Model [],
 # }
 
-OptionalModel : [None, Some (Box Model)]
+ProgramForHost : {
+    init : Task (Box Model) [],
+    update : Box Model -> Task (Box Model) []
+}
 
-mainForHost : OptionalModel -> Task OptionalModel []
-mainForHost = \optional ->
-    when optional is 
-        None ->
-            main.init
-            |> Box.box
-            |> Some
-            |> Task.ok
-        Some boxedModel ->
-            model <- main.update (Box.unbox boxedModel) |> Task.await
+mainForHost : ProgramForHost
+mainForHost = {init, update}
 
-            model
-            |> Box.box
-            |> Some
-            |> Task.ok
-        
+init : Task (Box Model) []
+init = main.init |> Task.map Box.box
+
+update : Box Model -> Task (Box Model) []
+update = \boxedModel ->
+    model <- main.update (Box.unbox boxedModel) |> Task.await
+
+    model 
+    |> Box.box
+    |> Task.ok

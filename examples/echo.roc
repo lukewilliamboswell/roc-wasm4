@@ -8,7 +8,7 @@ app "minimal"
     provides [main, Model] to w4
 
 Program : {
-    init : Model,
+    init : Task Model [],
     update : Model -> Task Model [],
 }
 
@@ -17,8 +17,8 @@ Model : {}
 main : Program
 main = {init,update}
 
-init : Model
-init = {}
+init : Task Model []
+init = Task.ok {}
 
 update : Model -> Task Model []
 update = \model ->
