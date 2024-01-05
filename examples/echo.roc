@@ -12,14 +12,14 @@ Program : {
     update : Model -> Task Model [],
 }
 
-Model : {}
+Model : Str
 
 main : Program
 main = {init,update}
 
 init : Task Model []
-init = Task.ok {}
+init = Task.ok "Test123"
 
 update : Model -> Task Model []
 update = \model ->
-    Task.ok model
+    Task.ok (Str.concat model "1.")

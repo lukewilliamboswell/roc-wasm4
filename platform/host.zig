@@ -103,8 +103,6 @@ const FromRoc = extern struct {
     noModel: bool,
 };
 
-extern fn roc__mainForHost_1_exposed_generic(*FromRoc, *void, bool) callconv(.C) void;
-
 pub fn main() u8 {
     return 0;
 }
@@ -120,50 +118,44 @@ const smiley = [8]u8{
     0b11000011,
 };
 
+var model: *anyopaque = undefined;
+
+fn trace_model() void {
+    w4.tracef("%x", @as(u32, @intFromPtr(model)));
+}
+
+extern fn roc__mainForHost_1_exposed_generic(*u8) callconv(.C) void;
+extern fn roc__mainForHost_1_exposed_size() callconv(.C) i64;
+// Init Task
+extern fn roc__mainForHost_0_caller(*anyopaque, *anyopaque, **anyopaque) callconv(.C) void;
+extern fn roc__mainForHost_0_size() callconv(.C) i64;
+
+// Update Fn
+extern fn roc__mainForHost_1_caller(**anyopaque, *anyopaque, *anyopaque) callconv(.C) void;
+extern fn roc__mainForHost_1_size() callconv(.C) i64;
+// Update Task
+extern fn roc__mainForHost_2_caller(*anyopaque, *anyopaque, **anyopaque) callconv(.C) void;
+extern fn roc__mainForHost_2_size() callconv(.C) i64;
+
 export fn start() void {
-    roc__mainForHost_1_exposed_generic(&fromRoc, undefined, true);
-
-    if (fromRoc.noModel) {
-        w4.text("NO MODEL", 5, 10);
-    } else {
-        w4.text("HAVE MODEL", 5, 10);
+    const update_size = @as(usize, @intCast(roc__mainForHost_1_size()));
+    if (update_size != 0) {
+        w4.trace("This platform does not allow for the update function to have captures");
+        @panic("Invalid roc app: captures not allowed");
     }
+
+    const size = @as(usize, @intCast(roc__mainForHost_1_exposed_size()));
+    const captures = roc_alloc(size, @alignOf(u128));
+    defer roc_dealloc(captures, @alignOf(u128));
+
+    roc__mainForHost_0_caller(undefined, captures, &model);
+
+    const update_task_size = @as(usize, @intCast(roc__mainForHost_2_size()));
+    update_captures = roc_alloc(update_task_size, @alignOf(u128));
 }
 
+var update_captures: *anyopaque = undefined;
 export fn update() void {
-
-    // var callresult = RocStr.fromSlice("OUT");
-    // defer callresult.decref();
-
-    // roc__mainForHost_1_exposed_generic(&callresult, &arg);
-
-    // w4.DRAW_COLORS.* = 2;
-    // w4.text(callresult.asSlice(), 5, 10);
-
-    // const gamepad = w4.GAMEPAD1.*;
-    // if (gamepad & w4.BUTTON_1 != 0) {
-    //     w4.DRAW_COLORS.* = 4;
-    // }
-
-    // w4.blit(&smiley, 76, 76, 8, 8, w4.BLIT_1BPP);
-    // w4.text("Press X to blink", 16, 90);
+    roc__mainForHost_1_caller(&model, undefined, update_captures);
+    roc__mainForHost_2_caller(undefined, update_captures, &model);
 }
-
-pub fn RocResult(comptime T: type, comptime E: type) type {
-    return extern struct {
-        payload: RocResultPayload(T, E),
-        tag: RocResultTag,
-    };
-}
-
-pub fn RocResultPayload(comptime T: type, comptime E: type) type {
-    return extern union {
-        ok: T,
-        err: E,
-    };
-}
-
-const RocResultTag = enum(u8) {
-    RocErr = 0,
-    RocOk = 1,
-};
