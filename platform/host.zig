@@ -16,6 +16,8 @@ const MEM: *[MEM_SIZE]u8 = @ptrFromInt(MEM_BASE);
 const MEM_CHUNK_SIZE = ALIGN;
 var free_set = std.bit_set.ArrayBitSet(u64, MEM_SIZE / MEM_CHUNK_SIZE).initFull();
 
+var fromRoc: FromRoc = undefined;
+
 // TODO: other roc_ functions.
 export fn roc_alloc(requested_size: usize, alignment: u32) callconv(.C) *anyopaque {
     _ = alignment;
@@ -92,7 +94,16 @@ export fn roc_panic(msg: *RocStr, tag_id: u32) callconv(.C) void {
     @panic("ROC PANICKED");
 }
 
-extern fn roc__mainForHost_1_exposed_generic(*RocStr, *RocStr) void;
+// OptionalModel : {
+//     noModel: Bool,
+//     boxedModel : Box Model,
+// }
+const FromRoc = extern struct {
+    boxedModel: *void,
+    noModel: bool,
+};
+
+extern fn roc__mainForHost_1_exposed_generic(*FromRoc, *void, bool) callconv(.C) void;
 
 pub fn main() u8 {
     return 0;
@@ -109,24 +120,50 @@ const smiley = [8]u8{
     0b11000011,
 };
 
-export fn start() void {}
+export fn start() void {
+    roc__mainForHost_1_exposed_generic(&fromRoc, undefined, true);
+
+    if (fromRoc.noModel) {
+        w4.text("NO MODEL", 5, 10);
+    } else {
+        w4.text("HAVE MODEL", 5, 10);
+    }
+}
 
 export fn update() void {
-    var arg = RocStr.fromSlice("MARCO");
 
-    var callresult = RocStr.fromSlice("OUT");
-    defer callresult.decref();
+    // var callresult = RocStr.fromSlice("OUT");
+    // defer callresult.decref();
 
-    roc__mainForHost_1_exposed_generic(&callresult, &arg);
+    // roc__mainForHost_1_exposed_generic(&callresult, &arg);
 
-    w4.DRAW_COLORS.* = 2;
-    w4.text(callresult.asSlice(), 5, 10);
+    // w4.DRAW_COLORS.* = 2;
+    // w4.text(callresult.asSlice(), 5, 10);
 
-    const gamepad = w4.GAMEPAD1.*;
-    if (gamepad & w4.BUTTON_1 != 0) {
-        w4.DRAW_COLORS.* = 4;
-    }
+    // const gamepad = w4.GAMEPAD1.*;
+    // if (gamepad & w4.BUTTON_1 != 0) {
+    //     w4.DRAW_COLORS.* = 4;
+    // }
 
-    w4.blit(&smiley, 76, 76, 8, 8, w4.BLIT_1BPP);
-    w4.text("Press X to blink", 16, 90);
+    // w4.blit(&smiley, 76, 76, 8, 8, w4.BLIT_1BPP);
+    // w4.text("Press X to blink", 16, 90);
 }
+
+pub fn RocResult(comptime T: type, comptime E: type) type {
+    return extern struct {
+        payload: RocResultPayload(T, E),
+        tag: RocResultTag,
+    };
+}
+
+pub fn RocResultPayload(comptime T: type, comptime E: type) type {
+    return extern union {
+        ok: T,
+        err: E,
+    };
+}
+
+const RocResultTag = enum(u8) {
+    RocErr = 0,
+    RocOk = 1,
+};

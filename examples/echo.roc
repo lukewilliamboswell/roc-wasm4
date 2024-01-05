@@ -1,16 +1,25 @@
-app "echo"
+app "minimal"
     packages {
-        pf: "../platform/main.roc",
+        w4: "../platform/main.roc",
     }
-    imports []
-    provides [main] to pf
+    imports [
+        w4.Task.{Task}
+    ]
+    provides [main, Model] to w4
 
-main : Str -> Str
-main = \s -> 
-    text =
-        if s == "MARCO" then
-            "POLO"
-        else
-            s
-    "This is a string\nthat definitely will\nbe long enough to\nforce an allocation\nalso \(text)"
+Program : {
+    init : Model,
+    update : Model -> Task Model [],
+}
 
+Model : {}
+
+main : Program
+main = {init,update}
+
+init : Model
+init = {}
+
+update : Model -> Task Model []
+update = \model ->
+    Task.ok model
