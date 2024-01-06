@@ -10,7 +10,7 @@ pub fn build(b: *std.Build) !void {
     if (roc_src) |val| {
         roc_lib.addFileArg(.{ .path = val });
     } else {
-        roc_lib.addFileArg(.{ .path = "examples/echo.roc" });
+        roc_lib.addFileArg(.{ .path = "examples/basic.roc" });
     }
     roc_lib.addArg("--output");
     const roc_out = roc_lib.addOutputFileArg("app.o");

@@ -1,4 +1,4 @@
-app "minimal"
+app "basic"
     packages {
         w4: "../platform/main.roc",
     }
