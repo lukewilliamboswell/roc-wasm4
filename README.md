@@ -4,11 +4,13 @@ Experimental platform for Roc with [wasm4](https://wasm4.org) game engine.
 
 ### Setup 
 
-Install wasm4 with `npm install -g wasm4`
+Install wasm4 with `npm install -g wasm4`.
+Install roc.
+Install zig version 0.11.0.
 
 ### Build
 
-Build with `bash bundle.sh`
+Build with `bash build.sh`
 
 ### Run 
 
