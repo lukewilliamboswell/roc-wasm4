@@ -2,6 +2,27 @@ const std = @import("std");
 
 pub fn build(b: *std.Build) !void {
     const optimize = b.standardOptimizeOption(.{});
+    const roc_src = b.option([]const u8, "app", "the roc application to build");
+
+    const roc_lib = b.addSystemCommand(&[_][]const u8{ "roc", "build", "--target=wasm32", "--no-link" });
+    // Note: I don't think this deals with transitive roc dependencies.
+    // If a transitive dependency changes, it won't rebuild.
+    if (roc_src) |val| {
+        roc_lib.addFileArg(.{ .path = val });
+    } else {
+        roc_lib.addFileArg(.{ .path = "examples/echo.roc" });
+    }
+    roc_lib.addArg("--output");
+    const roc_out = roc_lib.addOutputFileArg("app.o");
+    switch (optimize) {
+        .ReleaseFast => {
+            roc_lib.addArg("--optimize");
+        },
+        .ReleaseSmall => {
+            roc_lib.addArg("--opt-size");
+        },
+        else => {},
+    }
 
     const lib = b.addSharedLibrary(.{
         .name = "wasm4",
@@ -18,8 +39,7 @@ pub fn build(b: *std.Build) !void {
     // Export WASM-4 symbols
     lib.export_symbol_names = &[_][]const u8{ "start", "update" };
 
-    // TODO: unhardcode this.
-    lib.addObjectFile(.{ .path = "examples/echo.o" });
+    lib.addObjectFile(roc_out);
 
     b.installArtifact(lib);
 }
