@@ -42,4 +42,10 @@ pub fn build(b: *std.Build) !void {
     lib.addObjectFile(roc_out);
 
     b.installArtifact(lib);
+
+    const w4 = b.addSystemCommand(&[_][]const u8{ "w4", "run" });
+    w4.addArtifactArg(lib);
+
+    const run = b.step("run", "run the file w4 game");
+    run.dependOn(&w4.step);
 }
