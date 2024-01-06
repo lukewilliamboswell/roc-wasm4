@@ -13,7 +13,7 @@ Program : {
     update : Model -> Task Model [],
 }
 
-Model : Str
+Model : {}
 
 main : Program
 main = { init, update }
@@ -24,11 +24,10 @@ init =
     {} <- setColorPallet |> Task.await
     {} <- setDrawColors |> Task.await
 
-    Task.ok "Test123"
+    Task.ok {}
 
 update : Model -> Task Model []
 update = \model ->
-    next = Str.concat model "1."
 
     # Read gamepad
     { button1, button2, left, right, up, down } <- W4.readGamepad Player1 |> Task.await
@@ -48,7 +47,7 @@ update = \model ->
     {} <- "THIS IS TRASPARENT" |> W4.text { x: 0, y: 48 } |> Task.await
 
     # Return the model for next frame
-    Task.ok next
+    Task.ok model
 
 # Set the color pallet
 white = Color1
