@@ -2,6 +2,7 @@ platform "wasm-4"
     requires { Model } { main : _ }
     exposes [
         Task,
+        W4,
     ]
     packages {}
     imports [Task.{ Task }]

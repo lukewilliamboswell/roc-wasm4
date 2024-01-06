@@ -4,6 +4,7 @@ app "minimal"
     }
     imports [
         w4.Task.{ Task },
+        w4.W4,
     ]
     provides [main, Model] to w4
 
@@ -30,22 +31,23 @@ update = \model ->
     next = Str.concat model "1."
 
     # Read gamepad
-    { button1, button2, left, right, up, down } <- Task.readGamepad Player1 |> Task.await
+    { button1, button2, left, right, up, down } <- W4.readGamepad Player1 |> Task.await
 
     # Draw the gamepad state
-    {} <- Task.textColor { fg: red, bg: green } |> Task.await
-    {} <- "X: \(Inspect.toStr button1)" |> Task.text { x: 0, y: 0 } |> Task.await
+    {} <- W4.textColor { fg: red, bg: green } |> Task.await
+    {} <- "X: \(Inspect.toStr button1)" |> W4.text { x: 0, y: 0 } |> Task.await
 
-    {} <- Task.textColor { fg: blue, bg: white } |> Task.await
-    {} <- "Z: \(Inspect.toStr button2)" |> Task.text { x: 0, y: 8 } |> Task.await
-    {} <- "L: \(Inspect.toStr left)" |> Task.text { x: 0, y: 16 } |> Task.await
-    {} <- "R: \(Inspect.toStr right)" |> Task.text { x: 0, y: 24 } |> Task.await
-    {} <- "U: \(Inspect.toStr up)" |> Task.text { x: 0, y: 32 } |> Task.await
-    {} <- "D: \(Inspect.toStr down)" |> Task.text { x: 0, y: 40 } |> Task.await
+    {} <- W4.textColor { fg: blue, bg: white } |> Task.await
+    {} <- "Z: \(Inspect.toStr button2)" |> W4.text { x: 0, y: 8 } |> Task.await
+    {} <- "L: \(Inspect.toStr left)" |> W4.text { x: 0, y: 16 } |> Task.await
+    {} <- "R: \(Inspect.toStr right)" |> W4.text { x: 0, y: 24 } |> Task.await
+    {} <- "U: \(Inspect.toStr up)" |> W4.text { x: 0, y: 32 } |> Task.await
+    {} <- "D: \(Inspect.toStr down)" |> W4.text { x: 0, y: 40 } |> Task.await
 
-    {} <- Task.textColor { fg: None, bg: None } |> Task.await
-    {} <- "THIS IS TRASPARENT" |> Task.text { x: 0, y: 48 } |> Task.await
+    {} <- W4.textColor { fg: None, bg: None } |> Task.await
+    {} <- "THIS IS TRASPARENT" |> W4.text { x: 0, y: 48 } |> Task.await
 
+    # Return the model for next frame
     Task.ok next
 
 # Set the color pallet
@@ -56,7 +58,7 @@ blue = Color4
 
 setColorPallet : Task {} []
 setColorPallet =
-    Task.setPallet {
+    W4.setPallet {
         color1: 0xffffff,
         color2: 0xff0000,
         color3: 0x000ff00,
@@ -65,7 +67,7 @@ setColorPallet =
 
 setDrawColors : Task {} []
 setDrawColors =
-    Task.setDrawColors {
+    W4.setDrawColors {
         primary: white,
         secondary: red,
         tertiary: green,
