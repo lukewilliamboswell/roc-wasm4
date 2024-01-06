@@ -4,15 +4,20 @@ pub fn build(b: *std.Build) !void {
     const optimize = b.standardOptimizeOption(.{});
     const roc_src = b.option([]const u8, "app", "the roc application to build");
 
+    const roc_check = b.addSystemCommand(&[_][]const u8{ "roc", "check" });
     const roc_lib = b.addSystemCommand(&[_][]const u8{ "roc", "build", "--target=wasm32", "--no-link" });
     // Note: I don't think this deals with transitive roc dependencies.
     // If a transitive dependency changes, it won't rebuild.
     if (roc_src) |val| {
         roc_lib.addFileArg(.{ .path = val });
+        roc_check.addFileArg(.{ .path = val });
     } else {
         roc_lib.addFileArg(.{ .path = "examples/basic.roc" });
+        roc_check.addFileArg(.{ .path = "examples/basic.roc" });
     }
+
     roc_lib.addArg("--output");
+
     const roc_out = roc_lib.addOutputFileArg("app.o");
     switch (optimize) {
         .ReleaseFast, .ReleaseSafe => {
@@ -40,6 +45,9 @@ pub fn build(b: *std.Build) !void {
     lib.export_symbol_names = &[_][]const u8{ "start", "update" };
 
     lib.addObjectFile(roc_out);
+
+    // Run roc check before building
+    lib.step.dependOn(&roc_check.step);
 
     b.installArtifact(lib);
 
