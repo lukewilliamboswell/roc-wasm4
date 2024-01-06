@@ -13,6 +13,7 @@ interface Task
         fromEffect,
         text,
         setPallet,
+        setDrawColors,
     ]
     imports [
         Effect.{ Effect },
@@ -100,5 +101,36 @@ text = \str, x, y ->
 setPallet : U32, U32, U32, U32 -> Task {} []
 setPallet = \a, b, c, d ->
     Effect.setPallet a b c d
+    |> Effect.map Ok
+    |> fromEffect
+
+setDrawColors :
+    {
+        primary ? [First, Second, Third, Fourth],
+        secondary ? [First, Second, Third, Fourth],
+        tertiary ? [First, Second, Third, Fourth],
+        quaternary ? [First, Second, Third, Fourth],
+    }
+    -> Task {} []
+setDrawColors = \{ primary ? First, secondary ? Second, tertiary ? Third, quaternary ? Fourth } ->
+
+    toHex = \pos ->
+        when pos is
+            First -> 0x1
+            Second -> 0x2
+            Third -> 0x3
+            Fourth -> 0x4
+
+    a = toHex primary
+    b = toHex secondary |> Num.shiftLeftBy 2
+    c = toHex tertiary |> Num.shiftLeftBy 4
+    d = toHex quaternary |> Num.shiftLeftBy 6
+
+    0x0u16
+    |> Num.bitwiseOr a
+    |> Num.bitwiseOr b
+    |> Num.bitwiseOr c
+    |> Num.bitwiseOr d
+    |> Effect.setDrawColors
     |> Effect.map Ok
     |> fromEffect

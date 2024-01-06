@@ -18,15 +18,21 @@ main : Program
 main = { init, update }
 
 init : Task Model []
-init = Task.ok "Test123"
+init =
+
+    # Set the color pallet
+    {} <- Task.setPallet 0xfff6d3 0xf9a875 0xeb6b6f 0x7c3f58 |> Task.await
+
+    Task.ok "Test123"
 
 update : Model -> Task Model []
 update = \model ->
     next = Str.concat model "1."
 
-    {} <- Task.text next 0 0 |> Task.await
+    # Set draw colors
+    {} <- Task.setDrawColors { primary: Second } |> Task.await
 
-    # Set the color pallet
-    {} <- Task.setPallet 0xfff6d3 0xf9a875 0xeb6b6f 0x7c3f58 |> Task.await
+    # Draw some text
+    {} <- Task.text next 0 0 |> Task.await
 
     Task.ok next
