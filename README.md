@@ -1,17 +1,19 @@
-# roc-wasm4-games
+# roc-wasm4
 
-Experimental platform for Roc with [wasm4](https://wasm4.org) game engine.
+Experimental Roc platform for the [wasm4](https://wasm4.org) game engine. 
 
-### Setup 
+The intent for this platform is to have some fun, learn more about Roc and platform development, and contribute something for others to enjoy.
 
-Install wasm4 with `npm install -g wasm4`.
-Install roc.
-Install zig version 0.11.0.
+**Status** 🚧 Work In Progress 🚧 - let me know if you are interested in helping 😊
 
-### Build
+### Run
 
-Build with `bash build.sh`
+*Basic example* using `zig build run`
+*Snake example* using `zig build -Dapp=examples/snake.roc run`
 
-### Run 
+### Setup
 
-Run using wasm4 runtime `w4 run zig-out/lib/wasm4.wasm`
+Ensure the following is available in your `PATH` environment variable;
+- [w4](https://wasm4.org) with `npm install -g wasm4`.
+- [roc](https://www.roc-lang.org/install).
+- [zig version 0.11.0](https://ziglang.org/download/).
