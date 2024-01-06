@@ -3,7 +3,7 @@ app "minimal"
         w4: "../platform/main.roc",
     }
     imports [
-        w4.Task.{Task}
+        w4.Task.{ Task },
     ]
     provides [main, Model] to w4
 
@@ -15,7 +15,7 @@ Program : {
 Model : Str
 
 main : Program
-main = {init,update}
+main = { init, update }
 
 init : Task Model []
 init = Task.ok "Test123"
@@ -23,5 +23,10 @@ init = Task.ok "Test123"
 update : Model -> Task Model []
 update = \model ->
     next = Str.concat model "1."
-    _ <- Task.text next 0 0 |> Task.await
+
+    {} <- Task.text next 0 0 |> Task.await
+
+    # Set the color pallet
+    {} <- Task.setPallet 0xfff6d3 0xf9a875 0xeb6b6f 0x7c3f58 |> Task.await
+
     Task.ok next

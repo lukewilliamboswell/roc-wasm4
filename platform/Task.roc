@@ -12,6 +12,7 @@ interface Task
         fromResult,
         fromEffect,
         text,
+        setPallet,
     ]
     imports [
         Effect.{ Effect },
@@ -94,4 +95,10 @@ text : Str, I32, I32 -> Task {} []
 text = \str, x, y ->
     Effect.text str x y
     |> Effect.map (\{} -> Ok {})
+    |> fromEffect
+
+setPallet : U32, U32, U32, U32 -> Task {} []
+setPallet = \a, b, c, d ->
+    Effect.setPallet a b c d
+    |> Effect.map Ok
     |> fromEffect
