@@ -16,8 +16,6 @@ const MEM: *[MEM_SIZE]u8 = @ptrFromInt(MEM_BASE);
 const MEM_CHUNK_SIZE = ALIGN;
 var free_set = std.bit_set.ArrayBitSet(u64, MEM_SIZE / MEM_CHUNK_SIZE).initFull();
 
-var fromRoc: FromRoc = undefined;
-
 // TODO: other roc_ functions.
 export fn roc_alloc(requested_size: usize, alignment: u32) callconv(.C) *anyopaque {
     _ = alignment;
@@ -94,17 +92,17 @@ export fn roc_panic(msg: *RocStr, tag_id: u32) callconv(.C) void {
     @panic("ROC PANICKED");
 }
 
-// OptionalModel : {
-//     noModel: Bool,
-//     boxedModel : Box Model,
-// }
-const FromRoc = extern struct {
-    boxedModel: *void,
-    noModel: bool,
-};
+// Currently roc does not generate debug statements except with `roc dev ...`.
+// So this won't actually be called until that is updated.
+export fn roc_dbg(loc: *RocStr, msg: *RocStr, src: *RocStr) callconv(.C) void {
+    var loc0 = str.strConcatC(loc.*, RocStr.fromSlice(&[1]u8{0}));
+    defer loc0.decref();
+    var msg0 = str.strConcatC(msg.*, RocStr.fromSlice(&[1]u8{0}));
+    defer msg0.decref();
+    var src0 = str.strConcatC(src.*, RocStr.fromSlice(&[1]u8{0}));
+    defer src0.decref();
 
-pub fn main() u8 {
-    return 0;
+    w4.tracef("[%s] %s = %s\n", loc0.asU8ptr(), src0.asU8ptr(), msg0.asU8ptr());
 }
 
 const smiley = [8]u8{
@@ -124,7 +122,7 @@ fn trace_model() void {
     w4.tracef("%x", @as(u32, @intFromPtr(model)));
 }
 
-extern fn roc__mainForHost_1_exposed_generic(*u8) callconv(.C) void;
+extern fn roc__mainForHost_1_exposed_generic(*anyopaque) callconv(.C) void;
 extern fn roc__mainForHost_1_exposed_size() callconv(.C) i64;
 // Init Task
 extern fn roc__mainForHost_0_caller(*anyopaque, *anyopaque, **anyopaque) callconv(.C) void;
@@ -148,6 +146,7 @@ export fn start() void {
     const captures = roc_alloc(size, @alignOf(u128));
     defer roc_dealloc(captures, @alignOf(u128));
 
+    roc__mainForHost_1_exposed_generic(captures);
     roc__mainForHost_0_caller(undefined, captures, &model);
 
     const update_task_size = @as(usize, @intCast(roc__mainForHost_2_size()));
@@ -158,4 +157,8 @@ var update_captures: *anyopaque = undefined;
 export fn update() void {
     roc__mainForHost_1_caller(&model, undefined, update_captures);
     roc__mainForHost_2_caller(undefined, update_captures, &model);
+}
+
+export fn roc_fx_text(text: *RocStr, x: i32, y: i32) callconv(.C) void {
+    w4.text(text.asSlice(), x, y);
 }

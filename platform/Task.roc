@@ -11,6 +11,7 @@ interface Task
         map,
         fromResult,
         fromEffect,
+        text,
     ]
     imports [
         Effect.{ Effect },
@@ -88,3 +89,9 @@ fromResult = \result ->
     when result is
         Ok a -> ok a
         Err b -> err b
+
+text : Str, I32, I32 -> Task {} []
+text = \str, x, y ->
+    Effect.text str x y
+    |> Effect.map (\{} -> Ok {})
+    |> fromEffect

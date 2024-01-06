@@ -22,4 +22,6 @@ init = Task.ok "Test123"
 
 update : Model -> Task Model []
 update = \model ->
-    Task.ok (Str.concat model "1.")
+    next = Str.concat model "1."
+    _ <- Task.text next 0 0 |> Task.await
+    Task.ok next
