@@ -9,6 +9,7 @@ The intent for this platform is to have some fun, learn more about Roc and platf
 ### Run
 
 *Basic example* using `zig build run`
+
 *Snake example* using `zig build -Dapp=examples/snake.roc run`
 
 ### Setup
