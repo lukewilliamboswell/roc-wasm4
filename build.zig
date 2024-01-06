@@ -15,7 +15,7 @@ pub fn build(b: *std.Build) !void {
     roc_lib.addArg("--output");
     const roc_out = roc_lib.addOutputFileArg("app.o");
     switch (optimize) {
-        .ReleaseFast => {
+        .ReleaseFast, .ReleaseSafe => {
             roc_lib.addArg("--optimize");
         },
         .ReleaseSmall => {
