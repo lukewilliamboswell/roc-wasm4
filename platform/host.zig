@@ -276,10 +276,11 @@ export fn roc_fx_diskr() callconv(.C) RocList {
 
 // TODO: add the following
 //  - getDrawColors (this will be needed if a function wants to temporarily change draw colors and the reset back to the old value)
-//  - setPerserveFrame
-//  - setHideGamepadOverlay
 //  - blitSub (we may want to make a SubSprite type instead of directly exposing this function, or make a sprite a tag to suport both full and sub sprites).
 //  - tone
+//  ... Maybe just expose these from the host as get/setSystemFlags. Then in the platform make the subfunctions?
+//  - setPerserveFrame
+//  - setHideGamepadOverlay
 //  - getPerserveFrame (maybe not needed cause only ever set by user)
 //  - getHideGamepadOverlay (maybe not needed cause only ever set by user)
 
