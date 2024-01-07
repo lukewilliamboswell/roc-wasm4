@@ -29,6 +29,9 @@ pub fn build(b: *std.Build) !void {
         else => {},
     }
 
+    // Run roc check before building
+    roc_lib.step.dependOn(&roc_check.step);
+
     const lib = b.addSharedLibrary(.{
         .name = "wasm4",
         .root_source_file = .{ .path = "platform/host.zig" },
@@ -45,9 +48,6 @@ pub fn build(b: *std.Build) !void {
     lib.export_symbol_names = &[_][]const u8{ "start", "update" };
 
     lib.addObjectFile(roc_out);
-
-    // Run roc check before building
-    lib.step.dependOn(&roc_check.step);
 
     b.installArtifact(lib);
 
