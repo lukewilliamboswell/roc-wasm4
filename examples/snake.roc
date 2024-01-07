@@ -45,7 +45,18 @@ init =
     }
 
 update : Model -> Task Model []
-update = \prev ->
+update = \model ->
+    if snakeIsDead model.snake then
+        {} <- drawGame model |> Task.await
+        {} <- W4.setTextColors { fg: blue, bg: white } |> Task.await
+        # TODO: maybe count and display score under game over message.
+        {} <- W4.text "Game Over!" { x: 40, y: 72 } |> Task.await
+        Task.ok model
+    else
+        runGame model
+
+runGame : Model -> Task Model []
+runGame = \prev ->
 
     # Read gamepad
     { left, right, up, down } <- W4.readGamepad Player1 |> Task.await
@@ -79,6 +90,15 @@ update = \prev ->
                 Task.ok model.fruit
     fruit <- fruitTask |> Task.await
 
+    next = { model & snake, fruit }
+
+    {} <- drawGame next |> Task.await
+
+    # Return model for next frame
+    Task.ok next
+
+drawGame : Model -> Task {} []
+drawGame = \model ->
     # Draw fruit
     {} <- W4.setDrawColors {
             primary: None,
@@ -87,21 +107,18 @@ update = \prev ->
             quaternary: blue,
         }
         |> Task.await
-    {} <- Sprite.blit { x: fruit.x * 8, y: fruit.y * 8, flags: [] } model.fruitSprite |> Task.await
+    {} <- Sprite.blit { x: model.fruit.x * 8, y: model.fruit.y * 8, flags: [] } model.fruitSprite |> Task.await
 
     # Draw snake body
     {} <- W4.setRectColors { border: blue, fill: green } |> Task.await
-    {} <- drawSnakeBody snake |> Task.await
+    {} <- drawSnakeBody model.snake |> Task.await
 
     # Draw snake head
     {} <- W4.setRectColors { border: blue, fill: blue } |> Task.await
-    {} <- drawSnakeHead snake |> Task.await
-
-    # Return model for next frame
-    Task.ok { model & snake, fruit }
+    drawSnakeHead model.snake
 
 # Set the color pallet
-# white = Color1
+white = Color1
 orange = Color2
 green = Color3
 blue = Color4
@@ -180,6 +197,10 @@ growSnake : Snake -> Snake
 growSnake = \{ head, body, direction } ->
     tail = List.last body |> Result.withDefault head
     { head, body: List.append body tail, direction }
+
+snakeIsDead : Snake -> Bool
+snakeIsDead = \{ head, body } ->
+    List.contains body head
 
 getRandomFruit : Task Fruit []
 getRandomFruit =
