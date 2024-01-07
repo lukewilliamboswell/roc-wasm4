@@ -13,37 +13,22 @@ Program : {
     update : Model -> Task Model [],
 }
 
-Model : {}
+Model : { snake : Snake }
 
 main : Program
 main = { init, update }
 
 init : Task Model []
 init =
-
     {} <- setColorPallet |> Task.await
-    {} <- setDrawColors |> Task.await
 
-    Task.ok {}
+    Task.ok { snake: startingSnake }
 
 update : Model -> Task Model []
-update = \model ->
+update = \{ snake } ->
+    {} <- drawSnake snake |> Task.await
 
-    # Read gamepad
-    # { button1, button2, left, right, up, down } <- W4.readGamepad Player1 |> Task.await
-
-    # Draw the gamepad state
-    {} <- W4.textColor { fg: red, bg: green } |> Task.await
-    {} <- "SNAKE" |> W4.text { x: 0, y: 0 } |> Task.await
-
-    # Return the model for next frame
-    Task.ok model
-
-# Set the color pallet
-white = Color1
-red = Color2
-green = Color3
-blue = Color4
+    Task.ok { snake }
 
 setColorPallet : Task {} []
 setColorPallet =
@@ -54,11 +39,22 @@ setColorPallet =
         color4: 0x20283d,
     }
 
-setDrawColors : Task {} []
-setDrawColors =
-    W4.setDrawColors {
-        primary: white,
-        secondary: red,
-        tertiary: green,
-        quaternary: blue,
-    }
+Point : { x : I32, y : I32 }
+Dir : [Up, Down, Left, Right]
+
+Snake : {
+    body : List Point,
+    direction : Dir,
+}
+
+startingSnake : Snake
+startingSnake = {
+    body: [{ x: 2, y: 0 }, { x: 1, y: 0 }, { x: 0, y: 0 }],
+    direction: Right,
+}
+
+drawSnake : Snake -> Task {} []
+drawSnake = \snake ->
+    List.walk snake.body (Task.ok {}) \task, part ->
+        {} <- task |> Task.await
+        W4.rect (part.x * 8) (part.y * 8) 8 8

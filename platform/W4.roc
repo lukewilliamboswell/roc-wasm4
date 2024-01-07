@@ -5,6 +5,7 @@ interface W4
         setPallet,
         setDrawColors,
         readGamepad,
+        rect,
     ]
     imports [
         Task.{ Task },
@@ -85,6 +86,12 @@ readGamepad = \player ->
             # 128 BUTTON_DOWN
             down: Num.bitwiseAnd 0b1000_0000 flags > 0,
         }
+    |> Task.fromEffect
+
+rect : I32, I32, U32, U32 -> Task {} []
+rect = \x, y, width, height ->
+    Effect.rect x y width height
+    |> Effect.map Ok
     |> Task.fromEffect
 
 textColor : { fg : Pallet, bg : Pallet } -> Task {} []

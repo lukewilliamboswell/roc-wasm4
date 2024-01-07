@@ -163,6 +163,10 @@ export fn roc_fx_text(text: *RocStr, x: i32, y: i32) callconv(.C) void {
     w4.text(text.asSlice(), x, y);
 }
 
+export fn roc_fx_rect(x: i32, y: i32, width: u32, height: u32) callconv(.C) void {
+    w4.rect(x, y, width, height);
+}
+
 export fn roc_fx_setPallet(a: u32, b: u32, c: u32, d: u32) callconv(.C) void {
     w4.PALETTE.* = .{ a, b, c, d };
 }
