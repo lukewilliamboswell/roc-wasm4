@@ -26,7 +26,6 @@ var free_set = std.bit_set.ArrayBitSet(u64, MEM_SIZE / MEM_CHUNK_SIZE).initFull(
 var prng = std.rand.DefaultPrng.init(0);
 var rnd = prng.random();
 
-// TODO: other roc_ functions.
 export fn roc_alloc(requested_size: usize, alignment: u32) callconv(.C) *anyopaque {
     _ = alignment;
     // Leave extra space to store allocation size.
@@ -206,8 +205,6 @@ export fn roc_fx_randRangeLessThan(min: i32, max: i32) callconv(.C) i32 {
 }
 
 export fn roc_fx_blit(bytes: *RocList, x: i32, y: i32, width: u32, height: u32, flags: u32) callconv(.C) void {
-
-    // TODO I fix the sprite.. not getting the right bytes here I think
     const data: [*]const u8 = bytes.elements(u8).?;
 
     w4.blit(data, x, y, width, height, flags);
