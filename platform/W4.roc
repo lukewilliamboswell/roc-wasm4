@@ -3,7 +3,7 @@ interface W4
         Palette,
         Sprite,
         Mouse,
-        GamePad,
+        Gamepad,
         text,
         setTextColors,
         setPalette,
@@ -30,7 +30,7 @@ DrawColors : {
     quaternary : Palette,
 }
 
-GamePad : {
+Gamepad : {
     button1 : Bool,
     button2 : Bool,
     left : Bool,
@@ -129,8 +129,8 @@ setRectColors = \{ border, fill } ->
         quaternary: None,
     }
 
-## Read the controls for a GamePad
-readGamepad : [Player1, Player2, Player3, Player4] -> Task GamePad []
+## Read the controls for a Gamepad
+readGamepad : [Player1, Player2, Player3, Player4] -> Task Gamepad []
 readGamepad = \player ->
 
     gamepadNumber =
