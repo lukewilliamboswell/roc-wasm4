@@ -13,7 +13,9 @@ Program : {
     update : Model -> Task Model [],
 }
 
-Model : { snake : Snake }
+Model : {
+    snake : Snake,
+}
 
 main : Program
 main = { init, update }
@@ -26,15 +28,22 @@ init =
 
 update : Model -> Task Model []
 update = \{ snake } ->
-    {} <- drawSnake snake |> Task.await
+
+    # Snake body
+    {} <- setDrawColor green |> Task.await
+    {} <- drawSnakeBody snake |> Task.await
+
+    # Snake head
+    {} <- setDrawColor blue |> Task.await
+    {} <- drawSnakeHead snake |> Task.await
 
     Task.ok { snake }
 
 # Set the color pallet
 # white = Color1
 # orange = Color2
-# green = Color3
-# blue = Color4
+green = Color3
+blue = Color4
 
 setColorPallet : Task {} []
 setColorPallet =
@@ -50,27 +59,29 @@ Dir : [Up, Down, Left, Right]
 
 Snake : {
     body : List Point,
+    head : Point,
     direction : Dir,
 }
 
 startingSnake : Snake
 startingSnake = {
-    body: [{ x: 2, y: 0 }, { x: 1, y: 0 }, { x: 0, y: 0 }],
+    body: [{ x: 1, y: 0 }, { x: 0, y: 0 }],
+    head: { x: 2, y: 0 },
     direction: Right,
 }
 
-drawSnake : Snake -> Task {} []
-drawSnake = \snake ->
-    List.walk snake.body (Task.ok {}) \task, part ->
+drawSnakeBody : Snake -> Task {} []
+drawSnakeBody = \snake ->
+    List.walk snake.body  (Task.ok {}) \task, part ->
         {} <- task |> Task.await
-        W4.rect (part.x * 8) (part.y * 8) 8 8
         
-# setDrawColors : Task {} []
-# setDrawColors =
-#     W4.setDrawColors {
-#         primary: white,
-#         secondary: orange,
-#         tertiary: green,
-#         quaternary: blue,
-#     }
+        W4.rect (part.x * 8) (part.y * 8) 8 8
+
+drawSnakeHead : Snake -> Task {} []
+drawSnakeHead = \snake ->
+    W4.rect (snake.head.x * 8) (snake.head.y * 8) 8 8
+        
+setDrawColor : W4.Pallet -> Task {} []
+setDrawColor = \primary ->
+    W4.setDrawColors {primary,secondary: None,tertiary: None,quaternary: None}
 

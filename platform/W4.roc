@@ -1,5 +1,6 @@
 interface W4
     exposes [
+        Pallet,
         text,
         textColor,
         setPallet,
