@@ -205,6 +205,16 @@ export fn roc_fx_readGamepad(gamepad_number: u8) callconv(.C) u8 {
     return gamepad_flags;
 }
 
+const RocMouse = extern struct {
+    x: i16,
+    y: i16,
+    buttons: u8,
+};
+
+export fn roc_fx_readMouse() callconv(.C) RocMouse {
+    return .{ .x = w4.MOUSE_X.*, .y = w4.MOUSE_Y.*, .buttons = w4.MOUSE_BUTTONS.* };
+}
+
 export fn roc_fx_rand() callconv(.C) i32 {
     return rnd.int(i32);
 }

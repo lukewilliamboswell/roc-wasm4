@@ -2,12 +2,15 @@ interface W4
     exposes [
         Palette,
         Sprite,
+        Mouse,
+        GamePad,
         text,
         setTextColors,
         setPalette,
         getPalette,
         setDrawColors,
         readGamepad,
+        readMouse,
         rect,
         setRectColors,
         screenWidth,
@@ -34,6 +37,14 @@ GamePad : {
     right : Bool,
     up : Bool,
     down : Bool,
+}
+
+Mouse : {
+    x : I16,
+    y : I16,
+    left : Bool,
+    right : Bool,
+    middle : Bool,
 }
 
 Sprite := {
@@ -144,6 +155,23 @@ readGamepad = \player ->
             up: Num.bitwiseAnd 0b0100_0000 flags > 0,
             # 128 BUTTON_DOWN
             down: Num.bitwiseAnd 0b1000_0000 flags > 0,
+        }
+    |> Task.fromEffect
+
+## Read the mouse input
+readMouse : Task Mouse []
+readMouse =
+    Effect.readMouse
+    |> Effect.map \{ x, y, buttons } ->
+        Ok {
+            x: x,
+            y: y,
+            # 1 MOUSE_LEFT
+            left: Num.bitwiseAnd 0b0000_0001 buttons > 0,
+            # 2 MOUSE_RIGHT
+            right: Num.bitwiseAnd 0b0000_0010 buttons > 0,
+            # 4 MOUSE_MIDDLE
+            middle: Num.bitwiseAnd 0b0000_0100 buttons > 0,
         }
     |> Task.fromEffect
 

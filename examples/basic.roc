@@ -32,8 +32,9 @@ init =
 update : Model -> Task Model []
 update = \model ->
 
-    # Read gamepad
+    # Read inputs
     { button1, button2, left, right, up, down } <- W4.readGamepad Player1 |> Task.await
+    mouse <- W4.readMouse |> Task.await
 
     # Draw the gamepad state
     {} <- W4.setTextColors { fg: red, bg: green } |> Task.await
@@ -48,6 +49,13 @@ update = \model ->
 
     {} <- W4.setTextColors { fg: None, bg: None } |> Task.await
     {} <- "THIS IS TRASPARENT" |> W4.text { x: 0, y: 48 } |> Task.await
+
+    {} <- W4.setTextColors { fg: blue, bg: white } |> Task.await
+    {} <- "Mouse X: \(Inspect.toStr mouse.x)" |> W4.text { x: 0, y: 56 } |> Task.await
+    {} <- "Mouse Y: \(Inspect.toStr mouse.y)" |> W4.text { x: 0, y: 64 } |> Task.await
+    {} <- "Mouse L: \(Inspect.toStr mouse.left)" |> W4.text { x: 0, y: 72 } |> Task.await
+    {} <- "Mouse R: \(Inspect.toStr mouse.right)" |> W4.text { x: 0, y: 80 } |> Task.await
+    {} <- "Mouse M: \(Inspect.toStr mouse.middle)" |> W4.text { x: 0, y: 88 } |> Task.await
 
     # Return the model for next frame
     Task.ok model

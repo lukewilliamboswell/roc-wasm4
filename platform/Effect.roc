@@ -11,6 +11,7 @@ hosted Effect
         getPalette,
         setDrawColors,
         readGamepad,
+        readMouse,
         rect,
         rand,
         randRangeLessThan,
@@ -25,6 +26,7 @@ setPalette : U32, U32, U32, U32 -> Effect {}
 getPalette : Effect { color1 : U32, color2 : U32, color3 : U32, color4 : U32 }
 setDrawColors : U16 -> Effect {}
 readGamepad : U8 -> Effect U8
+readMouse : Effect { x : i16, y : i16, buttons : U8 }
 rect : I32, I32, U32, U32 -> Effect {}
 rand : Effect I32
 randRangeLessThan : I32, I32 -> Effect I32
