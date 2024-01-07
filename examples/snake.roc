@@ -16,6 +16,7 @@ Program : {
 Model : {
     frameCount : U64,
     snake : Snake,
+    fruit : List Point,
 }
 
 main : Program
@@ -25,9 +26,12 @@ init : Task Model []
 init =
     {} <- setColorPallet |> Task.await
 
+    fruit1 <- getRandomFruit |> Task.await
+
     Task.ok {
         frameCount: 0,
         snake: startingSnake,
+        fruit: [fruit1],
     }
 
 update : Model -> Task Model []
@@ -136,3 +140,11 @@ moveSnake = \prev ->
     body = walkBody prev.head prev.body []
 
     { prev & head, body }
+
+getRandomFruit : Task Point []
+getRandomFruit =
+    x <- W4.rand |> Task.await
+    y <- W4.rand |> Task.await
+
+    Task.ok { x, y }
+

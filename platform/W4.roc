@@ -8,6 +8,7 @@ interface W4
         readGamepad,
         rect,
         screenWidth,
+        rand,
     ]
     imports [
         Task.{ Task },
@@ -150,3 +151,9 @@ toColorFlags = \{ primary, secondary, tertiary, quaternary } ->
 
 expect toColorFlags { primary: Color2, secondary: Color4, tertiary: None, quaternary: None } == 0x0042
 expect toColorFlags { primary: Color1, secondary: Color2, tertiary: Color3, quaternary: Color4 } == 0x4321
+
+rand : Task I32 []
+rand =
+    Effect.rand
+    |> Effect.map Ok
+    |> Task.fromEffect

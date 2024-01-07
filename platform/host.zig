@@ -16,6 +16,9 @@ const MEM: *[MEM_SIZE]u8 = @ptrFromInt(MEM_BASE);
 const MEM_CHUNK_SIZE = ALIGN;
 var free_set = std.bit_set.ArrayBitSet(u64, MEM_SIZE / MEM_CHUNK_SIZE).initFull();
 
+// Random numbers
+var rnd = std.rand.DefaultPrng.init(0);
+
 // TODO: other roc_ functions.
 export fn roc_alloc(requested_size: usize, alignment: u32) callconv(.C) *anyopaque {
     _ = alignment;
@@ -185,4 +188,8 @@ export fn roc_fx_readGamepad(gamepad_number: u8) callconv(.C) u8 {
     };
 
     return gamepad_flags;
+}
+
+export fn roc_fx_rand() callconv(.C) i32 {
+    return rnd.random().int(i32);
 }
