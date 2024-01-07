@@ -48,10 +48,10 @@ blue = Color4
 setColorPallet : Task {} []
 setColorPallet =
     W4.setPallet {
-        color1: 0xffffff,
-        color2: 0xff0000,
-        color3: 0x000ff00,
-        color4: 0x0000ff,
+        color1: 0xfbf7f3,
+        color2: 0xe5b083,
+        color3: 0x426e5d,
+        color4: 0x20283d,
     }
 
 setDrawColors : Task {} []
