@@ -7,22 +7,26 @@ hosted Effect
         forever,
         loop,
         text,
-        setPallet,
+        setPalette,
+        getPalette,
         setDrawColors,
         readGamepad,
         rect,
         rand,
         randRangeLessThan,
         blit,
+        trace,
     ]
     imports []
     generates Effect with [after, map, always, forever, loop]
 
 text : Str, I32, I32 -> Effect {}
-setPallet : U32, U32, U32, U32 -> Effect {}
+setPalette : U32, U32, U32, U32 -> Effect {}
+getPalette : Effect { color1 : U32, color2 : U32, color3 : U32, color4 : U32 }
 setDrawColors : U16 -> Effect {}
 readGamepad : U8 -> Effect U8
 rect : I32, I32, U32, U32 -> Effect {}
 rand : Effect I32
 randRangeLessThan : I32, I32 -> Effect I32
 blit : List U8, I32, I32, U32, U32, U32 -> Effect {}
+trace : Str -> Effect {}

@@ -172,12 +172,21 @@ export fn roc_fx_text(text: *RocStr, x: i32, y: i32) callconv(.C) void {
     w4.text(text.asSlice(), x, y);
 }
 
+export fn roc_fx_trace(text: *RocStr) callconv(.C) void {
+    w4.trace(text.asSlice());
+}
+
 export fn roc_fx_rect(x: i32, y: i32, width: u32, height: u32) callconv(.C) void {
     w4.rect(x, y, width, height);
 }
 
-export fn roc_fx_setPallet(a: u32, b: u32, c: u32, d: u32) callconv(.C) void {
+export fn roc_fx_setPalette(a: u32, b: u32, c: u32, d: u32) callconv(.C) void {
     w4.PALETTE.* = .{ a, b, c, d };
+}
+
+const RocPalette = extern struct { color1: u32, color2: u32, color3: u32, color4: u32 };
+export fn roc_fx_getPalette() callconv(.C) RocPalette {
+    return .{ .color1 = w4.PALETTE[0], .color2 = w4.PALETTE[1], .color3 = w4.PALETTE[2], .color4 = w4.PALETTE[3] };
 }
 
 export fn roc_fx_setDrawColors(draw_color_flags: u16) callconv(.C) void {

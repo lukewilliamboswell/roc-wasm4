@@ -26,7 +26,7 @@ main = { init, update }
 
 init : Task Model []
 init =
-    {} <- setColorPallet |> Task.await
+    {} <- setColorPalette |> Task.await
 
     startingFruit <- getRandomFruit startingSnake |> Task.await
 
@@ -123,9 +123,9 @@ orange = Color2
 green = Color3
 blue = Color4
 
-setColorPallet : Task {} []
-setColorPallet =
-    W4.setPallet {
+setColorPalette : Task {} []
+setColorPalette =
+    W4.setPalette {
         color1: 0xfbf7f3,
         color2: 0xe5b083,
         color3: 0x426e5d,

@@ -1,10 +1,11 @@
 interface W4
     exposes [
-        Pallet,
+        Palette,
         Sprite,
         text,
         setTextColors,
-        setPallet,
+        setPalette,
+        getPalette,
         setDrawColors,
         readGamepad,
         rect,
@@ -13,16 +14,17 @@ interface W4
         screenHeight,
         rand,
         randRangeLessThan,
+        trace,
     ]
     imports [Task.{ Task }, Effect.{ Effect }]
 
-Pallet : [None, Color1, Color2, Color3, Color4]
+Palette : [None, Color1, Color2, Color3, Color4]
 
 DrawColors : {
-    primary : Pallet,
-    secondary : Pallet,
-    tertiary : Pallet,
-    quaternary : Pallet,
+    primary : Palette,
+    secondary : Palette,
+    tertiary : Palette,
+    quaternary : Palette,
 }
 
 GamePad : {
@@ -44,9 +46,15 @@ Sprite := {
 screenWidth = 160
 screenHeight = 160
 
-setPallet : { color1 : U32, color2 : U32, color3 : U32, color4 : U32 } -> Task {} []
-setPallet = \{ color1, color2, color3, color4 } ->
-    Effect.setPallet color1 color2 color3 color4
+setPalette : { color1 : U32, color2 : U32, color3 : U32, color4 : U32 } -> Task {} []
+setPalette = \{ color1, color2, color3, color4 } ->
+    Effect.setPalette color1 color2 color3 color4
+    |> Effect.map Ok
+    |> Task.fromEffect
+
+getPalette : Task { color1 : U32, color2 : U32, color3 : U32, color4 : U32 } []
+getPalette =
+    Effect.getPalette
     |> Effect.map Ok
     |> Task.fromEffect
 
@@ -75,7 +83,7 @@ text = \str, { x, y } ->
     |> Task.fromEffect
 
 ## Helper for colors when drawing text
-setTextColors : { fg : Pallet, bg : Pallet } -> Task {} []
+setTextColors : { fg : Palette, bg : Palette } -> Task {} []
 setTextColors = \{ fg, bg } ->
     setDrawColors {
         primary: fg,
@@ -101,7 +109,7 @@ rect = \x, y, width, height ->
     |> Task.fromEffect
 
 ## Helper for colors when drawing a rectangle
-setRectColors : { border : W4.Pallet, fill : W4.Pallet } -> Task {} []
+setRectColors : { border : W4.Palette, fill : W4.Palette } -> Task {} []
 setRectColors = \{ border, fill } ->
     setDrawColors {
         primary: fill,
@@ -151,6 +159,19 @@ rand =
 randRangeLessThan : I32, I32 -> Task I32 []
 randRangeLessThan = \start, end ->
     Effect.randRangeLessThan start end
+    |> Effect.map Ok
+    |> Task.fromEffect
+
+## Prints a message to the debug console.
+##
+## ```
+## W4.trace "Hello, World"
+## ```
+##
+## [Refer w4 docs for more information](https://wasm4.org/docs/guides/trace)
+trace : Str -> Task {} []
+trace = \str ->
+    Effect.trace str
     |> Effect.map Ok
     |> Task.fromEffect
 

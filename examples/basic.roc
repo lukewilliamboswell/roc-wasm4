@@ -21,8 +21,11 @@ main = { init, update }
 init : Task Model []
 init =
 
-    {} <- setColorPallet |> Task.await
+    {} <- setColorPalette |> Task.await
     {} <- setDrawColors |> Task.await
+
+    palette <- W4.getPalette |> Task.await
+    {} <- Inspect.toStr palette |> W4.trace |> Task.await
 
     Task.ok {}
 
@@ -33,17 +36,17 @@ update = \model ->
     { button1, button2, left, right, up, down } <- W4.readGamepad Player1 |> Task.await
 
     # Draw the gamepad state
-    {} <- W4.textColor { fg: red, bg: green } |> Task.await
+    {} <- W4.setTextColors { fg: red, bg: green } |> Task.await
     {} <- "X: \(Inspect.toStr button1)" |> W4.text { x: 0, y: 0 } |> Task.await
 
-    {} <- W4.textColor { fg: blue, bg: white } |> Task.await
+    {} <- W4.setTextColors { fg: blue, bg: white } |> Task.await
     {} <- "Z: \(Inspect.toStr button2)" |> W4.text { x: 0, y: 8 } |> Task.await
     {} <- "L: \(Inspect.toStr left)" |> W4.text { x: 0, y: 16 } |> Task.await
     {} <- "R: \(Inspect.toStr right)" |> W4.text { x: 0, y: 24 } |> Task.await
     {} <- "U: \(Inspect.toStr up)" |> W4.text { x: 0, y: 32 } |> Task.await
     {} <- "D: \(Inspect.toStr down)" |> W4.text { x: 0, y: 40 } |> Task.await
 
-    {} <- W4.textColor { fg: None, bg: None } |> Task.await
+    {} <- W4.setTextColors { fg: None, bg: None } |> Task.await
     {} <- "THIS IS TRASPARENT" |> W4.text { x: 0, y: 48 } |> Task.await
 
     # Return the model for next frame
@@ -55,9 +58,9 @@ red = Color2
 green = Color3
 blue = Color4
 
-setColorPallet : Task {} []
-setColorPallet =
-    W4.setPallet {
+setColorPalette : Task {} []
+setColorPalette =
+    W4.setPalette {
         color1: 0xffffff,
         color2: 0xff0000,
         color3: 0x000ff00,
