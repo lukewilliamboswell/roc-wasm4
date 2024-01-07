@@ -12,6 +12,7 @@ interface W4
         screenWidth,
         screenHeight,
         rand,
+        randRangeLessThan,
     ]
     imports [Task.{ Task }, Effect.{ Effect }]
 
@@ -142,6 +143,14 @@ readGamepad = \player ->
 rand : Task I32 []
 rand =
     Effect.rand
+    |> Effect.map Ok
+    |> Task.fromEffect
+
+## Generate a psuedo-random number in specified range
+## The range has an inclusive start and exclusive end
+randRangeLessThan : I32, I32 -> Task I32 []
+randRangeLessThan = \start, end ->
+    Effect.randRangeLessThan start end
     |> Effect.map Ok
     |> Task.fromEffect
 

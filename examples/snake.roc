@@ -17,7 +17,7 @@ Program : {
 Model : {
     frameCount : U64,
     snake : Snake,
-    fruit : List Point,
+    fruit : List Fruit,
     fruitSprite : Sprite,
 }
 
@@ -28,7 +28,7 @@ init : Task Model []
 init =
     {} <- setColorPallet |> Task.await
 
-    fruit1 <- getRandomFruit |> Task.await
+    startingFruit <- getRandomFruit |> Task.await
 
     fruitSprite = Sprite.new {
         data: [0x00, 0xa0, 0x02, 0x00, 0x0e, 0xf0, 0x36, 0x5c, 0xd6, 0x57, 0xd5, 0x57, 0x35, 0x5c, 0x0f, 0xf0],
@@ -40,7 +40,7 @@ init =
     Task.ok {
         frameCount: 0,
         snake: startingSnake,
-        fruit: [fruit1],
+        fruit: [startingFruit],
         fruitSprite,
     }
 
@@ -75,13 +75,13 @@ update = \prev ->
 
     # Draw fruit
     {} <- W4.setDrawColors {
-            primary: Color1,
-            secondary: Color2,
-            tertiary: Color3,
-            quaternary: Color4,
+            primary: None,
+            secondary: orange,
+            tertiary: green,
+            quaternary: blue,
         }
         |> Task.await
-    {} <- Sprite.blit { x: 20, y: 20, flags: [] } model.fruitSprite |> Task.await
+    {} <- drawFruit model.fruit model.fruitSprite |> Task.await
 
     # Draw snake body
     {} <- W4.setRectColors { border: blue, fill: green } |> Task.await
@@ -96,7 +96,7 @@ update = \prev ->
 
 # Set the color pallet
 # white = Color1
-# orange = Color2
+orange = Color2
 green = Color3
 blue = Color4
 
@@ -111,6 +111,8 @@ setColorPallet =
 
 Point : { x : I32, y : I32 }
 Dir : [Up, Down, Left, Right]
+
+Fruit : Point
 
 Snake : {
     body : List Point,
@@ -157,10 +159,16 @@ moveSnake = \prev ->
 
     { prev & head, body }
 
-getRandomFruit : Task Point []
+drawFruit : List Fruit, Sprite -> Task {} []
+drawFruit = \fruits, fruitSprite ->
+    List.walk fruits (Task.ok {}) \task, { x, y } ->
+        {} <- task |> Task.await
+        Sprite.blit { x: x * 8, y: y * 8, flags: [] } fruitSprite
+
+getRandomFruit : Task Fruit []
 getRandomFruit =
-    x <- W4.rand |> Task.await
-    y <- W4.rand |> Task.await
+    x <- W4.randRangeLessThan 0 20 |> Task.await
+    y <- W4.randRangeLessThan 0 20 |> Task.await
 
     Task.ok { x, y }
 
