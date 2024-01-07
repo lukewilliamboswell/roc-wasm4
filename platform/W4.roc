@@ -1,7 +1,6 @@
 interface W4
     exposes [
         Palette,
-        Sprite,
         Mouse,
         Gamepad,
         text,
@@ -45,13 +44,6 @@ Mouse : {
     left : Bool,
     right : Bool,
     middle : Bool,
-}
-
-Sprite := {
-    data : List U8,
-    bpp : [BPP1, BPP2],
-    width : U32,
-    height : U32,
 }
 
 screenWidth = 160
