@@ -279,8 +279,8 @@ export fn roc_fx_diskr() callconv(.C) RocList {
 //  - blitSub (we may want to make a SubSprite type instead of directly exposing this function, or make a sprite a tag to suport both full and sub sprites).
 //  - tone
 //  ... Maybe just expose these from the host as get/setSystemFlags. Then in the platform make the subfunctions?
-//  - setPerserveFrame
-//  - setHideGamepadOverlay
+//  - setPerserveFrame (perserveFrame and resetFrame?)
+//  - setHideGamepadOverlay (showGamepadOverlay and hideGamepadOverlay?)
 //  - getPerserveFrame (maybe not needed cause only ever set by user)
 //  - getHideGamepadOverlay (maybe not needed cause only ever set by user)
 
