@@ -17,7 +17,7 @@ Program : {
 Model : {
     frameCount : U64,
     snake : Snake,
-    fruit : List Fruit,
+    fruit : Fruit,
     fruitSprite : Sprite,
 }
 
@@ -40,7 +40,7 @@ init =
     Task.ok {
         frameCount: 0,
         snake: startingSnake,
-        fruit: [startingFruit],
+        fruit: startingFruit,
         fruitSprite,
     }
 
@@ -81,7 +81,7 @@ update = \prev ->
             quaternary: blue,
         }
         |> Task.await
-    {} <- drawFruit model.fruit model.fruitSprite |> Task.await
+    {} <- Sprite.blit { x: model.fruit.x * 8, y: model.fruit.y * 8, flags: [] } model.fruitSprite |> Task.await
 
     # Draw snake body
     {} <- W4.setRectColors { border: blue, fill: green } |> Task.await
@@ -158,12 +158,6 @@ moveSnake = \prev ->
     body = walkBody prev.head prev.body []
 
     { prev & head, body }
-
-drawFruit : List Fruit, Sprite -> Task {} []
-drawFruit = \fruits, fruitSprite ->
-    List.walk fruits (Task.ok {}) \task, { x, y } ->
-        {} <- task |> Task.await
-        Sprite.blit { x: x * 8, y: y * 8, flags: [] } fruitSprite
 
 getRandomFruit : Task Fruit []
 getRandomFruit =
