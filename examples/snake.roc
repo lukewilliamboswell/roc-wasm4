@@ -30,6 +30,12 @@ update = \{ snake } ->
 
     Task.ok { snake }
 
+# Set the color pallet
+# white = Color1
+# orange = Color2
+# green = Color3
+# blue = Color4
+
 setColorPallet : Task {} []
 setColorPallet =
     W4.setPallet {
@@ -58,3 +64,13 @@ drawSnake = \snake ->
     List.walk snake.body (Task.ok {}) \task, part ->
         {} <- task |> Task.await
         W4.rect (part.x * 8) (part.y * 8) 8 8
+        
+# setDrawColors : Task {} []
+# setDrawColors =
+#     W4.setDrawColors {
+#         primary: white,
+#         secondary: orange,
+#         tertiary: green,
+#         quaternary: blue,
+#     }
+
