@@ -30,11 +30,11 @@ update : Model -> Task Model []
 update = \{ snake } ->
 
     # Snake body
-    {} <- setDrawColor green |> Task.await
+    {} <- setRectColors { border: blue, fill: green } |> Task.await
     {} <- drawSnakeBody snake |> Task.await
 
     # Snake head
-    {} <- setDrawColor blue |> Task.await
+    {} <- setRectColors { border: blue, fill: blue } |> Task.await
     {} <- drawSnakeHead snake |> Task.await
 
     Task.ok { snake }
@@ -72,16 +72,16 @@ startingSnake = {
 
 drawSnakeBody : Snake -> Task {} []
 drawSnakeBody = \snake ->
-    List.walk snake.body  (Task.ok {}) \task, part ->
+    List.walk snake.body (Task.ok {}) \task, part ->
         {} <- task |> Task.await
-        
+
         W4.rect (part.x * 8) (part.y * 8) 8 8
 
 drawSnakeHead : Snake -> Task {} []
 drawSnakeHead = \snake ->
     W4.rect (snake.head.x * 8) (snake.head.y * 8) 8 8
-        
-setDrawColor : W4.Pallet -> Task {} []
-setDrawColor = \primary ->
-    W4.setDrawColors {primary,secondary: None,tertiary: None,quaternary: None}
+
+setRectColors : { border : W4.Pallet, fill : W4.Pallet } -> Task {} []
+setRectColors = \{ border, fill } ->
+    W4.setDrawColors { primary: fill, secondary: border, tertiary: None, quaternary: None }
 
