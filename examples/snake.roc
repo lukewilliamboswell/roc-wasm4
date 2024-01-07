@@ -54,24 +54,30 @@ update = \prev ->
     model = { prev & frameCount: prev.frameCount + 1 }
 
     # Move snake
-    snake =
+    (snake, fruitEaten) =
         prev.snake
-        |> \s1 ->
-            if (model.frameCount % 15) == 0 then
-                moveSnake s1
-            else
-                s1
-        |> \s2 ->
+        |> \s ->
             if left then
-                { s2 & direction: Left }
+                { s & direction: Left }
             else if right then
-                { s2 & direction: Right }
+                { s & direction: Right }
             else if up then
-                { s2 & direction: Up }
+                { s & direction: Up }
             else if down then
-                { s2 & direction: Down }
+                { s & direction: Down }
             else
-                s2
+                s
+        |> \s ->
+            updateSnake s model.frameCount model.fruit
+
+    fruitTask =
+        when fruitEaten is
+            Eaten ->
+                getRandomFruit
+
+            NotEaten ->
+                Task.ok model.fruit
+    fruit <- fruitTask |> Task.await
 
     # Draw fruit
     {} <- W4.setDrawColors {
@@ -81,7 +87,7 @@ update = \prev ->
             quaternary: blue,
         }
         |> Task.await
-    {} <- Sprite.blit { x: model.fruit.x * 8, y: model.fruit.y * 8, flags: [] } model.fruitSprite |> Task.await
+    {} <- Sprite.blit { x: fruit.x * 8, y: fruit.y * 8, flags: [] } model.fruitSprite |> Task.await
 
     # Draw snake body
     {} <- W4.setRectColors { border: blue, fill: green } |> Task.await
@@ -92,7 +98,7 @@ update = \prev ->
     {} <- drawSnakeHead snake |> Task.await
 
     # Return model for next frame
-    Task.ok { model & snake }
+    Task.ok { model & snake, fruit }
 
 # Set the color pallet
 # white = Color1
@@ -138,6 +144,17 @@ drawSnakeHead : Snake -> Task {} []
 drawSnakeHead = \snake ->
     W4.rect (snake.head.x * 8) (snake.head.y * 8) 8 8
 
+updateSnake : Snake, U64, Fruit -> (Snake, [Eaten, NotEaten])
+updateSnake = \prev, frameCount, fruit ->
+    if (frameCount % 15) == 0 then
+        moved = moveSnake prev
+        if moved.head == fruit then
+            (growSnake moved, Eaten)
+        else
+            (moved, NotEaten)
+    else
+        (prev, NotEaten)
+
 moveSnake : Snake -> Snake
 moveSnake = \prev ->
 
@@ -158,6 +175,11 @@ moveSnake = \prev ->
     body = walkBody prev.head prev.body []
 
     { prev & head, body }
+
+growSnake : Snake -> Snake
+growSnake = \{ head, body, direction } ->
+    tail = List.last body |> Result.withDefault head
+    { head, body: List.append body tail, direction }
 
 getRandomFruit : Task Fruit []
 getRandomFruit =
