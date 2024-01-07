@@ -275,13 +275,12 @@ export fn roc_fx_diskr() callconv(.C) RocList {
 }
 
 // TODO: add the following
-//  - getDrawColors
+//  - getDrawColors (this will be needed if a function wants to temporarily change draw colors and the reset back to the old value)
 //  - setPerserveFrame
 //  - setHideGamepadOverlay
-//  - getPerserveFrame (maybe not needed cause only ever set by user)
-//  - getHideGamepadOverlay (maybe not needed cause only ever set by user)
-//  - getNetplay (will return current play and if netplay active)
 //  - blitSub (we may want to make a SubSprite type instead of directly exposing this function, or make a sprite a tag to suport both full and sub sprites).
 //  - tone
+//  - getPerserveFrame (maybe not needed cause only ever set by user)
+//  - getHideGamepadOverlay (maybe not needed cause only ever set by user)
 
 // TODO: figure out nice api for raw frame buffer functions (maybe just get and set pixel, maybe something fancier)
