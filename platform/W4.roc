@@ -7,6 +7,7 @@ interface W4
         setDrawColors,
         readGamepad,
         rect,
+        screenWidth,
     ]
     imports [
         Task.{ Task },
@@ -30,6 +31,8 @@ GamePad : {
     up : Bool,
     down : Bool,
 }
+
+screenWidth = 160
 
 ## Draw text to the screen.
 ##

@@ -14,6 +14,7 @@ Program : {
 }
 
 Model : {
+    frameCount : U64,
     snake : Snake,
 }
 
@@ -24,20 +25,50 @@ init : Task Model []
 init =
     {} <- setColorPallet |> Task.await
 
-    Task.ok { snake: startingSnake }
+    Task.ok {
+        frameCount: 0,
+        snake: startingSnake,
+    }
 
 update : Model -> Task Model []
-update = \{ snake } ->
+update = \prev ->
 
-    # Snake body
+    # Read gamepad
+    { left, right, up, down } <- W4.readGamepad Player1 |> Task.await
+
+    # Update frame
+    model = { prev & frameCount: prev.frameCount + 1 }
+
+    # Move snake
+    snake =
+        prev.snake
+        |> \s1 ->
+            if (model.frameCount % 15) == 0 then
+                moveSnake s1
+            else
+                s1
+        |> \s2 ->
+            if left then
+                { s2 & direction: Left }
+            else if right then
+                { s2 & direction: Right }
+            else if up then
+                { s2 & direction: Up }
+            else if down then
+                { s2 & direction: Down }
+            else
+                s2
+
+    # Draw snake body
     {} <- setRectColors { border: blue, fill: green } |> Task.await
     {} <- drawSnakeBody snake |> Task.await
 
-    # Snake head
+    # Draw snake head
     {} <- setRectColors { border: blue, fill: blue } |> Task.await
     {} <- drawSnakeHead snake |> Task.await
 
-    Task.ok { snake }
+    # Return model for next frame
+    Task.ok { model & snake }
 
 # Set the color pallet
 # white = Color1
@@ -85,3 +116,23 @@ setRectColors : { border : W4.Pallet, fill : W4.Pallet } -> Task {} []
 setRectColors = \{ border, fill } ->
     W4.setDrawColors { primary: fill, secondary: border, tertiary: None, quaternary: None }
 
+moveSnake : Snake -> Snake
+moveSnake = \prev ->
+
+    head =
+        when prev.direction is
+            Up -> { x: prev.head.x, y: (prev.head.y + 20 - 1) % 20 }
+            Down -> { x: prev.head.x, y: (prev.head.y + 1) % 20 }
+            Left -> { x: (prev.head.x + 20 - 1) % 20, y: prev.head.y }
+            Right -> { x: (prev.head.x + 1) % 20, y: prev.head.y }
+
+    walkBody : Point, List Point, List Point -> List Point
+    walkBody = \last, remaining, newBody ->
+        when remaining is
+            [] -> newBody
+            [curr, .. as rest] ->
+                walkBody curr (List.dropFirst remaining 1) (List.append newBody last)
+
+    body = walkBody prev.head prev.body []
+
+    { prev & head, body }
