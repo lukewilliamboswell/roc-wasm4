@@ -4,14 +4,23 @@ interface W4
         Mouse,
         Gamepad,
         text,
-        setTextColors,
         setPalette,
         getPalette,
+        # TODO: Think about this color apis and how they should look.
+        # text, oval, and rect use the same colors
+        # all lines use the first colors.
+        # Maybe just setFgColor and SetBgColor?
+        # Also, should we set the other colors to None or keep them at the old value.
         setDrawColors,
+        setTextColors,
+        setRectColors,
         readGamepad,
         readMouse,
         rect,
-        setRectColors,
+        oval,
+        line,
+        hline,
+        vline,
         screenWidth,
         screenHeight,
         rand,
@@ -97,6 +106,8 @@ setTextColors = \{ fg, bg } ->
         quaternary: None,
     }
 
+# TODO: maybe change the follow functions to either take a {x: I32, y: I32} or (I32, I32) just to cleary group points and width/height
+
 ## Draw a rectangle to the screen.
 ##
 ## ```
@@ -110,6 +121,67 @@ setTextColors = \{ fg, bg } ->
 rect : I32, I32, U32, U32 -> Task {} []
 rect = \x, y, width, height ->
     Effect.rect x y width height
+    |> Effect.map Ok
+    |> Task.fromEffect
+
+## Draw an oval to the screen.
+##
+## ```
+## W4.oval x y width height
+## ```
+##
+## Text color is the Primary draw color
+## Background color is the Secondary draw color
+##
+## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#oval-x-y-width-height)
+oval : I32, I32, U32, U32 -> Task {} []
+oval = \x, y, width, height ->
+    Effect.oval x y width height
+    |> Effect.map Ok
+    |> Task.fromEffect
+
+## Draw an line between two points to the screen.
+##
+## ```
+## W4.line x1 y1 x2 y2
+## ```
+##
+## Text color is the Primary draw color
+##
+## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#line-x1-y1-x2-y2)
+line : I32, I32, I32, I32 -> Task {} []
+line = \x1, y1, x2, y2 ->
+    Effect.line x1 y1 x2 y2
+    |> Effect.map Ok
+    |> Task.fromEffect
+
+## Draw a horizontal line starting at (x, y) with len to the screen.
+##
+## ```
+## W4.hline x y len
+## ```
+##
+## Text color is the Primary draw color
+##
+## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#line-x1-y1-x2-y2)
+hline : I32, I32, U32 -> Task {} []
+hline = \x, y, len ->
+    Effect.hline x y len
+    |> Effect.map Ok
+    |> Task.fromEffect
+
+## Draw a vertical line starting at (x, y) with len to the screen.
+##
+## ```
+## W4.vline x y len
+## ```
+##
+## Text color is the Primary draw color
+##
+## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#line-x1-y1-x2-y2)
+vline : I32, I32, U32 -> Task {} []
+vline = \x, y, len ->
+    Effect.vline x y len
     |> Effect.map Ok
     |> Task.fromEffect
 

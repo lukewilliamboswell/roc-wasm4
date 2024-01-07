@@ -180,6 +180,22 @@ export fn roc_fx_rect(x: i32, y: i32, width: u32, height: u32) callconv(.C) void
     w4.rect(x, y, width, height);
 }
 
+export fn roc_fx_oval(x: i32, y: i32, width: u32, height: u32) callconv(.C) void {
+    w4.oval(x, y, width, height);
+}
+
+export fn roc_fx_line(x: i32, y: i32, x2: i32, y2: i32) callconv(.C) void {
+    w4.line(x, y, x2, y2);
+}
+
+export fn roc_fx_hline(x: i32, y: i32, len: u32) callconv(.C) void {
+    w4.hline(x, y, len);
+}
+
+export fn roc_fx_vline(x: i32, y: i32, len: u32) callconv(.C) void {
+    w4.vline(x, y, len);
+}
+
 export fn roc_fx_setPalette(a: u32, b: u32, c: u32, d: u32) callconv(.C) void {
     w4.PALETTE.* = .{ a, b, c, d };
 }
@@ -261,11 +277,7 @@ export fn roc_fx_diskr() callconv(.C) RocList {
 //  - getHideGamepadOverlay
 //  - setHideGamepadOverlay
 //  - getNetplay (will return current play and if netplay active)
-//  - blitSub
-//  - line
-//  - hline
-//  - vline
-//  - oval
+//  - blitSub (we may want to make a SubSprite type instead of directly exposing this function, or make a sprite a tag to suport both full and sub sprites).
 //  - tone
 
 // TODO: figure out nice api for raw frame buffer functions (maybe just get and set pixel, maybe something fancier)

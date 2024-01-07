@@ -13,6 +13,10 @@ hosted Effect
         readGamepad,
         readMouse,
         rect,
+        oval,
+        line,
+        hline,
+        vline,
         rand,
         randRangeLessThan,
         blit,
@@ -30,6 +34,10 @@ setDrawColors : U16 -> Effect {}
 readGamepad : U8 -> Effect U8
 readMouse : Effect { x : i16, y : i16, buttons : U8 }
 rect : I32, I32, U32, U32 -> Effect {}
+oval : I32, I32, U32, U32 -> Effect {}
+line : I32, I32, I32, I32 -> Effect {}
+hline : I32, I32, U32 -> Effect {}
+vline : I32, I32, U32 -> Effect {}
 rand : Effect I32
 randRangeLessThan : I32, I32 -> Effect I32
 blit : List U8, I32, I32, U32, U32, U32 -> Effect {}

@@ -67,6 +67,11 @@ update = \model ->
     {} <- "Mouse R: \(Inspect.toStr mouse.right)" |> W4.text { x: 0, y: 80 } |> Task.await
     {} <- "Mouse M: \(Inspect.toStr mouse.middle)" |> W4.text { x: 0, y: 88 } |> Task.await
 
+    {} <- W4.line 110 10 150 50 |> Task.await
+    {} <- W4.hline 5 52 150 |> Task.await
+    {} <- W4.vline 80 100 10 |> Task.await
+    {} <- W4.oval 70 120 20 50 |> Task.await
+
     # Return the model for next frame
     Task.ok model
 
