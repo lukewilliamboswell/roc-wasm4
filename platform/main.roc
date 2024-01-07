@@ -3,6 +3,7 @@ platform "wasm-4"
     exposes [
         Task,
         W4,
+        Sprite,
     ]
     packages {}
     imports [Task.{ Task }]

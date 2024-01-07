@@ -1,19 +1,19 @@
 interface W4
     exposes [
         Pallet,
+        Sprite,
         text,
-        textColor,
+        setTextColors,
         setPallet,
         setDrawColors,
         readGamepad,
         rect,
+        setRectColors,
         screenWidth,
+        screenHeight,
         rand,
     ]
-    imports [
-        Task.{ Task },
-        Effect.{ Effect },
-    ]
+    imports [Task.{ Task }, Effect.{ Effect }]
 
 Pallet : [None, Color1, Color2, Color3, Color4]
 
@@ -33,23 +33,15 @@ GamePad : {
     down : Bool,
 }
 
-screenWidth = 160
+Sprite := {
+    data : List U8,
+    bpp : [BPP1, BPP2],
+    width : U32,
+    height : U32,
+}
 
-## Draw text to the screen.
-##
-## ```
-## {} <- "Hello World" |> Task.textColor { fg: blue, bg: white } |> Task.await
-## ```
-##
-## Text color is the Primary draw color
-## Background color is the Secondary draw color
-##
-## [Refer w4 docs for more information](https://wasm4.org/docs/guides/text)
-text : Str, { x : I32, y : I32 } -> Task {} []
-text = \str, { x, y } ->
-    Effect.text str x y
-    |> Effect.map Ok
-    |> Task.fromEffect
+screenWidth = 160
+screenHeight = 160
 
 setPallet : { color1 : U32, color2 : U32, color3 : U32, color4 : U32 } -> Task {} []
 setPallet = \{ color1, color2, color3, color4 } ->
@@ -65,6 +57,59 @@ setDrawColors = \colors ->
     |> Effect.map Ok
     |> Task.fromEffect
 
+## Draw text to the screen.
+##
+## ```
+## W4.text "Hello, World" {x: 0, y: 0}
+## ```
+##
+## Text color is the Primary draw color
+## Background color is the Secondary draw color
+##
+## [Refer w4 docs for more information](https://wasm4.org/docs/guides/text)
+text : Str, { x : I32, y : I32 } -> Task {} []
+text = \str, { x, y } ->
+    Effect.text str x y
+    |> Effect.map Ok
+    |> Task.fromEffect
+
+## Helper for colors when drawing text
+setTextColors : { fg : Pallet, bg : Pallet } -> Task {} []
+setTextColors = \{ fg, bg } ->
+    setDrawColors {
+        primary: fg,
+        secondary: bg,
+        tertiary: None,
+        quaternary: None,
+    }
+
+## Draw a rectangle to the screen.
+##
+## ```
+## W4.rect x y width height
+## ```
+##
+## Text color is the Primary draw color
+## Background color is the Secondary draw color
+##
+## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#rect-x-y-width-height)
+rect : I32, I32, U32, U32 -> Task {} []
+rect = \x, y, width, height ->
+    Effect.rect x y width height
+    |> Effect.map Ok
+    |> Task.fromEffect
+
+## Helper for colors when drawing a rectangle
+setRectColors : { border : W4.Pallet, fill : W4.Pallet } -> Task {} []
+setRectColors = \{ border, fill } ->
+    setDrawColors {
+        primary: fill,
+        secondary: border,
+        tertiary: None,
+        quaternary: None,
+    }
+
+## Read the controls for a GamePad
 readGamepad : [Player1, Player2, Player3, Player4] -> Task GamePad []
 readGamepad = \player ->
 
@@ -93,20 +138,14 @@ readGamepad = \player ->
         }
     |> Task.fromEffect
 
-rect : I32, I32, U32, U32 -> Task {} []
-rect = \x, y, width, height ->
-    Effect.rect x y width height
+## Generate a psuedo-random number
+rand : Task I32 []
+rand =
+    Effect.rand
     |> Effect.map Ok
     |> Task.fromEffect
 
-textColor : { fg : Pallet, bg : Pallet } -> Task {} []
-textColor = \{ fg, bg } ->
-    setDrawColors {
-        primary: fg,
-        secondary: bg,
-        tertiary: None,
-        quaternary: None,
-    }
+# HELPERS ------
 
 toColorFlags : DrawColors -> U16
 toColorFlags = \{ primary, secondary, tertiary, quaternary } ->
@@ -151,9 +190,3 @@ toColorFlags = \{ primary, secondary, tertiary, quaternary } ->
 
 expect toColorFlags { primary: Color2, secondary: Color4, tertiary: None, quaternary: None } == 0x0042
 expect toColorFlags { primary: Color1, secondary: Color2, tertiary: Color3, quaternary: Color4 } == 0x4321
-
-rand : Task I32 []
-rand =
-    Effect.rand
-    |> Effect.map Ok
-    |> Task.fromEffect

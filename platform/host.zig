@@ -5,6 +5,12 @@ const w4 = @import("wasm4.zig");
 
 const str = @import("str.zig");
 const RocStr = str.RocStr;
+
+const list = @import("list.zig");
+const RocList = list.RocList;
+
+const utils = @import("utils.zig");
+
 const ALIGN = 2 * @alignOf(usize);
 
 const TRACE_ALLOC = false;
@@ -192,4 +198,12 @@ export fn roc_fx_readGamepad(gamepad_number: u8) callconv(.C) u8 {
 
 export fn roc_fx_rand() callconv(.C) i32 {
     return rnd.random().int(i32);
+}
+
+export fn roc_fx_blit(bytes: *RocList, x: i32, y: i32, width: u32, height: u32, flags: u32) callconv(.C) void {
+
+    // TODO I fix the sprite.. not getting the right bytes here I think
+    const data: [*]const u8 = bytes.elements(u8).?;
+
+    w4.blit(data, x, y, width, height, flags);
 }

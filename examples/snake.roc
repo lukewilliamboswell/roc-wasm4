@@ -5,6 +5,7 @@ app "snake"
     imports [
         w4.Task.{ Task },
         w4.W4,
+        w4.Sprite.{ Sprite },
     ]
     provides [main, Model] to w4
 
@@ -17,6 +18,7 @@ Model : {
     frameCount : U64,
     snake : Snake,
     fruit : List Point,
+    fruitSprite : Sprite,
 }
 
 main : Program
@@ -28,10 +30,18 @@ init =
 
     fruit1 <- getRandomFruit |> Task.await
 
+    fruitSprite = Sprite.new {
+        data: [0x00, 0xa0, 0x02, 0x00, 0x0e, 0xf0, 0x36, 0x5c, 0xd6, 0x57, 0xd5, 0x57, 0x35, 0x5c, 0x0f, 0xf0],
+        bpp: BPP1,
+        width: 8,
+        height: 8,
+    }
+
     Task.ok {
         frameCount: 0,
         snake: startingSnake,
         fruit: [fruit1],
+        fruitSprite,
     }
 
 update : Model -> Task Model []
@@ -63,12 +73,22 @@ update = \prev ->
             else
                 s2
 
+    # Draw fruit
+    {} <- W4.setDrawColors {
+            primary: Color1,
+            secondary: Color2,
+            tertiary: Color3,
+            quaternary: Color4,
+        }
+        |> Task.await
+    {} <- Sprite.blit { x: 20, y: 20, flags: [] } model.fruitSprite |> Task.await
+
     # Draw snake body
-    {} <- setRectColors { border: blue, fill: green } |> Task.await
+    {} <- W4.setRectColors { border: blue, fill: green } |> Task.await
     {} <- drawSnakeBody snake |> Task.await
 
     # Draw snake head
-    {} <- setRectColors { border: blue, fill: blue } |> Task.await
+    {} <- W4.setRectColors { border: blue, fill: blue } |> Task.await
     {} <- drawSnakeHead snake |> Task.await
 
     # Return model for next frame
@@ -115,10 +135,6 @@ drawSnakeBody = \snake ->
 drawSnakeHead : Snake -> Task {} []
 drawSnakeHead = \snake ->
     W4.rect (snake.head.x * 8) (snake.head.y * 8) 8 8
-
-setRectColors : { border : W4.Pallet, fill : W4.Pallet } -> Task {} []
-setRectColors = \{ border, fill } ->
-    W4.setDrawColors { primary: fill, secondary: border, tertiary: None, quaternary: None }
 
 moveSnake : Snake -> Snake
 moveSnake = \prev ->
