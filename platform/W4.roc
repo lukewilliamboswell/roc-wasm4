@@ -17,6 +17,8 @@ interface W4
         rand,
         randRangeLessThan,
         trace,
+        saveToDisk,
+        loadFromDisk,
     ]
     imports [Task.{ Task }, Effect.{ Effect }]
 
@@ -192,6 +194,40 @@ randRangeLessThan = \start, end ->
 trace : Str -> Task {} []
 trace = \str ->
     Effect.trace str
+    |> Effect.map Ok
+    |> Task.fromEffect
+
+## Writes the passed in data to persistant storage.
+## Any previously saved data on the disk is replaced.
+## Returns `Err SaveFailed` on failure.
+##
+## ```
+## W4.saveToDisk [0x10]
+## ```
+##
+## Games can persist up to 1024 bytes of data.
+## [Refer w4 docs for more information](https://wasm4.org/docs/guides/diskw)
+saveToDisk : List U8 -> Task {} [SaveFailed]
+saveToDisk = \data ->
+    Effect.diskw data
+    |> Effect.map \succeeded ->
+        if succeeded then
+            Ok {}
+        else
+            Err SaveFailed
+    |> Task.fromEffect
+
+## Reads all saved data from persistant storage.
+##
+## ```
+## data <- W4.loadFromDisk |> Task.await
+## ```
+##
+## Games can persist up to 1024 bytes of data.
+## [Refer w4 docs for more information](https://wasm4.org/docs/guides/diskw)
+loadFromDisk : Task (List U8) []
+loadFromDisk =
+    Effect.diskr
     |> Effect.map Ok
     |> Task.fromEffect
 

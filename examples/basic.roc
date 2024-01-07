@@ -21,6 +21,16 @@ main = { init, update }
 init : Task Model []
 init =
 
+    savedData <- W4.loadFromDisk |> Task.await
+    saves =
+        when List.first savedData is
+            Ok v -> v
+            Err _ -> 0
+
+    {} <- "Game has been loaded \(Inspect.toStr saves) times" |> W4.trace |> Task.await
+    # Ignore save failures
+    _ <- W4.saveToDisk [Num.addWrap saves 1] |> Task.attempt
+
     {} <- setColorPalette |> Task.await
     {} <- setDrawColors |> Task.await
 

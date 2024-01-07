@@ -17,6 +17,8 @@ hosted Effect
         randRangeLessThan,
         blit,
         trace,
+        diskw,
+        diskr,
     ]
     imports []
     generates Effect with [after, map, always, forever, loop]
@@ -32,3 +34,5 @@ rand : Effect I32
 randRangeLessThan : I32, I32 -> Effect I32
 blit : List U8, I32, I32, U32, U32, U32 -> Effect {}
 trace : Str -> Effect {}
+diskw : List U8 -> Effect Bool
+diskr : Effect (List U8)

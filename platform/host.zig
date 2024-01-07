@@ -229,6 +229,31 @@ export fn roc_fx_blit(bytes: *RocList, x: i32, y: i32, width: u32, height: u32, 
     w4.blit(data, x, y, width, height, flags);
 }
 
+// Max size according to https://wasm4.org/docs/reference/functions#storage
+const MAX_DISK_SIZE = 1024;
+
+export fn roc_fx_diskw(bytes: *RocList) callconv(.C) bool {
+    if (bytes.len() > MAX_DISK_SIZE) {
+        // Not possible to save all bytes.
+        return false;
+    }
+    const data: [*]const u8 = bytes.elements(u8).?;
+
+    const written = w4.diskw(data, bytes.len());
+    return written == bytes.len();
+}
+
+export fn roc_fx_diskr() callconv(.C) RocList {
+    // This is just gonna always read as many bytes as possible.
+    var out = RocList.allocateExact(@alignOf(u8), 1024, @sizeOf(u8));
+
+    const data: [*]u8 = out.elements(u8).?;
+    const read = w4.diskr(data, MAX_DISK_SIZE);
+    out.length = read;
+
+    return out;
+}
+
 // TODO: add the following
 //  - getDrawColors
 //  - getPerserveFrame
@@ -242,7 +267,5 @@ export fn roc_fx_blit(bytes: *RocList, x: i32, y: i32, width: u32, height: u32, 
 //  - vline
 //  - oval
 //  - tone
-//  - diskr
-//  - diskw
 
 // TODO: figure out nice api for raw frame buffer functions (maybe just get and set pixel, maybe something fancier)
