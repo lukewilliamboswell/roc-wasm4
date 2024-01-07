@@ -54,6 +54,12 @@ pub fn build(b: *std.Build) !void {
     const w4 = b.addSystemCommand(&[_][]const u8{ "w4", "run" });
     w4.addArtifactArg(lib);
 
-    const run = b.step("run", "run the file w4 game");
+    const run = b.step("run", "compile and run the game in the browsers");
     run.dependOn(&w4.step);
+
+    const w4_native = b.addSystemCommand(&[_][]const u8{ "w4", "run-native" });
+    w4_native.addArtifactArg(lib);
+
+    const run_native = b.step("run-native", "compile and run the game in a native app");
+    run_native.dependOn(&w4_native.step);
 }
