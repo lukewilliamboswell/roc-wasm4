@@ -11,6 +11,7 @@ interface Task
         map,
         fromResult,
         fromEffect,
+        loop,
     ]
     imports [
         Effect.{ Effect },
@@ -88,3 +89,18 @@ fromResult = \result ->
     when result is
         Ok a -> ok a
         Err b -> err b
+
+loop : state, (state -> Task [Step state, Done done] err) -> Task done err
+loop = \state, step ->
+    looper = \current ->
+        step current
+        |> toEffect
+        |> Effect.map
+            \res ->
+                when res is
+                    Ok (Step newState) -> Step newState
+                    Ok (Done result) -> Done (Ok result)
+                    Err e -> Done (Err e)
+
+    Effect.loop state looper
+    |> fromEffect

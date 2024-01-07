@@ -28,7 +28,7 @@ init : Task Model []
 init =
     {} <- setColorPallet |> Task.await
 
-    startingFruit <- getRandomFruit |> Task.await
+    startingFruit <- getRandomFruit startingSnake |> Task.await
 
     fruitSprite = Sprite.new {
         data: [0x00, 0xa0, 0x02, 0x00, 0x0e, 0xf0, 0x36, 0x5c, 0xd6, 0x57, 0xd5, 0x57, 0x35, 0x5c, 0x0f, 0xf0],
@@ -84,7 +84,7 @@ runGame = \prev ->
     fruitTask =
         when fruitEaten is
             Eaten ->
-                getRandomFruit
+                getRandomFruit snake
 
             NotEaten ->
                 Task.ok model.fruit
@@ -202,10 +202,17 @@ snakeIsDead : Snake -> Bool
 snakeIsDead = \{ head, body } ->
     List.contains body head
 
-getRandomFruit : Task Fruit []
-getRandomFruit =
-    x <- W4.randRangeLessThan 0 20 |> Task.await
-    y <- W4.randRangeLessThan 0 20 |> Task.await
+getRandomFruit : Snake -> Task Fruit []
+getRandomFruit = \{ head, body } ->
+    # Will the perf of this be bad with a large snake?
+    # The better alternative may be to have a free square list and randomly select one.
+    Task.loop {} \{} ->
+        x <- W4.randRangeLessThan 0 20 |> Task.await
+        y <- W4.randRangeLessThan 0 20 |> Task.await
 
-    Task.ok { x, y }
+        fruit = { x, y }
+        if fruit == head || List.contains body fruit then
+            Step {} |> Task.ok
+        else
+            Done fruit |> Task.ok
 
