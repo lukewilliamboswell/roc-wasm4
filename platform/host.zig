@@ -245,7 +245,7 @@ export fn roc_fx_diskw(bytes: *RocList) callconv(.C) bool {
 
 export fn roc_fx_diskr() callconv(.C) RocList {
     // This is just gonna always read as many bytes as possible.
-    var out = RocList.allocateExact(@alignOf(u8), 1024, @sizeOf(u8));
+    var out = RocList.allocateExact(@alignOf(u8), MAX_DISK_SIZE, @sizeOf(u8));
 
     const data: [*]u8 = out.elements(u8).?;
     const read = w4.diskr(data, MAX_DISK_SIZE);
