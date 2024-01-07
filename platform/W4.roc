@@ -3,6 +3,8 @@ interface W4
         Palette,
         Mouse,
         Gamepad,
+        Netplay,
+        Player,
         text,
         setPalette,
         getPalette,
@@ -16,6 +18,7 @@ interface W4
         setRectColors,
         readGamepad,
         readMouse,
+        readNetplay,
         rect,
         oval,
         line,
@@ -56,6 +59,13 @@ Mouse : {
     right : Bool,
     middle : Bool,
 }
+
+Netplay : [
+    Enabled Player,
+    Disabled,
+]
+
+Player : [Player1, Player2, Player3, Player4]
 
 screenWidth = 160
 screenHeight = 160
@@ -196,7 +206,7 @@ setRectColors = \{ border, fill } ->
     }
 
 ## Read the controls for a Gamepad
-readGamepad : [Player1, Player2, Player3, Player4] -> Task Gamepad []
+readGamepad : Player -> Task Gamepad []
 readGamepad = \player ->
 
     gamepadNumber =
@@ -239,6 +249,25 @@ readMouse =
             # 4 MOUSE_MIDDLE
             middle: Num.bitwiseAnd 0b0000_0100 buttons > 0,
         }
+    |> Task.fromEffect
+
+## Read the netplay status
+readNetplay : Task Netplay []
+readNetplay =
+    Effect.readNetplay
+    |> Effect.map \flags ->
+        enabled = Num.bitwiseAnd 0b0000_0100 flags > 0
+        if enabled then
+            player =
+                when Num.bitwiseAnd 0b0000_0011 flags is
+                    0 -> Player1
+                    1 -> Player2
+                    2 -> Player3
+                    3 -> Player4
+                    _ -> crash "It is impossible for this value to be greater than 3"
+            Ok (Enabled player)
+        else
+            Ok Disabled
     |> Task.fromEffect
 
 ## Generate a psuedo-random number

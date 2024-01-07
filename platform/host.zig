@@ -231,6 +231,10 @@ export fn roc_fx_readMouse() callconv(.C) RocMouse {
     return .{ .x = w4.MOUSE_X.*, .y = w4.MOUSE_Y.*, .buttons = w4.MOUSE_BUTTONS.* };
 }
 
+export fn roc_fx_readNetplay() callconv(.C) u8 {
+    return w4.NETPLAY.*;
+}
+
 export fn roc_fx_rand() callconv(.C) i32 {
     return rnd.int(i32);
 }
