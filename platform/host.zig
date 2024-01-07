@@ -228,3 +228,21 @@ export fn roc_fx_blit(bytes: *RocList, x: i32, y: i32, width: u32, height: u32, 
 
     w4.blit(data, x, y, width, height, flags);
 }
+
+// TODO: add the following
+//  - getDrawColors
+//  - getPerserveFrame
+//  - setPerserveFrame
+//  - getHideGamepadOverlay
+//  - setHideGamepadOverlay
+//  - getNetplay (will return current play and if netplay active)
+//  - blitSub
+//  - line
+//  - hline
+//  - vline
+//  - oval
+//  - tone
+//  - diskr
+//  - diskw
+
+// TODO: figure out nice api for raw frame buffer functions (maybe just get and set pixel, maybe something fancier)
