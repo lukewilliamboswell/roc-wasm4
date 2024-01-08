@@ -2,6 +2,9 @@ interface Sprite
     exposes [Sprite, new, blit, blitSub]
     imports [Task.{ Task }, Effect.{ Effect }]
 
+# TODO: add api docs
+# TODO: add functionality to modify a sprite
+
 Sprite := {
     data : List U8,
     bpp : [BPP1, BPP2],
