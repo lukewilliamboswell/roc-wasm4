@@ -12,8 +12,9 @@ pub fn build(b: *std.Build) !void {
         roc_lib.addFileArg(.{ .path = val });
         roc_check.addFileArg(.{ .path = val });
     } else {
-        roc_lib.addFileArg(.{ .path = "examples/basic.roc" });
-        roc_check.addFileArg(.{ .path = "examples/basic.roc" });
+        const default_path = "examples/snake.roc";
+        roc_lib.addFileArg(.{ .path = default_path });
+        roc_check.addFileArg(.{ .path = default_path });
     }
 
     roc_lib.addArg("--output");
