@@ -1,6 +1,6 @@
 interface Sprite
     exposes [Sprite, new, blit, blitSub]
-    imports [InternalTask.{ Task }, Effect.{ Effect }]
+    imports [InternalTask, Task.{ Task }, Effect.{ Effect }]
 
 # TODO: add api docs
 # TODO: add functionality to modify a sprite

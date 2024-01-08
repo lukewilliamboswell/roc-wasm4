@@ -34,7 +34,7 @@ interface W4
         showGamepadOverlay,
         tone,
     ]
-    imports [InternalTask.{ Task }, Effect.{ Effect }]
+    imports [InternalTask, Task.{ Task }, Effect.{ Effect }]
 
 # TODO: add api docs
 
