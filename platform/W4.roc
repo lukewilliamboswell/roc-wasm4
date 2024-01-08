@@ -28,6 +28,10 @@ interface W4
         trace,
         saveToDisk,
         loadFromDisk,
+        perserveFrameBuffer,
+        clearFrameBufferEachUpdate,
+        hideGamepadOverlay,
+        showGamepadOverlay,
     ]
     imports [Task.{ Task }, Effect.{ Effect }]
 
@@ -343,6 +347,30 @@ saveToDisk = \data ->
 loadFromDisk : Task (List U8) []
 loadFromDisk =
     Effect.diskr
+    |> Effect.map Ok
+    |> Task.fromEffect
+
+perserveFrameBuffer : Task {} []
+perserveFrameBuffer =
+    Effect.setPerserveFrameBuffer Bool.true
+    |> Effect.map Ok
+    |> Task.fromEffect
+
+clearFrameBufferEachUpdate : Task {} []
+clearFrameBufferEachUpdate =
+    Effect.setPerserveFrameBuffer Bool.false
+    |> Effect.map Ok
+    |> Task.fromEffect
+
+hideGamepadOverlay : Task {} []
+hideGamepadOverlay =
+    Effect.setHideGamepadOverlay Bool.true
+    |> Effect.map Ok
+    |> Task.fromEffect
+
+showGamepadOverlay : Task {} []
+showGamepadOverlay =
+    Effect.setHideGamepadOverlay Bool.false
     |> Effect.map Ok
     |> Task.fromEffect
 

@@ -278,14 +278,23 @@ export fn roc_fx_diskr() callconv(.C) RocList {
     return out;
 }
 
+export fn roc_fx_setPerserveFrameBuffer(perserve: bool) callconv(.C) void {
+    if (perserve) {
+        w4.SYSTEM_FLAGS.* |= w4.SYSTEM_PRESERVE_FRAMEBUFFER;
+    } else {
+        w4.SYSTEM_FLAGS.* &= ~w4.SYSTEM_PRESERVE_FRAMEBUFFER;
+    }
+}
+
+export fn roc_fx_setHideGamepadOverlay(hide: bool) callconv(.C) void {
+    if (hide) {
+        w4.SYSTEM_FLAGS.* |= w4.SYSTEM_HIDE_GAMEPAD_OVERLAY;
+    } else {
+        w4.SYSTEM_FLAGS.* &= ~w4.SYSTEM_HIDE_GAMEPAD_OVERLAY;
+    }
+}
 // TODO: add the following
-//  - getDrawColors (this will be needed if a function wants to temporarily change draw colors and the reset back to the old value)
 //  - blitSub (we may want to make a SubSprite type instead of directly exposing this function, or make a sprite a tag to suport both full and sub sprites).
-//  - tone
-//  ... Maybe just expose these from the host as get/setSystemFlags. Then in the platform make the subfunctions?
-//  - setPerserveFrame (perserveFrame and resetFrame?)
-//  - setHideGamepadOverlay (showGamepadOverlay and hideGamepadOverlay?)
-//  - getPerserveFrame (maybe not needed cause only ever set by user)
-//  - getHideGamepadOverlay (maybe not needed cause only ever set by user)
+//  - tone (finding a good api may be interesting)
 
 // TODO: figure out nice api for raw frame buffer functions (maybe just get and set pixel, maybe something fancier)
