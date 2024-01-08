@@ -32,3 +32,20 @@ The `build.zig` script reports any warnings or errors for the app using `roc che
 
 ![sound demo](/examples/sound.gif)
 
+### Bundling a Game for Release
+
+To release a game, first build it with optimizations by adding `-Doptimize=ReleaseSmall`.
+Then bundle it [like any other wasm4 game](https://wasm4.org/docs/guides/distribution/) using the generate cartidge in `zig-out/lib/cart.wasm`.
+
+For example, a web release can be built with:
+```shell
+w4 bundle zig-out/lib/cart.wasm --title "My Game" --html my-game.html
+```
+
+For windows/mac/linux, a bundling command could look like:
+```shell
+w4 bundle zig-out/lib/cart.wasm --title "My Game" \
+    --windows my-game-windows.exe \
+    --mac my-game-mac \
+    --linux my-game-linux
+```
