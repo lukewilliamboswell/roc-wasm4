@@ -107,7 +107,7 @@ drawGame = \model ->
             quaternary: blue,
         }
         |> Task.await
-    {} <- Sprite.blit { x: model.fruit.x * 8, y: model.fruit.y * 8, flags: [] } model.fruitSprite |> Task.await
+    {} <- Sprite.blit model.fruitSprite { x: model.fruit.x * 8, y: model.fruit.y * 8 } |> Task.await
 
     # Draw snake body
     {} <- W4.setShapeColors { border: blue, fill: green } |> Task.await

@@ -22,8 +22,8 @@ new :
     -> Sprite
 new = @Sprite
 
-blit : { x : I32, y : I32, flags : List [FlipX, FlipY, Rotate] }, Sprite -> Task {} []
-blit = \{ x, y, flags }, @Sprite { data, bpp, width, height } ->
+blit : Sprite, { x : I32, y : I32, flags ? List [FlipX, FlipY, Rotate] } -> Task {} []
+blit = \@Sprite { data, bpp, width, height }, { x, y, flags ? [] } ->
 
     format =
         when bpp is
@@ -41,8 +41,8 @@ blit = \{ x, y, flags }, @Sprite { data, bpp, width, height } ->
     |> Effect.map Ok
     |> Task.fromEffect
 
-blitSub : { x : I32, y : I32, srcX : U32, srcY : U32, width : U32, height : U32, flags : List [FlipX, FlipY, Rotate] }, Sprite -> Task {} []
-blitSub = \{ x, y, srcX, srcY, width, height, flags }, @Sprite { data, bpp, width: stride } ->
+blitSub : Sprite, { x : I32, y : I32, srcX : U32, srcY : U32, width : U32, height : U32, flags ? List [FlipX, FlipY, Rotate] } -> Task {} []
+blitSub = \@Sprite { data, bpp, width: stride }, { x, y, srcX, srcY, width, height, flags ? [] } ->
 
     format =
         when bpp is
