@@ -1,6 +1,6 @@
 interface Sprite
     exposes [Sprite, new, blit, blitSub]
-    imports [Task.{ Task }, Effect.{ Effect }]
+    imports [InternalTask.{ Task }, Effect.{ Effect }]
 
 # TODO: add api docs
 # TODO: add functionality to modify a sprite
@@ -39,7 +39,7 @@ blit = \@Sprite { data, bpp, width, height }, { x, y, flags ? [] } ->
 
     Effect.blit data x y width height combined
     |> Effect.map Ok
-    |> Task.fromEffect
+    |> InternalTask.fromEffect
 
 blitSub : Sprite, { x : I32, y : I32, srcX : U32, srcY : U32, width : U32, height : U32, flags ? List [FlipX, FlipY, Rotate] } -> Task {} []
 blitSub = \@Sprite { data, bpp, width: stride }, { x, y, srcX, srcY, width, height, flags ? [] } ->
@@ -58,4 +58,4 @@ blitSub = \@Sprite { data, bpp, width: stride }, { x, y, srcX, srcY, width, heig
 
     Effect.blitSub data x y width height srcX srcY stride combined
     |> Effect.map Ok
-    |> Task.fromEffect
+    |> InternalTask.fromEffect

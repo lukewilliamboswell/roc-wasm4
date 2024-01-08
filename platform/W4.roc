@@ -34,7 +34,7 @@ interface W4
         showGamepadOverlay,
         tone,
     ]
-    imports [Task.{ Task }, Effect.{ Effect }]
+    imports [InternalTask.{ Task }, Effect.{ Effect }]
 
 # TODO: add api docs
 
@@ -78,13 +78,13 @@ setPalette : { color1 : U32, color2 : U32, color3 : U32, color4 : U32 } -> Task 
 setPalette = \{ color1, color2, color3, color4 } ->
     Effect.setPalette color1 color2 color3 color4
     |> Effect.map Ok
-    |> Task.fromEffect
+    |> InternalTask.fromEffect
 
 getPalette : Task { color1 : U32, color2 : U32, color3 : U32, color4 : U32 } []
 getPalette =
     Effect.getPalette
     |> Effect.map Ok
-    |> Task.fromEffect
+    |> InternalTask.fromEffect
 
 setDrawColors : DrawColors -> Task {} []
 setDrawColors = \colors ->
@@ -92,14 +92,14 @@ setDrawColors = \colors ->
     |> toColorFlags
     |> Effect.setDrawColors
     |> Effect.map Ok
-    |> Task.fromEffect
+    |> InternalTask.fromEffect
 
 getDrawColors : Task DrawColors []
 getDrawColors =
     Effect.getDrawColors
     |> Effect.map fromColorFlags
     |> Effect.map Ok
-    |> Task.fromEffect
+    |> InternalTask.fromEffect
 
 ## Draw text to the screen.
 ##
@@ -115,7 +115,7 @@ text : Str, { x : I32, y : I32 } -> Task {} []
 text = \str, { x, y } ->
     Effect.text str x y
     |> Effect.map Ok
-    |> Task.fromEffect
+    |> InternalTask.fromEffect
 
 ## Helper for colors when drawing text
 setTextColors : { fg : Palette, bg : Palette } -> Task {} []
@@ -143,7 +143,7 @@ rect : I32, I32, U32, U32 -> Task {} []
 rect = \x, y, width, height ->
     Effect.rect x y width height
     |> Effect.map Ok
-    |> Task.fromEffect
+    |> InternalTask.fromEffect
 
 ## Draw an oval to the screen.
 ##
@@ -159,7 +159,7 @@ oval : I32, I32, U32, U32 -> Task {} []
 oval = \x, y, width, height ->
     Effect.oval x y width height
     |> Effect.map Ok
-    |> Task.fromEffect
+    |> InternalTask.fromEffect
 
 ## Draw an line between two points to the screen.
 ##
@@ -174,7 +174,7 @@ line : I32, I32, I32, I32 -> Task {} []
 line = \x1, y1, x2, y2 ->
     Effect.line x1 y1 x2 y2
     |> Effect.map Ok
-    |> Task.fromEffect
+    |> InternalTask.fromEffect
 
 ## Draw a horizontal line starting at (x, y) with len to the screen.
 ##
@@ -189,7 +189,7 @@ hline : I32, I32, U32 -> Task {} []
 hline = \x, y, len ->
     Effect.hline x y len
     |> Effect.map Ok
-    |> Task.fromEffect
+    |> InternalTask.fromEffect
 
 ## Draw a vertical line starting at (x, y) with len to the screen.
 ##
@@ -204,7 +204,7 @@ vline : I32, I32, U32 -> Task {} []
 vline = \x, y, len ->
     Effect.vline x y len
     |> Effect.map Ok
-    |> Task.fromEffect
+    |> InternalTask.fromEffect
 
 ## Helper for colors when drawing a shape
 setShapeColors : { border : W4.Palette, fill : W4.Palette } -> Task {} []
@@ -253,7 +253,7 @@ readGamepad = \player ->
             # 128 BUTTON_DOWN
             down: Num.bitwiseAnd 0b1000_0000 flags > 0,
         }
-    |> Task.fromEffect
+    |> InternalTask.fromEffect
 
 ## Read the mouse input
 readMouse : Task Mouse []
@@ -270,7 +270,7 @@ readMouse =
             # 4 MOUSE_MIDDLE
             middle: Num.bitwiseAnd 0b0000_0100 buttons > 0,
         }
-    |> Task.fromEffect
+    |> InternalTask.fromEffect
 
 ## Read the netplay status
 readNetplay : Task Netplay []
@@ -289,14 +289,14 @@ readNetplay =
             Ok (Enabled player)
         else
             Ok Disabled
-    |> Task.fromEffect
+    |> InternalTask.fromEffect
 
 ## Generate a psuedo-random number
 rand : Task I32 []
 rand =
     Effect.rand
     |> Effect.map Ok
-    |> Task.fromEffect
+    |> InternalTask.fromEffect
 
 ## Generate a psuedo-random number in specified range
 ## The range has an inclusive start and exclusive end
@@ -304,7 +304,7 @@ randRangeLessThan : I32, I32 -> Task I32 []
 randRangeLessThan = \start, end ->
     Effect.randRangeLessThan start end
     |> Effect.map Ok
-    |> Task.fromEffect
+    |> InternalTask.fromEffect
 
 ## Prints a message to the debug console.
 ##
@@ -317,7 +317,7 @@ trace : Str -> Task {} []
 trace = \str ->
     Effect.trace str
     |> Effect.map Ok
-    |> Task.fromEffect
+    |> InternalTask.fromEffect
 
 ## Writes the passed in data to persistant storage.
 ## Any previously saved data on the disk is replaced.
@@ -337,7 +337,7 @@ saveToDisk = \data ->
             Ok {}
         else
             Err SaveFailed
-    |> Task.fromEffect
+    |> InternalTask.fromEffect
 
 ## Reads all saved data from persistant storage.
 ##
@@ -351,31 +351,31 @@ loadFromDisk : Task (List U8) []
 loadFromDisk =
     Effect.diskr
     |> Effect.map Ok
-    |> Task.fromEffect
+    |> InternalTask.fromEffect
 
 preserveFrameBuffer : Task {} []
 preserveFrameBuffer =
     Effect.setPreserveFrameBuffer Bool.true
     |> Effect.map Ok
-    |> Task.fromEffect
+    |> InternalTask.fromEffect
 
 clearFrameBufferEachUpdate : Task {} []
 clearFrameBufferEachUpdate =
     Effect.setPreserveFrameBuffer Bool.false
     |> Effect.map Ok
-    |> Task.fromEffect
+    |> InternalTask.fromEffect
 
 hideGamepadOverlay : Task {} []
 hideGamepadOverlay =
     Effect.setHideGamepadOverlay Bool.true
     |> Effect.map Ok
-    |> Task.fromEffect
+    |> InternalTask.fromEffect
 
 showGamepadOverlay : Task {} []
 showGamepadOverlay =
     Effect.setHideGamepadOverlay Bool.false
     |> Effect.map Ok
-    |> Task.fromEffect
+    |> InternalTask.fromEffect
 
 # TODO: add doc and test for encoding into correct format
 tone :
@@ -452,7 +452,7 @@ tone = \{ startFreq ? 0, endFreq ? 0, channel ? Pulse1 Eighth, pan ? Center, sus
 
     Effect.tone freq duration volumeBits flags
     |> Effect.map Ok
-    |> Task.fromEffect
+    |> InternalTask.fromEffect
 
 # HELPERS ------
 
