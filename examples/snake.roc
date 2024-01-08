@@ -4,7 +4,7 @@ app "snake"
     }
     imports [
         w4.Task.{ Task },
-        w4.W4,
+        w4.W4.{ Gamepad },
         w4.Sprite.{ Sprite },
     ]
     provides [main, Model] to w4
@@ -59,34 +59,21 @@ runGame : Model -> Task Model []
 runGame = \prev ->
 
     # Read gamepad
-    { left, right, up, down } <- W4.readGamepad Player1 |> Task.await
+    gamepad <- W4.readGamepad Player1 |> Task.await
 
     # Update frame
     model = { prev & frameCount: prev.frameCount + 1 }
 
-    # Move snake
-    (snake, fruitEaten) =
-        prev.snake
-        |> \s ->
-            if left then
-                { s & direction: Left }
-            else if right then
-                { s & direction: Right }
-            else if up then
-                { s & direction: Up }
-            else if down then
-                { s & direction: Down }
-            else
-                s
-        |> \s ->
-            updateSnake s model.frameCount model.fruit
+    # Update snake
+    (snake, ate) =
+        updateSnake model.snake gamepad model.frameCount model.fruit
 
     fruitTask =
-        when fruitEaten is
-            Eaten ->
+        when ate is
+            AteFruit ->
                 getRandomFruit snake
 
-            NotEaten ->
+            DidNotEat ->
                 Task.ok model.fruit
     fruit <- fruitTask |> Task.await
 
@@ -161,16 +148,32 @@ drawSnakeHead : Snake -> Task {} []
 drawSnakeHead = \snake ->
     W4.rect (snake.head.x * 8) (snake.head.y * 8) 8 8
 
-updateSnake : Snake, U64, Fruit -> (Snake, [Eaten, NotEaten])
-updateSnake = \prev, frameCount, fruit ->
-    if (frameCount % 15) == 0 then
-        moved = moveSnake prev
-        if moved.head == fruit then
-            (growSnake moved, Eaten)
+updateSnake : Snake, Gamepad, U64, Fruit -> (Snake, [AteFruit, DidNotEat])
+updateSnake = \s0, { left, right, up, down }, frameCount, fruit ->
+    # Always record direction changes
+    s1 =
+        if left && !right then
+            { s0 & direction: Left }
+        else if right && !left then
+            { s0 & direction: Right }
+        else if up && !down then
+            { s0 & direction: Up }
+        else if down && !up then
+            { s0 & direction: Down }
         else
-            (moved, NotEaten)
+            s0
+
+    # Only move every 0.25 seconds (15 of 60 frames)
+    s2 =
+        if (frameCount % 15) == 0 then
+            moveSnake s1
+        else
+            s1
+
+    if s2.head == fruit then
+        (growSnake s2, AteFruit)
     else
-        (prev, NotEaten)
+        (s2, DidNotEat)
 
 moveSnake : Snake -> Snake
 moveSnake = \prev ->
