@@ -64,6 +64,4 @@ pub fn build(b: *std.Build) !void {
 
     const run_native = b.step("run-native", "compile and run the game in a native app");
     run_native.dependOn(&w4_native.step);
-
-    // TODO: add automatic bundle command: https://wasm4.org/docs/guides/distribution#bundle-to-windowsmaclinux-executable
 }
