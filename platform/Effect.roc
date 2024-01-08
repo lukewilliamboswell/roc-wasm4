@@ -23,6 +23,7 @@ hosted Effect
         rand,
         randRangeLessThan,
         blit,
+        blitSub,
         trace,
         diskw,
         diskr,
@@ -48,6 +49,7 @@ vline : I32, I32, U32 -> Effect {}
 rand : Effect I32
 randRangeLessThan : I32, I32 -> Effect I32
 blit : List U8, I32, I32, U32, U32, U32 -> Effect {}
+blitSub : List U8, I32, I32, U32, U32, U32, U32, U32, U32 -> Effect {}
 trace : Str -> Effect {}
 diskw : List U8 -> Effect Bool
 diskr : Effect (List U8)

@@ -253,6 +253,12 @@ export fn roc_fx_blit(bytes: *RocList, x: i32, y: i32, width: u32, height: u32, 
     w4.blit(data, x, y, width, height, flags);
 }
 
+export fn roc_fx_blitSub(bytes: *RocList, x: i32, y: i32, width: u32, height: u32, srcX: u32, srcY: u32, stride: u32, flags: u32) callconv(.C) void {
+    const data: [*]const u8 = bytes.elements(u8).?;
+
+    w4.blitSub(data, x, y, width, height, srcX, srcY, stride, flags);
+}
+
 // Max size according to https://wasm4.org/docs/reference/functions#storage
 const MAX_DISK_SIZE = 1024;
 
@@ -294,7 +300,6 @@ export fn roc_fx_setHideGamepadOverlay(hide: bool) callconv(.C) void {
     }
 }
 // TODO: add the following
-//  - blitSub (we may want to make a SubSprite type instead of directly exposing this function, or make a sprite a tag to suport both full and sub sprites).
 //  - tone (finding a good api may be interesting)
 
 // TODO: figure out nice api for raw frame buffer functions (maybe just get and set pixel, maybe something fancier)
