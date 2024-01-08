@@ -4,7 +4,7 @@ Roc platform for the [wasm4](https://wasm4.org) game engine.
 
 The intent for this platform is to have some fun, learn more about Roc and platform development, and contribute something for others to enjoy.
 
-*Work In Progress* we are still working on improving API, writing more examples, and including documentation. 🚧   
+🚧 *Work In Progress* 🚧 we are still working on improving API, writing more examples, and including documentation. 
 
 ### Setup
 
@@ -31,6 +31,12 @@ The `build.zig` script reports any warnings or errors for the app using `roc che
 - Windows `zig build -Dapp=".\examples\sound.roc" run`
 
 ![sound demo](/examples/sound.gif)
+
+### Documentation
+
+*TODO - add link to GH Pages site*
+
+To generate platform docs locally use `roc docs platform/main.roc`, and then host the docs using a file server e.g. `simple-http-server generated-docs/`.
 
 ### Bundling a Game for Release
 

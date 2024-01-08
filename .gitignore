@@ -23,3 +23,7 @@ examples/*.wasm
 *.png
 
 .envrc
+
+generated-docs/
+
+format.sh
