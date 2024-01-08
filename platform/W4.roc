@@ -378,16 +378,16 @@ showGamepadOverlay =
 # TODO: add doc and test for encoding into correct format
 tone :
     {
-        startFreq : U16,
-        endFreq : U16,
-        channel : [
-            Pulse1 [Eigth, Quarter, Half, ThreeQuarters],
-            Pulse2 [Eigth, Quarter, Half, ThreeQuarters],
+        startFreq ? U16,
+        endFreq ? U16,
+        channel ? [
+            Pulse1 [Eighth, Quarter, Half, ThreeQuarters],
+            Pulse2 [Eighth, Quarter, Half, ThreeQuarters],
             Triangle,
             Noise,
         ],
-        sustainTime : U8,
         pan ? [Center, Left, Right],
+        sustainTime ? U8,
         releaseTime ? U8,
         decayTime ? U8,
         attackTime ? U8,
@@ -395,7 +395,7 @@ tone :
         peakVolume ? U8,
     }
     -> Task {} []
-tone = \{ startFreq, endFreq, channel, sustainTime, pan ? Center, releaseTime ? 0, decayTime ? 0, attackTime ? 0, volume ? 100, peakVolume ? 0 } ->
+tone = \{ startFreq ? 0, endFreq ? 0, channel ? Pulse1 Eighth, pan ? Center, sustainTime ? 0, releaseTime ? 0, decayTime ? 0, attackTime ? 0, volume ? 100, peakVolume ? 0 } ->
     freq =
         Num.toU32 endFreq
         |> Num.shiftLeftBy 16
@@ -424,7 +424,7 @@ tone = \{ startFreq, endFreq, channel, sustainTime, pan ? Center, releaseTime ? 
     convertMode = \m ->
         when m is
             # pub const TONE_MODE1: u32 = 0;
-            Eigth -> 0
+            Eighth -> 0
             # pub const TONE_MODE2: u32 = 4;
             Quarter -> 4
             # pub const TONE_MODE3: u32 = 8;
