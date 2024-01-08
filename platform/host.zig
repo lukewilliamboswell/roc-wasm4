@@ -299,7 +299,9 @@ export fn roc_fx_setHideGamepadOverlay(hide: bool) callconv(.C) void {
         w4.SYSTEM_FLAGS.* &= ~w4.SYSTEM_HIDE_GAMEPAD_OVERLAY;
     }
 }
-// TODO: add the following
-//  - tone (finding a good api may be interesting)
+
+export fn roc_fx_tone(frequency: u32, duration: u32, volume: u16, flags: u8) callconv(.C) void {
+    w4.tone(frequency, duration, volume, flags);
+}
 
 // TODO: figure out nice api for raw frame buffer functions (maybe just get and set pixel, maybe something fancier)

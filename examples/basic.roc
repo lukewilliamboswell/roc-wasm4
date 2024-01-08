@@ -40,6 +40,8 @@ init =
     colors <- W4.getDrawColors |> Task.await
     {} <- Inspect.toStr colors |> W4.trace |> Task.await
 
+    {} <- W4.tone { startFreq: 50000, endFreq: 30000, channel: Pulse1 Half, sustainTime: 100 } |> Task.await
+
     Task.ok {}
 
 update : Model -> Task Model []

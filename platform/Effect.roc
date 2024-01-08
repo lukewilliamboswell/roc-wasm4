@@ -29,6 +29,7 @@ hosted Effect
         diskr,
         setPerserveFrameBuffer,
         setHideGamepadOverlay,
+        tone,
     ]
     imports []
     generates Effect with [after, map, always, forever, loop]
@@ -55,3 +56,4 @@ diskw : List U8 -> Effect Bool
 diskr : Effect (List U8)
 setPerserveFrameBuffer : Bool -> Effect {}
 setHideGamepadOverlay : Bool -> Effect {}
+tone : U32, U32, U16, U8 -> Effect {}
