@@ -1,20 +1,34 @@
 # roc-wasm4
 
-Experimental Roc platform for the [wasm4](https://wasm4.org) game engine. 
+Roc platform for the [wasm4](https://wasm4.org) game engine.
 
 The intent for this platform is to have some fun, learn more about Roc and platform development, and contribute something for others to enjoy.
 
-**Status** 🚧 Work In Progress 🚧 - let me know if you are interested in helping 😊
-
-### Run
-
-*Basic example* using `zig build run`
-
-*Snake example* using `zig build -Dapp=examples/snake.roc run`
+*Work In Progress* we are still working on improving API, writing more examples, and including documentation. 🚧   
 
 ### Setup
 
-Ensure the following is available in your `PATH` environment variable;
-- [w4](https://wasm4.org) with `npm install -g wasm4`
-- [roc](https://www.roc-lang.org/install)
-- [zig version 0.11.0](https://ziglang.org/download/)
+Make sure you have [roc](https://www.roc-lang.org/install), [zig v0.11.0](https://ziglang.org/download/), and [w4](https://wasm4.org) in your `PATH` environment variable.
+
+### Run
+
+For the *web runtime* use `zig build run`
+
+For the *native runtime* use `zig build run-native`
+
+The `build.zig` script reports any warnings or errors for the app using `roc check`, it then builds an object file using `roc build --target=wasm32 --no-link` and links this with the host to produce the final `.wasm` game cartridge.
+
+### Snake Demo
+
+- Unix/Macos `zig build -Dapp=examples/snake.roc run`
+- Windows `zig build -Dapp=".\examples\snake.roc" run`
+
+![snake demo](/examples/snake.gif)
+
+### Sound Demo
+
+- Unix/Macos `zig build -Dapp=examples/sound.roc run`
+- Windows `zig build -Dapp=".\examples\sound.roc" run`
+
+![sound demo](/examples/sound.gif)
+
