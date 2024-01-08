@@ -37,6 +37,9 @@ init =
     palette <- W4.getPalette |> Task.await
     {} <- Inspect.toStr palette |> W4.trace |> Task.await
 
+    colors <- W4.getDrawColors |> Task.await
+    {} <- Inspect.toStr colors |> W4.trace |> Task.await
+
     Task.ok {}
 
 update : Model -> Task Model []

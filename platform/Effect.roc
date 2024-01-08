@@ -11,6 +11,7 @@ hosted Effect
         setPalette,
         getPalette,
         setDrawColors,
+        getDrawColors,
         readGamepad,
         readMouse,
         readNetplay,
@@ -33,6 +34,7 @@ text : Str, I32, I32 -> Effect {}
 setPalette : U32, U32, U32, U32 -> Effect {}
 getPalette : Effect { color1 : U32, color2 : U32, color3 : U32, color4 : U32 }
 setDrawColors : U16 -> Effect {}
+getDrawColors : Effect U16
 readGamepad : U8 -> Effect U8
 readMouse : Effect { x : i16, y : i16, buttons : U8 }
 readNetplay : Effect U8

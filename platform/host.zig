@@ -209,6 +209,10 @@ export fn roc_fx_setDrawColors(draw_color_flags: u16) callconv(.C) void {
     w4.DRAW_COLORS.* = draw_color_flags;
 }
 
+export fn roc_fx_getDrawColors() callconv(.C) u16 {
+    return w4.DRAW_COLORS.*;
+}
+
 export fn roc_fx_readGamepad(gamepad_number: u8) callconv(.C) u8 {
     const gamepad_flags = switch (gamepad_number) {
         1 => w4.GAMEPAD1.*,

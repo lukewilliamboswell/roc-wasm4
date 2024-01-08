@@ -110,11 +110,11 @@ drawGame = \model ->
     {} <- Sprite.blit { x: model.fruit.x * 8, y: model.fruit.y * 8, flags: [] } model.fruitSprite |> Task.await
 
     # Draw snake body
-    {} <- W4.setRectColors { border: blue, fill: green } |> Task.await
+    {} <- W4.setShapeColors { border: blue, fill: green } |> Task.await
     {} <- drawSnakeBody model.snake |> Task.await
 
     # Draw snake head
-    {} <- W4.setRectColors { border: blue, fill: blue } |> Task.await
+    {} <- W4.setShapeColors { border: blue, fill: blue } |> Task.await
     drawSnakeHead model.snake
 
 # Set the color pallet

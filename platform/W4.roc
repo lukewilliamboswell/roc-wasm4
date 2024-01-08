@@ -8,14 +8,11 @@ interface W4
         text,
         setPalette,
         getPalette,
-        # TODO: Think about this color apis and how they should look.
-        # text, oval, and rect use the same colors
-        # all lines use the first colors.
-        # Maybe just setFgColor and SetBgColor?
-        # Also, should we set the other colors to None or keep them at the old value.
         setDrawColors,
+        getDrawColors,
+        setPrimaryColor,
         setTextColors,
-        setRectColors,
+        setShapeColors,
         readGamepad,
         readMouse,
         readNetplay,
@@ -90,6 +87,13 @@ setDrawColors = \colors ->
     |> Effect.map Ok
     |> Task.fromEffect
 
+getDrawColors : Task DrawColors []
+getDrawColors =
+    Effect.getDrawColors
+    |> Effect.map fromColorFlags
+    |> Effect.map Ok
+    |> Task.fromEffect
+
 ## Draw text to the screen.
 ##
 ## ```
@@ -124,8 +128,8 @@ setTextColors = \{ fg, bg } ->
 ## W4.rect x y width height
 ## ```
 ##
-## Text color is the Primary draw color
-## Background color is the Secondary draw color
+## Fill color is the Primary draw color
+## Border color is the Secondary draw color
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#rect-x-y-width-height)
 rect : I32, I32, U32, U32 -> Task {} []
@@ -140,8 +144,8 @@ rect = \x, y, width, height ->
 ## W4.oval x y width height
 ## ```
 ##
-## Text color is the Primary draw color
-## Background color is the Secondary draw color
+## Fill color is the Primary draw color
+## Border color is the Secondary draw color
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#oval-x-y-width-height)
 oval : I32, I32, U32, U32 -> Task {} []
@@ -156,7 +160,7 @@ oval = \x, y, width, height ->
 ## W4.line x1 y1 x2 y2
 ## ```
 ##
-## Text color is the Primary draw color
+## Line color is the Primary draw color
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#line-x1-y1-x2-y2)
 line : I32, I32, I32, I32 -> Task {} []
@@ -171,7 +175,7 @@ line = \x1, y1, x2, y2 ->
 ## W4.hline x y len
 ## ```
 ##
-## Text color is the Primary draw color
+## Line color is the Primary draw color
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#line-x1-y1-x2-y2)
 hline : I32, I32, U32 -> Task {} []
@@ -186,7 +190,7 @@ hline = \x, y, len ->
 ## W4.vline x y len
 ## ```
 ##
-## Text color is the Primary draw color
+## Line color is the Primary draw color
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#line-x1-y1-x2-y2)
 vline : I32, I32, U32 -> Task {} []
@@ -195,12 +199,22 @@ vline = \x, y, len ->
     |> Effect.map Ok
     |> Task.fromEffect
 
-## Helper for colors when drawing a rectangle
-setRectColors : { border : W4.Palette, fill : W4.Palette } -> Task {} []
-setRectColors = \{ border, fill } ->
+## Helper for colors when drawing a shape
+setShapeColors : { border : W4.Palette, fill : W4.Palette } -> Task {} []
+setShapeColors = \{ border, fill } ->
     setDrawColors {
         primary: fill,
         secondary: border,
+        tertiary: None,
+        quaternary: None,
+    }
+
+## Helper for primary drawing color
+setPrimaryColor : W4.Palette -> Task {} []
+setPrimaryColor = \primary ->
+    setDrawColors {
+        primary,
+        secondary: None,
         tertiary: None,
         quaternary: None,
     }
@@ -377,3 +391,32 @@ toColorFlags = \{ primary, secondary, tertiary, quaternary } ->
 
 expect toColorFlags { primary: Color2, secondary: Color4, tertiary: None, quaternary: None } == 0x0042
 expect toColorFlags { primary: Color1, secondary: Color2, tertiary: Color3, quaternary: Color4 } == 0x4321
+
+fromColorFlags : U16 -> DrawColors
+fromColorFlags = \flags ->
+    pos1 = Num.bitwiseAnd 0x000F flags
+    pos2 = Num.bitwiseAnd 0x00F0 flags |> Num.shiftRightZfBy 4
+    pos3 = Num.bitwiseAnd 0x0F00 flags |> Num.shiftRightZfBy 8
+    pos4 = Num.bitwiseAnd 0xF000 flags |> Num.shiftRightZfBy 12
+
+    extractColor = \pos ->
+        when pos is
+            0x0 -> None
+            0x1 -> Color1
+            0x2 -> Color2
+            0x3 -> Color3
+            0x4 -> Color4
+            _ -> crash "got invalid draw color from the host"
+
+    primary = extractColor pos1
+    secondary = extractColor pos2
+    tertiary = extractColor pos3
+    quaternary = extractColor pos4
+
+    { primary, secondary, tertiary, quaternary }
+
+expect
+    res = fromColorFlags 0x0042
+    res == { primary: Color2, secondary: Color4, tertiary: None, quaternary: None }
+expect fromColorFlags 0x4321 == { primary: Color1, secondary: Color2, tertiary: Color3, quaternary: Color4 }
+
