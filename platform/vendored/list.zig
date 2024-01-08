@@ -1,3 +1,7 @@
+// THIS FILE HAS BEEN COPIED FROM https://github.com/roc-lang/roc/tree/main/crates/compiler/builtins/bitcode/src
+// IN FUTURE THIS WILL BE PROVIDED BY ROC USING `roc glue` HOWEVER GLUE FOR ZIG
+// HAS NOT BEEN WRITTEN YET
+
 const std = @import("std");
 const utils = @import("utils.zig");
 const UpdateMode = utils.UpdateMode;

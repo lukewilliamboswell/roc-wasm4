@@ -1,15 +1,15 @@
 const std = @import("std");
 const assert = std.debug.assert;
 
-const w4 = @import("wasm4.zig");
+const w4 = @import("vendored/wasm4.zig");
 
-const str = @import("str.zig");
+const str = @import("vendored/str.zig");
 const RocStr = str.RocStr;
 
-const list = @import("list.zig");
+const list = @import("vendored/list.zig");
 const RocList = list.RocList;
 
-const utils = @import("utils.zig");
+const utils = @import("vendored/utils.zig");
 
 const ALIGN = 2 * @alignOf(usize);
 
