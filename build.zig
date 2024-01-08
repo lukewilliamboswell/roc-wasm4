@@ -33,8 +33,9 @@ pub fn build(b: *std.Build) !void {
     // Run roc check before building
     roc_lib.step.dependOn(&roc_check.step);
 
+    // TODO: change to addExecutable with entry disabled when we update to zig 0.12.0.
     const lib = b.addSharedLibrary(.{
-        .name = "wasm4",
+        .name = "cart",
         .root_source_file = .{ .path = "platform/host.zig" },
         .target = .{ .cpu_arch = .wasm32, .os_tag = .freestanding },
         .optimize = optimize,
