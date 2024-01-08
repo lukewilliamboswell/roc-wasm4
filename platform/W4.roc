@@ -36,6 +36,8 @@ interface W4
     ]
     imports [Task.{ Task }, Effect.{ Effect }]
 
+# TODO: add api docs
+
 Palette : [None, Color1, Color2, Color3, Color4]
 
 DrawColors : {
