@@ -27,7 +27,7 @@ hosted Effect
         trace,
         diskw,
         diskr,
-        setPerserveFrameBuffer,
+        setPreserveFrameBuffer,
         setHideGamepadOverlay,
         tone,
     ]
@@ -54,6 +54,6 @@ blitSub : List U8, I32, I32, U32, U32, U32, U32, U32, U32 -> Effect {}
 trace : Str -> Effect {}
 diskw : List U8 -> Effect Bool
 diskr : Effect (List U8)
-setPerserveFrameBuffer : Bool -> Effect {}
+setPreserveFrameBuffer : Bool -> Effect {}
 setHideGamepadOverlay : Bool -> Effect {}
 tone : U32, U32, U16, U8 -> Effect {}

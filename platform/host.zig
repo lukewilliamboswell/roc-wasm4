@@ -284,8 +284,8 @@ export fn roc_fx_diskr() callconv(.C) RocList {
     return out;
 }
 
-export fn roc_fx_setPerserveFrameBuffer(perserve: bool) callconv(.C) void {
-    if (perserve) {
+export fn roc_fx_setPreserveFrameBuffer(preserve: bool) callconv(.C) void {
+    if (preserve) {
         w4.SYSTEM_FLAGS.* |= w4.SYSTEM_PRESERVE_FRAMEBUFFER;
     } else {
         w4.SYSTEM_FLAGS.* &= ~w4.SYSTEM_PRESERVE_FRAMEBUFFER;

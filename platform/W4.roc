@@ -28,7 +28,7 @@ interface W4
         trace,
         saveToDisk,
         loadFromDisk,
-        perserveFrameBuffer,
+        preserveFrameBuffer,
         clearFrameBufferEachUpdate,
         hideGamepadOverlay,
         showGamepadOverlay,
@@ -351,15 +351,15 @@ loadFromDisk =
     |> Effect.map Ok
     |> Task.fromEffect
 
-perserveFrameBuffer : Task {} []
-perserveFrameBuffer =
-    Effect.setPerserveFrameBuffer Bool.true
+preserveFrameBuffer : Task {} []
+preserveFrameBuffer =
+    Effect.setPreserveFrameBuffer Bool.true
     |> Effect.map Ok
     |> Task.fromEffect
 
 clearFrameBufferEachUpdate : Task {} []
 clearFrameBufferEachUpdate =
-    Effect.setPerserveFrameBuffer Bool.false
+    Effect.setPreserveFrameBuffer Bool.false
     |> Effect.map Ok
     |> Task.fromEffect
 
