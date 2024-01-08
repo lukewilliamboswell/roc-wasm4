@@ -41,7 +41,7 @@ blit = \{ x, y, flags }, @Sprite { data, bpp, width, height } ->
     |> Effect.map Ok
     |> Task.fromEffect
 
-blitSub : { x : I32, y : I32, srcX: U32, srcY: U32, width: U32, height: U32, flags : List [FlipX, FlipY, Rotate] }, Sprite -> Task {} []
+blitSub : { x : I32, y : I32, srcX : U32, srcY : U32, width : U32, height : U32, flags : List [FlipX, FlipY, Rotate] }, Sprite -> Task {} []
 blitSub = \{ x, y, srcX, srcY, width, height, flags }, @Sprite { data, bpp, width: stride } ->
 
     format =
