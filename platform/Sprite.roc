@@ -14,7 +14,7 @@ Sprite := {
     height : U32,
 }
 
-## Create [Sprite] to be drawn or [blit](https://en.wikipedia.org/wiki/Bit_blit) to the screen.
+## Create a [Sprite] to be drawn or [blit](https://en.wikipedia.org/wiki/Bit_blit) to the screen.
 ##
 ## ```
 ## fruitSprite = Sprite.new {
@@ -34,11 +34,13 @@ new :
     -> Sprite
 new = @Sprite
 
-## Draw a [Sprite] to the framebuffer
+## Draw a [Sprite] to the framebuffer.
 ##
 ## ```
 ## {} <- Sprite.blit fruitSprite { x: 0, y: 0, flags: [FlipX, Rotate] } |> Task.await
 ## ```
+##
+## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#blit-spriteptr-x-y-width-height-flags)
 blit : Sprite, { x : I32, y : I32, flags ? List [FlipX, FlipY, Rotate] } -> Task {} []
 blit = \@Sprite { data, bpp, width, height }, { x, y, flags ? [] } ->
 
@@ -71,6 +73,8 @@ blit = \@Sprite { data, bpp, width, height }, { x, y, flags ? [] } ->
 ##        flags: [FlipX, Rotate],
 ##    } |> Task.await
 ## ```
+##
+## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#blitsub-spriteptr-x-y-width-height-srcx-srcy-stride-flags)
 blitSub : Sprite, { x : I32, y : I32, srcX : U32, srcY : U32, width : U32, height : U32, flags ? List [FlipX, FlipY, Rotate] } -> Task {} []
 blitSub = \@Sprite { data, bpp, width: stride }, { x, y, srcX, srcY, width, height, flags ? [] } ->
 

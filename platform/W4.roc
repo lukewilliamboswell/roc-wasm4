@@ -111,7 +111,7 @@ Mouse : {
 
 ## Represents the current state of [Netplay](https://wasm4.org/docs/guides/multiplayer#netplay).
 ##
-## > Netplay connects gamepad inputs over the Internet using WebRTC
+## Netplay connects gamepad inputs over the Internet using WebRTC.
 ##
 ## ```
 ## Netplay : [
@@ -131,7 +131,7 @@ Netplay : [
 ##
 Player : [Player1, Player2, Player3, Player4]
 
-## Represents fragment shader for raw operations with the framebuffer
+## Represents fragment shader for raw operations with the framebuffer.
 ##
 ## ```
 ## Shader : U8, U8, Palette -> Palette
@@ -153,7 +153,7 @@ screenHeight = 160
 ## }
 ## ```
 ##
-## Note this will overwrite any existing colors that are set.
+## Warning: this will overwrite the existing [Palette], changing all colors on the screen.
 ##
 setPalette : { color1 : U32, color2 : U32, color3 : U32, color4 : U32 } -> Task {} []
 setPalette = \{ color1, color2, color3, color4 } ->
@@ -173,7 +173,7 @@ getPalette =
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
-## Set the draw colors for the next draw command. This
+## Set the draw colors for the next draw command.
 ##
 ## ```
 ## blue = Color1
@@ -186,7 +186,7 @@ getPalette =
 ## }
 ## ```
 ##
-## Note this will overwrite any existing colors that are set.
+## Warning: this will overwrite any existing draw colors that are set.
 ##
 setDrawColors : DrawColors -> Task {} []
 setDrawColors = \colors ->
@@ -209,30 +209,35 @@ getDrawColors =
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
-## Draw text to the screen.
+## Helper for primary drawing color.
 ##
 ## ```
-## W4.text "Hello, World" {x: 0, y: 0}
+## blue = Color1
+## W4.setPrimaryColor blue
 ## ```
 ##
-## Text color is the Primary draw color
-## Background color is the Secondary draw color
+## Warning: this will overwrite any existing draw colors, and sets the
+## secondary, tertiary and quaternary values to `None`.
 ##
-## [Refer w4 docs for more information](https://wasm4.org/docs/guides/text)
-##
-text : Str, { x : I32, y : I32 } -> Task {} []
-text = \str, { x, y } ->
-    Effect.text str x y
-    |> Effect.map Ok
-    |> InternalTask.fromEffect
+setPrimaryColor : W4.Palette -> Task {} []
+setPrimaryColor = \primary ->
+    setDrawColors {
+        primary,
+        secondary: None,
+        tertiary: None,
+        quaternary: None,
+    }
 
-## Helper for setting the draw colors for text
+## Helper for setting the draw colors for text.
 ##
 ## ```
 ## blue = Color1
 ## white = Color4
 ## W4.setTextColors { fg : blue, bg : white }
 ## ```
+##
+## Warning: this will overwrite any existing draw colors, and sets the
+## tertiary and quaternary values to `None`.
 ##
 setTextColors : { fg : Palette, bg : Palette } -> Task {} []
 setTextColors = \{ fg, bg } ->
@@ -243,14 +248,53 @@ setTextColors = \{ fg, bg } ->
         quaternary: None,
     }
 
+## Helper for colors when drawing a shape.
+##
+## ```
+## blue = Color1
+## white = Color4
+## W4.setShapeColors { border : blue, fill : white }
+## ```
+##
+## Warning: this will overwrite any existing draw colors, and sets the
+## tertiary and quaternary values to `None`.
+##
+setShapeColors : { border : W4.Palette, fill : W4.Palette } -> Task {} []
+setShapeColors = \{ border, fill } ->
+    setDrawColors {
+        primary: fill,
+        secondary: border,
+        tertiary: None,
+        quaternary: None,
+    }
+
+## Draw text to the screen.
+##
+## ```
+## W4.text "Hello, World" {x: 0, y: 0}
+## ```
+##
+## Text color is the Primary draw color.
+##
+## Background color is the Secondary draw color.
+##
+## [Refer w4 docs for more information](https://wasm4.org/docs/guides/text)
+##
+text : Str, { x : I32, y : I32 } -> Task {} []
+text = \str, { x, y } ->
+    Effect.text str x y
+    |> Effect.map Ok
+    |> InternalTask.fromEffect
+
 ## Draw a rectangle to the screen.
 ##
 ## ```
 ## W4.rect {x: 0, y: 10, width: 40, height: 60}
 ## ```
 ##
-## Fill color is the Primary draw color
-## Border color is the Secondary draw color
+## Fill color is the Primary draw color.
+##
+## Border color is the Secondary draw color.
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#rect-x-y-width-height)
 ##
@@ -266,8 +310,9 @@ rect = \{ x, y, width, height } ->
 ## W4.oval {x, y, width: 20, height: 30}
 ## ```
 ##
-## Fill color is the Primary draw color
-## Border color is the Secondary draw color
+## Fill color is the Primary draw color.
+##
+## Border color is the Secondary draw color.
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#oval-x-y-width-height)
 ##
@@ -283,7 +328,7 @@ oval = \{ x, y, width, height } ->
 ## W4.line {x: 0, y: 0}, {x: 10, y: 10}
 ## ```
 ##
-## Line color is the Primary draw color
+## Line color is the Primary draw color.
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#line-x1-y1-x2-y2)
 ##
@@ -299,7 +344,7 @@ line = \{ x: x1, y: y1 }, { x: x2, y: y2 } ->
 ## W4.hline {x: 10, y: 20, len: 30}
 ## ```
 ##
-## Line color is the Primary draw color
+## Line color is the Primary draw color.
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#line-x1-y1-x2-y2)
 ##
@@ -315,7 +360,7 @@ hline = \{ x, y, len } ->
 ## W4.vline {x: 10, y: 20, len: 30}
 ## ```
 ##
-## Line color is the Primary draw color
+## Line color is the Primary draw color.
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#line-x1-y1-x2-y2)
 ##
@@ -324,45 +369,6 @@ vline = \{ x, y, len } ->
     Effect.vline x y len
     |> Effect.map Ok
     |> InternalTask.fromEffect
-
-## Helper for colors when drawing a shape
-##
-## ```
-## blue = Color1
-## white = Color4
-## W4.setShapeColors { border : blue, fill : white }
-## ```
-##
-## Note this will overwrite any existing colors, and sets the
-## tertiary and quaternary values to `None`.
-##
-setShapeColors : { border : W4.Palette, fill : W4.Palette } -> Task {} []
-setShapeColors = \{ border, fill } ->
-    setDrawColors {
-        primary: fill,
-        secondary: border,
-        tertiary: None,
-        quaternary: None,
-    }
-
-## Helper for primary drawing color
-##
-## ```
-## blue = Color1
-## W4.setPrimaryColor blue
-## ```
-##
-## Note this will overwrite any existing colors, and sets the
-## secondary, tertiary and quaternary values to `None`.
-##
-setPrimaryColor : W4.Palette -> Task {} []
-setPrimaryColor = \primary ->
-    setDrawColors {
-        primary,
-        secondary: None,
-        tertiary: None,
-        quaternary: None,
-    }
 
 ## Get the controls for a [Gamepad].
 ##
@@ -398,7 +404,7 @@ getGamepad = \player ->
         }
     |> InternalTask.fromEffect
 
-## Get the current [Mouse] position
+## Get the current [Mouse] position.
 ##
 ## ```
 ## {x,y,left,right,middle} <- W4.getMouse |> Task.await
@@ -420,7 +426,7 @@ getMouse =
         }
     |> InternalTask.fromEffect
 
-## Get the [Netplay] status
+## Get the [Netplay] status.
 ##
 ## ```
 ## netplay <- W4.getNetplay |> Task.await
@@ -456,10 +462,10 @@ getNetplay =
             Ok Disabled
     |> InternalTask.fromEffect
 
-## Generate a pseudo-random number
+## Generate a pseudo-random number.
 ##
 ## ```
-## # pseudo-random number between Num.minI32 and Num.maxI32
+## # pseudo-random number between Num.minI32 and Num.maxI32 (inclusive of both)
 ## i <- W4.rand |> Task.await
 ## ```
 ##
@@ -469,9 +475,9 @@ rand =
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
-## Generate a pseudo-random number in the range
+## Generate a pseudo-random number in the range.
 ##
-## The range has an inclusive start and exclusive end
+## The range has an inclusive start and exclusive end.
 ##
 ## ```
 ## # random number in the range 0-99
@@ -539,9 +545,9 @@ loadFromDisk =
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
-## Set a flag to keep the framebuffer between frames
+## Set a flag to keep the framebuffer between frames.
 ##
-## This can be helpful if you only want to update part of the screen
+## This can be helpful if you only want to update part of the screen.
 ##
 preserveFrameBuffer : Task {} []
 preserveFrameBuffer =
@@ -549,28 +555,28 @@ preserveFrameBuffer =
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
-## Set a flag to clear the framebuffer between frames
+## Set a flag to clear the framebuffer between frames.
 clearFrameBufferEachUpdate : Task {} []
 clearFrameBufferEachUpdate =
     Effect.setPreserveFrameBuffer Bool.false
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
-## Set a flag to hide the game overlay
+## Set a flag to hide the game overlay.
 hideGamepadOverlay : Task {} []
 hideGamepadOverlay =
     Effect.setHideGamepadOverlay Bool.true
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
-## Set a flag to show the game overlay
+## Set a flag to show the game overlay.
 showGamepadOverlay : Task {} []
 showGamepadOverlay =
     Effect.setHideGamepadOverlay Bool.false
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
-## Get the color for an individual pixel in the framebuffer
+## Get the color for an individual pixel in the framebuffer.
 getPixel : { x : U8, y : U8 } -> Task Palette []
 getPixel = \{ x, y } ->
     Effect.getPixel x y
@@ -578,7 +584,7 @@ getPixel = \{ x, y } ->
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
-## Set the color for an individual pixel in the framebuffer
+## Set the color for an individual pixel in the framebuffer.
 setPixel : { x : U8, y : U8 }, Palette -> Task {} []
 setPixel = \{ x, y }, color ->
     bits =
@@ -593,7 +599,7 @@ setPixel = \{ x, y }, color ->
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
-# Run a fragment [Shader] on the raw framebuffer
+# Run a fragment [Shader] on the raw framebuffer.
 runShader : Shader -> Task {} []
 runShader = \shader ->
     Task.loop (0, 0) \(x, y) ->
@@ -611,7 +617,11 @@ runShader = \shader ->
             |> Step
             |> Task.ok
 
-## Plays a tone sound
+## Plays a tone sound.
+##
+## Please refer to the [wasm4 audio docs](https://wasm4.org/docs/guides/audio/).
+##
+## The sound.roc example app along with the [wasm4 sound tools](https://wasm4.org/docs/guides/audio/#sound-tool) can be quite helpful to play with.
 tone :
     {
         startFreq ? U16,
