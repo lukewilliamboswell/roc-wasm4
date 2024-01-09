@@ -5,9 +5,11 @@ pub fn build(b: *std.Build) !void {
     const roc_src = b.option([]const u8, "app", "the roc application to build");
 
     const roc_check = b.addSystemCommand(&[_][]const u8{ "roc", "check" });
-    const roc_lib = b.addSystemCommand(&[_][]const u8{ "roc", "build", "--target=wasm32", "--no-link" });
-    // Note: I don't think this deals with transitive roc dependencies.
-    // If a transitive dependency changes, it won't rebuild.
+    const roc_lib = b.addSystemCommand(&[_][]const u8{ "roc", "build", "--target=wasm32", "--no-link", "--output", "zig-cache/app.o" });
+    // By setting this to true, we ensure zig always rebuilds the roc app since it can't tell if any transitive dependencies have changed.
+    roc_check.has_side_effects = true;
+    roc_lib.has_side_effects = true;
+
     if (roc_src) |val| {
         roc_lib.addFileArg(.{ .path = val });
         roc_check.addFileArg(.{ .path = val });
@@ -17,9 +19,6 @@ pub fn build(b: *std.Build) !void {
         roc_check.addFileArg(.{ .path = default_path });
     }
 
-    roc_lib.addArg("--output");
-
-    const roc_out = roc_lib.addOutputFileArg("app.o");
     switch (optimize) {
         .ReleaseFast, .ReleaseSafe => {
             roc_lib.addArg("--optimize");
@@ -49,7 +48,8 @@ pub fn build(b: *std.Build) !void {
     // Export WASM-4 symbols
     lib.export_symbol_names = &[_][]const u8{ "start", "update" };
 
-    lib.addObjectFile(roc_out);
+    lib.step.dependOn(&roc_lib.step);
+    lib.addObjectFile(.{ .path = "zig-cache/app.o" });
 
     b.installArtifact(lib);
 
