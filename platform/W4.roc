@@ -416,6 +416,12 @@ getMouse =
 ##     Disabled -> # ..
 ## ```
 ##
+## Note: All WASM-4 games that support local multiplayer automatically support netplay.
+## There are no additional steps developers need to take to make their games netplay-ready.
+## Netplay can be used to implement advanced features such as non-shared screen multiplayer
+##
+## [Refer w4 docs for more information](https://wasm4.org/docs/guides/multiplayer) 
+##
 getNetplay : Task Netplay []
 getNetplay =
     Effect.getNetplay
