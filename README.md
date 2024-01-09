@@ -4,8 +4,6 @@ Roc platform for the [wasm4](https://wasm4.org) game engine 🎮🕹️👾
 
 The intent for this platform is to have some fun, learn more about Roc and platform development, and contribute something for others to enjoy.
 
-🚧 *Work In Progress* 🏗️ we are still working on improving API, writing more examples, and including documentation. 
-
 ### Setup
 
 Make sure you have [roc](https://www.roc-lang.org/install), [zig v0.11.0](https://ziglang.org/download/), and [w4](https://wasm4.org) in your `PATH` environment variable.
