@@ -131,6 +131,14 @@ Netplay : [
 ##
 Player : [Player1, Player2, Player3, Player4]
 
+## Represents fragment shader for raw operations with the framebuffer
+##
+## ```
+## Shader : U8, U8, Palette -> Palette
+## ```
+##
+Shader : U8, U8, Palette -> Palette
+
 screenWidth = 160
 screenHeight = 160
 
@@ -471,7 +479,10 @@ trace = \str ->
 ## Returns `Err SaveFailed` on failure.
 ##
 ## ```
-## W4.saveToDisk [0x10]
+## result <- W4.saveToDisk [0x10] |> Task.attempt
+## when result is
+##    Ok {} -> # success
+##    Err SaveFailed -> # handle failure
 ## ```
 ##
 ## Games can persist up to 1024 bytes of data.
@@ -500,39 +511,46 @@ loadFromDisk =
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
+## Set a flag to keep the framebuffer between frames
+## This can be helpful if you only want to update part of the screen
 preserveFrameBuffer : Task {} []
 preserveFrameBuffer =
     Effect.setPreserveFrameBuffer Bool.true
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
+## Set a flag to clear the framebuffer between frames
 clearFrameBufferEachUpdate : Task {} []
 clearFrameBufferEachUpdate =
     Effect.setPreserveFrameBuffer Bool.false
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
+## Set a flag to hide the game overlay
 hideGamepadOverlay : Task {} []
 hideGamepadOverlay =
     Effect.setHideGamepadOverlay Bool.true
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
+## Set a flag to show the game overlay
 showGamepadOverlay : Task {} []
 showGamepadOverlay =
     Effect.setHideGamepadOverlay Bool.false
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
-getPixel : U8, U8 -> Task Palette []
-getPixel = \x, y ->
+## Get the color for an individual pixel in the framebuffer
+getPixel : { x : U8, y : U8 } -> Task Palette []
+getPixel = \{ x, y } ->
     Effect.getPixel x y
     |> Effect.map extractColor
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
-setPixel : U8, U8, Palette -> Task {} []
-setPixel = \x, y, color ->
+## Set the color for an individual pixel in the framebuffer
+setPixel : { x : U8, y : U8 }, Palette -> Task {} []
+setPixel = \{ x, y }, color ->
     bits =
         when color is
             None -> 0x0
@@ -545,7 +563,7 @@ setPixel = \x, y, color ->
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
-Shader : U8, U8, Palette -> Palette
+# Run a fragment [Shader] on the raw framebuffer
 runShader : Shader -> Task {} []
 runShader = \shader ->
     Task.loop (0, 0) \(x, y) ->
@@ -556,14 +574,14 @@ runShader = \shader ->
             |> Step
             |> Task.ok
         else
-            color <- getPixel x y |> Task.await
+            color <- getPixel { x, y } |> Task.await
             newColor = shader x y color
-            {} <- setPixel x y newColor |> Task.await
+            {} <- setPixel { x, y } newColor |> Task.await
             ((x + 1), y)
             |> Step
             |> Task.ok
 
-# TODO: add doc and test for encoding into correct format
+## Plays a tone sound
 tone :
     {
         startFreq ? U16,
