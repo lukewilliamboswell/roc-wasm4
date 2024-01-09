@@ -275,14 +275,14 @@ line = \{ x: x1, y: y1 }, { x: x2, y: y2 } ->
 ## Draw a horizontal line starting at (x, y) with len to the screen.
 ##
 ## ```
-## W4.hline x y len
+## W4.hline {x: 10, y: 20, len: 30}
 ## ```
 ##
 ## Line color is the Primary draw color
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#line-x1-y1-x2-y2)
-hline : I32, I32, U32 -> Task {} []
-hline = \x, y, len ->
+hline : { x : I32, y : I32, len : U32 } -> Task {} []
+hline = \{ x, y, len } ->
     Effect.hline x y len
     |> Effect.map Ok
     |> InternalTask.fromEffect
@@ -290,14 +290,14 @@ hline = \x, y, len ->
 ## Draw a vertical line starting at (x, y) with len to the screen.
 ##
 ## ```
-## W4.vline x y len
+## W4.vline {x: 10, y: 20, len: 30}
 ## ```
 ##
 ## Line color is the Primary draw color
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#line-x1-y1-x2-y2)
-vline : I32, I32, U32 -> Task {} []
-vline = \x, y, len ->
+vline : { x : I32, y : I32, len : U32 } -> Task {} []
+vline = \{ x, y, len } ->
     Effect.vline x y len
     |> Effect.map Ok
     |> InternalTask.fromEffect
