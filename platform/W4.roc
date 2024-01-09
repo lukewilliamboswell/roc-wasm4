@@ -10,6 +10,8 @@ interface W4
         Netplay,
         Player,
         Shader,
+        screenWidth,
+        screenHeight,
         text,
         setPalette,
         getPalette,
@@ -26,8 +28,6 @@ interface W4
         line,
         hline,
         vline,
-        screenWidth,
-        screenHeight,
         rand,
         randRangeLessThan,
         trace,
@@ -125,23 +125,57 @@ Netplay : [
     Disabled,
 ]
 
+## Represents [Player].
+##
+## [WASM-4 supports realtime multiplayer](https://wasm4.org/docs/guides/multiplayer) of up to 4 players, either locally or online. 
+##
 Player : [Player1, Player2, Player3, Player4]
 
 screenWidth = 160
 screenHeight = 160
 
+## Set the color [Palette] for your game.
+## 
+## ```
+## W4.setPalette {
+##     color1: 0xffffff,
+##     color2: 0xff0000,
+##     color3: 0x000ff00,
+##     color4: 0x0000ff,
+## }
+## ```
+##
 setPalette : { color1 : U32, color2 : U32, color3 : U32, color4 : U32 } -> Task {} []
 setPalette = \{ color1, color2, color3, color4 } ->
     Effect.setPalette color1 color2 color3 color4
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
+## Get the color [Palette] for your game.
+## 
+## ```
+## {color1, color2, color3, color4} <- W4.getPalette |> Task.await
+## ```
+##
 getPalette : Task { color1 : U32, color2 : U32, color3 : U32, color4 : U32 } []
 getPalette =
     Effect.getPalette
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
+## Set the draw colors for the next draw command. This
+## 
+## ```
+## blue = Color1
+## white = Color4
+## W4.setDrawColors {
+##     primary : blue,
+##     secondary : white,
+##     tertiary : None,
+##     quaternary : None,
+## }
+## ```
+##
 setDrawColors : DrawColors -> Task {} []
 setDrawColors = \colors ->
     colors
@@ -150,6 +184,13 @@ setDrawColors = \colors ->
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
+
+## Get the currently set draw colors. 
+## 
+## ```
+## {primary, secondary} <- W4.getDrawColors |> Task.await
+## ```
+##
 getDrawColors : Task DrawColors []
 getDrawColors =
     Effect.getDrawColors
@@ -173,7 +214,7 @@ text = \str, { x, y } ->
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
-## Helper for colors when drawing text
+## Helper for setting the draw colors for text
 setTextColors : { fg : Palette, bg : Palette } -> Task {} []
 setTextColors = \{ fg, bg } ->
     setDrawColors {
