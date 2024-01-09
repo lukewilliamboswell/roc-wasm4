@@ -213,7 +213,7 @@ export fn roc_fx_getDrawColors() callconv(.C) u16 {
     return w4.DRAW_COLORS.*;
 }
 
-export fn roc_fx_readGamepad(gamepad_number: u8) callconv(.C) u8 {
+export fn roc_fx_getGamepad(gamepad_number: u8) callconv(.C) u8 {
     const gamepad_flags = switch (gamepad_number) {
         1 => w4.GAMEPAD1.*,
         2 => w4.GAMEPAD2.*,
@@ -231,11 +231,11 @@ const RocMouse = extern struct {
     buttons: u8,
 };
 
-export fn roc_fx_readMouse() callconv(.C) RocMouse {
+export fn roc_fx_getMouse() callconv(.C) RocMouse {
     return .{ .x = w4.MOUSE_X.*, .y = w4.MOUSE_Y.*, .buttons = w4.MOUSE_BUTTONS.* };
 }
 
-export fn roc_fx_readNetplay() callconv(.C) u8 {
+export fn roc_fx_getNetplay() callconv(.C) u8 {
     return w4.NETPLAY.*;
 }
 
@@ -274,12 +274,12 @@ export fn roc_fx_diskw(bytes: *RocList) callconv(.C) bool {
 }
 
 export fn roc_fx_diskr() callconv(.C) RocList {
-    // This is just gonna always read as many bytes as possible.
+    // This is just gonna always get as many bytes as possible.
     var out = RocList.allocateExact(@alignOf(u8), MAX_DISK_SIZE, @sizeOf(u8));
 
     const data: [*]u8 = out.elements(u8).?;
-    const read = w4.diskr(data, MAX_DISK_SIZE);
-    out.length = read;
+    const get = w4.diskr(data, MAX_DISK_SIZE);
+    out.length = get;
 
     return out;
 }
