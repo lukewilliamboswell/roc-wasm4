@@ -210,8 +210,8 @@ getRandomFruit = \{ head, body } ->
     # Will the perf of this be bad with a large snake?
     # The better alternative may be to have a free square list and randomly select one.
     Task.loop {} \{} ->
-        x <- W4.randRangeLessThan 0 20 |> Task.await
-        y <- W4.randRangeLessThan 0 20 |> Task.await
+        x <- W4.randBetween { start: 0, before: 20 } |> Task.await
+        y <- W4.randBetween { start: 0, before: 20 } |> Task.await
 
         fruit = { x, y }
         if fruit == head || List.contains body fruit then

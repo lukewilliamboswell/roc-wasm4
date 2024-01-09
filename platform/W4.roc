@@ -29,7 +29,7 @@ interface W4
         hline,
         vline,
         rand,
-        randRangeLessThan,
+        randBetween,
         trace,
         saveToDisk,
         loadFromDisk,
@@ -214,6 +214,13 @@ text = \str, { x, y } ->
     |> InternalTask.fromEffect
 
 ## Helper for setting the draw colors for text
+##
+## ```
+## blue = Color1
+## white = Color4
+## W4.setTextColors { fg : blue, bg : white }
+## ```
+##
 setTextColors : { fg : Palette, bg : Palette } -> Task {} []
 setTextColors = \{ fg, bg } ->
     setDrawColors {
@@ -222,8 +229,6 @@ setTextColors = \{ fg, bg } ->
         tertiary: None,
         quaternary: None,
     }
-
-# TODO: maybe change the follow functions to either take a {x: I32, y: I32} or (I32, I32) just to cleary group points and width/height
 
 ## Draw a rectangle to the screen.
 ##
@@ -303,6 +308,13 @@ vline = \{ x, y, len } ->
     |> InternalTask.fromEffect
 
 ## Helper for colors when drawing a shape
+##
+## ```
+## blue = Color1
+## white = Color4
+## W4.setShapeColors { border : blue, fill : white }
+## ```
+##
 setShapeColors : { border : W4.Palette, fill : W4.Palette } -> Task {} []
 setShapeColors = \{ border, fill } ->
     setDrawColors {
@@ -313,6 +325,12 @@ setShapeColors = \{ border, fill } ->
     }
 
 ## Helper for primary drawing color
+##
+## ```
+## blue = Color1
+## W4.setPrimaryColor blue
+## ```
+##
 setPrimaryColor : W4.Palette -> Task {} []
 setPrimaryColor = \primary ->
     setDrawColors {
@@ -356,7 +374,12 @@ getGamepad = \player ->
         }
     |> InternalTask.fromEffect
 
-## Get the mouse input
+## Get the current [Mouse] position
+##
+## ```
+## {x,y,left,right,middle} <- W4.getMouse |> Task.await
+## ```
+##
 getMouse : Task Mouse []
 getMouse =
     Effect.getMouse
@@ -373,7 +396,18 @@ getMouse =
         }
     |> InternalTask.fromEffect
 
-## Get the netplay status
+## Get the [Netplay] status
+##
+## ```
+## netplay <- W4.getNetplay |> Task.await
+## when netplay is
+##     Enabled Player1 -> # ..
+##     Enabled Player2 -> # ..
+##     Enabled Player3 -> # ..
+##     Enabled Player4 -> # ..
+##     Disabled -> # ..
+## ```
+##
 getNetplay : Task Netplay []
 getNetplay =
     Effect.getNetplay
@@ -393,6 +427,12 @@ getNetplay =
     |> InternalTask.fromEffect
 
 ## Generate a psuedo-random number
+##
+## ```
+## # psuedo-random number between Num.minI32 and Num.maxI32
+## i <- W4.rand |> Task.await
+## ```
+##
 rand : Task I32 []
 rand =
     Effect.rand
@@ -401,9 +441,15 @@ rand =
 
 ## Generate a psuedo-random number in specified range
 ## The range has an inclusive start and exclusive end
-randRangeLessThan : I32, I32 -> Task I32 []
-randRangeLessThan = \start, end ->
-    Effect.randRangeLessThan start end
+##
+## ```
+## # random number in the range 0-99
+## i <- W4.randBetween {start: 0, before: 100} |> Task.await
+## ```
+##
+randBetween : { start : I32, before : I32 } -> Task I32 []
+randBetween = \{ start, before } ->
+    Effect.randRangeLessThan start before
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
