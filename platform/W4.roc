@@ -153,6 +153,8 @@ screenHeight = 160
 ## }
 ## ```
 ##
+## Note this will overwrite any existing colors that are set.
+##
 setPalette : { color1 : U32, color2 : U32, color3 : U32, color4 : U32 } -> Task {} []
 setPalette = \{ color1, color2, color3, color4 } ->
     Effect.setPalette color1 color2 color3 color4
@@ -183,6 +185,8 @@ getPalette =
 ##     quaternary : None,
 ## }
 ## ```
+##
+## Note this will overwrite any existing colors that are set.
 ##
 setDrawColors : DrawColors -> Task {} []
 setDrawColors = \colors ->
@@ -215,6 +219,7 @@ getDrawColors =
 ## Background color is the Secondary draw color
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/guides/text)
+##
 text : Str, { x : I32, y : I32 } -> Task {} []
 text = \str, { x, y } ->
     Effect.text str x y
@@ -248,6 +253,7 @@ setTextColors = \{ fg, bg } ->
 ## Border color is the Secondary draw color
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#rect-x-y-width-height)
+##
 rect : { x : I32, y : I32, width : U32, height : U32 } -> Task {} []
 rect = \{ x, y, width, height } ->
     Effect.rect x y width height
@@ -264,6 +270,7 @@ rect = \{ x, y, width, height } ->
 ## Border color is the Secondary draw color
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#oval-x-y-width-height)
+##
 oval : { x : I32, y : I32, width : U32, height : U32 } -> Task {} []
 oval = \{ x, y, width, height } ->
     Effect.oval x y width height
@@ -279,6 +286,7 @@ oval = \{ x, y, width, height } ->
 ## Line color is the Primary draw color
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#line-x1-y1-x2-y2)
+##
 line : { x : I32, y : I32 }, { x : I32, y : I32 } -> Task {} []
 line = \{ x: x1, y: y1 }, { x: x2, y: y2 } ->
     Effect.line x1 y1 x2 y2
@@ -294,6 +302,7 @@ line = \{ x: x1, y: y1 }, { x: x2, y: y2 } ->
 ## Line color is the Primary draw color
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#line-x1-y1-x2-y2)
+##
 hline : { x : I32, y : I32, len : U32 } -> Task {} []
 hline = \{ x, y, len } ->
     Effect.hline x y len
@@ -309,6 +318,7 @@ hline = \{ x, y, len } ->
 ## Line color is the Primary draw color
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#line-x1-y1-x2-y2)
+##
 vline : { x : I32, y : I32, len : U32 } -> Task {} []
 vline = \{ x, y, len } ->
     Effect.vline x y len
@@ -322,6 +332,9 @@ vline = \{ x, y, len } ->
 ## white = Color4
 ## W4.setShapeColors { border : blue, fill : white }
 ## ```
+##
+## Note this will overwrite any existing colors that are set, and sets the
+## tertiary and quaternary values to `None`.
 ##
 setShapeColors : { border : W4.Palette, fill : W4.Palette } -> Task {} []
 setShapeColors = \{ border, fill } ->
@@ -338,6 +351,9 @@ setShapeColors = \{ border, fill } ->
 ## blue = Color1
 ## W4.setPrimaryColor blue
 ## ```
+##
+## Note this will overwrite any existing colors that are set, and sets the
+## secondary, tertiary and quaternary values to `None`.
 ##
 setPrimaryColor : W4.Palette -> Task {} []
 setPrimaryColor = \primary ->
@@ -420,7 +436,7 @@ getMouse =
 ## There are no additional steps developers need to take to make their games netplay-ready.
 ## Netplay can be used to implement advanced features such as non-shared screen multiplayer
 ##
-## [Refer w4 docs for more information](https://wasm4.org/docs/guides/multiplayer) 
+## [Refer w4 docs for more information](https://wasm4.org/docs/guides/multiplayer)
 ##
 getNetplay : Task Netplay []
 getNetplay =
@@ -474,6 +490,7 @@ randBetween = \{ start, before } ->
 ## ```
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/guides/trace)
+##
 trace : Str -> Task {} []
 trace = \str ->
     Effect.trace str
@@ -492,7 +509,9 @@ trace = \str ->
 ## ```
 ##
 ## Games can persist up to 1024 bytes of data.
+##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/guides/diskw)
+##
 saveToDisk : List U8 -> Task {} [SaveFailed]
 saveToDisk = \data ->
     Effect.diskw data
@@ -510,7 +529,9 @@ saveToDisk = \data ->
 ## ```
 ##
 ## Games can persist up to 1024 bytes of data.
+##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/guides/diskw)
+##
 loadFromDisk : Task (List U8) []
 loadFromDisk =
     Effect.diskr
@@ -518,7 +539,9 @@ loadFromDisk =
     |> InternalTask.fromEffect
 
 ## Set a flag to keep the framebuffer between frames
+##
 ## This can be helpful if you only want to update part of the screen
+##
 preserveFrameBuffer : Task {} []
 preserveFrameBuffer =
     Effect.setPreserveFrameBuffer Bool.true
