@@ -1,3 +1,7 @@
+## # roc-wasm4
+##
+## Build [wasm4](https://wasm4.org) games using Roc
+##  
 interface W4
     exposes [
         Palette,
@@ -40,8 +44,18 @@ interface W4
     ]
     imports [InternalTask, Task.{ Task }, Effect.{ Effect }]
 
-# TODO: add api docs
-
+## Each pixel on the screen can be set to one of four colors, there is also 
+## `None` which is used to represent a transparent or no change color. 
+##
+## You may find it helpful to create an alias for the color to use within your game. 
+## 
+## ```
+## red = Color2
+## green = Color3
+##
+## W4.setTextColors { fg: red, bg: green }
+## ```
+##
 Palette : [None, Color1, Color2, Color3, Color4]
 
 DrawColors : {

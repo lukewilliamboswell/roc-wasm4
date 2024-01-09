@@ -36,7 +36,7 @@ The `build.zig` script reports any warnings or errors for the app using `roc che
 
 📖 Platform docs hosted at [lukewilliamboswell.github.io/roc-wasm4/](https://lukewilliamboswell.github.io/roc-wasm4/)
 
-To generate locally use `roc docs platform/main.roc`, and then host the docs using a file server e.g. `simple-http-server generated-docs/`.
+To generate locally use `roc docs platform/main.roc`, and then use a file server `simple-http-server generated-docs/`.
 
 ### Distribution
 
