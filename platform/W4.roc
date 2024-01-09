@@ -20,9 +20,9 @@ interface W4
         setPrimaryColor,
         setTextColors,
         setShapeColors,
-        readGamepad,
-        readMouse,
-        readNetplay,
+        getGamepad,
+        getMouse,
+        getNetplay,
         rect,
         oval,
         line,
@@ -322,9 +322,14 @@ setPrimaryColor = \primary ->
         quaternary: None,
     }
 
-## Read the controls for a Gamepad
-readGamepad : Player -> Task Gamepad []
-readGamepad = \player ->
+## Get the controls for a [Gamepad].
+##
+## ```
+## {button1,button2,left,right,up,down} <- W4.getGamepad Player1 |> Task.await
+## ```
+##
+getGamepad : Player -> Task Gamepad []
+getGamepad = \player ->
 
     gamepadNumber =
         when player is
@@ -333,7 +338,7 @@ readGamepad = \player ->
             Player3 -> 3
             Player4 -> 4
 
-    Effect.readGamepad gamepadNumber
+    Effect.getGamepad gamepadNumber
     |> Effect.map \flags ->
         Ok {
             # 1 BUTTON_1
@@ -351,10 +356,10 @@ readGamepad = \player ->
         }
     |> InternalTask.fromEffect
 
-## Read the mouse input
-readMouse : Task Mouse []
-readMouse =
-    Effect.readMouse
+## Get the mouse input
+getMouse : Task Mouse []
+getMouse =
+    Effect.getMouse
     |> Effect.map \{ x, y, buttons } ->
         Ok {
             x: x,
@@ -368,10 +373,10 @@ readMouse =
         }
     |> InternalTask.fromEffect
 
-## Read the netplay status
-readNetplay : Task Netplay []
-readNetplay =
-    Effect.readNetplay
+## Get the netplay status
+getNetplay : Task Netplay []
+getNetplay =
+    Effect.getNetplay
     |> Effect.map \flags ->
         enabled = Num.bitwiseAnd 0b0000_0100 flags > 0
         if enabled then
@@ -435,7 +440,7 @@ saveToDisk = \data ->
             Err SaveFailed
     |> InternalTask.fromEffect
 
-## Reads all saved data from persistant storage.
+## Gets all saved data from persistant storage.
 ##
 ## ```
 ## data <- W4.loadFromDisk |> Task.await

@@ -92,7 +92,7 @@ update = \model ->
     {} <- W4.setDrawColors { primary: None, secondary: Color4, tertiary: None, quaternary: None } |> Task.await
     {} <- Sprite.blit model.arrowSprite { x: x - 8 - 4, y: y + (Num.toI32 model.arrowIdx) * spacing } |> Task.await
 
-    gamepad <- W4.readGamepad Player1 |> Task.await
+    gamepad <- W4.getGamepad Player1 |> Task.await
 
     pressedThisFrame = {
         left: gamepad.left && !model.lastGamepadState.left,

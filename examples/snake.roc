@@ -58,8 +58,8 @@ update = \model ->
 runGame : Model -> Task Model []
 runGame = \prev ->
 
-    # Read gamepad
-    gamepad <- W4.readGamepad Player1 |> Task.await
+    # Get gamepad
+    gamepad <- W4.getGamepad Player1 |> Task.await
 
     # Update frame
     model = { prev & frameCount: prev.frameCount + 1 }

@@ -47,9 +47,9 @@ init =
 update : Model -> Task Model []
 update = \model ->
 
-    # Read inputs
-    { button1, button2, left, right, up, down } <- W4.readGamepad Player1 |> Task.await
-    mouse <- W4.readMouse |> Task.await
+    # Get inputs
+    { button1, button2, left, right, up, down } <- W4.getGamepad Player1 |> Task.await
+    mouse <- W4.getMouse |> Task.await
 
     # Draw the gamepad state
     {} <- W4.setTextColors { fg: red, bg: green } |> Task.await
