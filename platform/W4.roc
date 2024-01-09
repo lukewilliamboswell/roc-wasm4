@@ -44,10 +44,11 @@ interface W4
     ]
     imports [InternalTask, Task.{ Task }, Effect.{ Effect }]
 
-## Each pixel on the screen can be set to one of four colors, there is also 
-## `None` which is used to represent a transparent or no change color. 
+## The [Palette] consists of four colors. There is also `None` which is used to 
+## represent a transparent or no change color. Each pixel on the screen will be 
+## drawn using one of these colors.
 ##
-## You may find it helpful to create an alias for the color to use within your game. 
+## You may find it helpful to create an alias for your game. 
 ## 
 ## ```
 ## red = Color2
@@ -58,6 +59,7 @@ interface W4
 ##
 Palette : [None, Color1, Color2, Color3, Color4]
 
+## Represents the four colors in the [Palette].
 DrawColors : {
     primary : Palette,
     secondary : Palette,
@@ -65,6 +67,19 @@ DrawColors : {
     quaternary : Palette,
 }
 
+## Represents the current state of a [Player] gamepad.
+## 
+## ```
+## Gamepad : {
+##     button1 : Bool,
+##     button2 : Bool,
+##     left : Bool,
+##     right : Bool,
+##     up : Bool,
+##     down : Bool,
+## }
+## ```
+##
 Gamepad : {
     button1 : Bool,
     button2 : Bool,
@@ -74,6 +89,18 @@ Gamepad : {
     down : Bool,
 }
 
+## Represents the current state of the mouse.
+## 
+## ```
+## Mouse : {
+##     x : I16,
+##     y : I16,
+##     left : Bool,
+##     right : Bool,
+##     middle : Bool,
+## }
+## ```
+##
 Mouse : {
     x : I16,
     y : I16,
@@ -82,6 +109,17 @@ Mouse : {
     middle : Bool,
 }
 
+## Represents the current state of [Netplay](https://wasm4.org/docs/guides/multiplayer#netplay). 
+##
+## > Netplay connects gamepad inputs over the Internet using WebRTC
+## 
+## ```
+## Netplay : [
+##     Enabled Player,
+##     Disabled,
+## ]
+## ```
+##
 Netplay : [
     Enabled Player,
     Disabled,
