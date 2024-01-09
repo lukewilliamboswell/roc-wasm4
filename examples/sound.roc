@@ -147,10 +147,10 @@ drawControl = \name, x, y, value, max ->
     meterWidth : U32
     meterWidth = 50
     {} <- W4.setPrimaryColor Color2 |> Task.await
-    {} <- W4.rect (5 * 8 + x + 4) y (meterWidth + 2) 8 |> Task.await
+    {} <- W4.rect { x: (5 * 8 + x + 4), y, width: (meterWidth + 2), height: 8 } |> Task.await
 
     {} <- W4.setPrimaryColor Color3 |> Task.await
-    {} <- W4.rect (5 * 8 + x + 4 + 1) (y + 1) ((value * meterWidth) // max) 6 |> Task.await
+    {} <- W4.rect { x: (5 * 8 + x + 4 + 1), y: (y + 1), width: ((value * meterWidth) // max), height: 6 } |> Task.await
 
     {} <- W4.setPrimaryColor Color4 |> Task.await
     {} <- W4.text name { x, y } |> Task.await

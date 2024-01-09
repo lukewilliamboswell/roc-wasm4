@@ -1,7 +1,7 @@
 ## # roc-wasm4
 ##
 ## Build [wasm4](https://wasm4.org) games using Roc
-##  
+##
 interface W4
     exposes [
         Palette,
@@ -44,12 +44,12 @@ interface W4
     ]
     imports [InternalTask, Task.{ Task }, Effect.{ Effect }]
 
-## The [Palette] consists of four colors. There is also `None` which is used to 
-## represent a transparent or no change color. Each pixel on the screen will be 
+## The [Palette] consists of four colors. There is also `None` which is used to
+## represent a transparent or no change color. Each pixel on the screen will be
 ## drawn using one of these colors.
 ##
-## You may find it helpful to create an alias for your game. 
-## 
+## You may find it helpful to create an alias for your game.
+##
 ## ```
 ## red = Color2
 ## green = Color3
@@ -68,7 +68,7 @@ DrawColors : {
 }
 
 ## Represents the current state of a [Player] gamepad.
-## 
+##
 ## ```
 ## Gamepad : {
 ##     button1 : Bool,
@@ -90,7 +90,7 @@ Gamepad : {
 }
 
 ## Represents the current state of the mouse.
-## 
+##
 ## ```
 ## Mouse : {
 ##     x : I16,
@@ -109,10 +109,10 @@ Mouse : {
     middle : Bool,
 }
 
-## Represents the current state of [Netplay](https://wasm4.org/docs/guides/multiplayer#netplay). 
+## Represents the current state of [Netplay](https://wasm4.org/docs/guides/multiplayer#netplay).
 ##
 ## > Netplay connects gamepad inputs over the Internet using WebRTC
-## 
+##
 ## ```
 ## Netplay : [
 ##     Enabled Player,
@@ -127,7 +127,7 @@ Netplay : [
 
 ## Represents [Player].
 ##
-## [WASM-4 supports realtime multiplayer](https://wasm4.org/docs/guides/multiplayer) of up to 4 players, either locally or online. 
+## [WASM-4 supports realtime multiplayer](https://wasm4.org/docs/guides/multiplayer) of up to 4 players, either locally or online.
 ##
 Player : [Player1, Player2, Player3, Player4]
 
@@ -135,7 +135,7 @@ screenWidth = 160
 screenHeight = 160
 
 ## Set the color [Palette] for your game.
-## 
+##
 ## ```
 ## W4.setPalette {
 ##     color1: 0xffffff,
@@ -152,7 +152,7 @@ setPalette = \{ color1, color2, color3, color4 } ->
     |> InternalTask.fromEffect
 
 ## Get the color [Palette] for your game.
-## 
+##
 ## ```
 ## {color1, color2, color3, color4} <- W4.getPalette |> Task.await
 ## ```
@@ -164,7 +164,7 @@ getPalette =
     |> InternalTask.fromEffect
 
 ## Set the draw colors for the next draw command. This
-## 
+##
 ## ```
 ## blue = Color1
 ## white = Color4
@@ -184,9 +184,8 @@ setDrawColors = \colors ->
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
-
-## Get the currently set draw colors. 
-## 
+## Get the currently set draw colors.
+##
 ## ```
 ## {primary, secondary} <- W4.getDrawColors |> Task.await
 ## ```
@@ -236,8 +235,8 @@ setTextColors = \{ fg, bg } ->
 ## Border color is the Secondary draw color
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#rect-x-y-width-height)
-rect : I32, I32, U32, U32 -> Task {} []
-rect = \x, y, width, height ->
+rect : { x : I32, y : I32, width : U32, height : U32 } -> Task {} []
+rect = \{ x, y, width, height } ->
     Effect.rect x y width height
     |> Effect.map Ok
     |> InternalTask.fromEffect

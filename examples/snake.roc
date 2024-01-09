@@ -142,11 +142,11 @@ drawSnakeBody = \snake ->
     List.walk snake.body (Task.ok {}) \task, part ->
         {} <- task |> Task.await
 
-        W4.rect (part.x * 8) (part.y * 8) 8 8
+        W4.rect { x: (part.x * 8), y: (part.y * 8), width: 8, height: 8 }
 
 drawSnakeHead : Snake -> Task {} []
 drawSnakeHead = \snake ->
-    W4.rect (snake.head.x * 8) (snake.head.y * 8) 8 8
+    W4.rect { x: (snake.head.x * 8), y: (snake.head.y * 8), width: 8, height: 8 }
 
 updateSnake : Snake, Gamepad, U64, Fruit -> (Snake, [AteFruit, DidNotEat])
 updateSnake = \s0, { left, right, up, down }, frameCount, fruit ->
