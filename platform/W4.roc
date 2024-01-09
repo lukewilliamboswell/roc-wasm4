@@ -5,6 +5,7 @@ interface W4
         Gamepad,
         Netplay,
         Player,
+        Shader,
         text,
         setPalette,
         getPalette,
@@ -33,6 +34,9 @@ interface W4
         hideGamepadOverlay,
         showGamepadOverlay,
         tone,
+        getPixel,
+        setPixel,
+        runShader,
     ]
     imports [InternalTask, Task.{ Task }, Effect.{ Effect }]
 
@@ -377,6 +381,45 @@ showGamepadOverlay =
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
+getPixel : U8, U8 -> Task Palette []
+getPixel = \x, y ->
+    Effect.getPixel x y
+    |> Effect.map extractColor
+    |> Effect.map Ok
+    |> InternalTask.fromEffect
+
+setPixel : U8, U8, Palette -> Task {} []
+setPixel = \x, y, color ->
+    bits =
+        when color is
+            None -> 0x0
+            Color1 -> 0x1
+            Color2 -> 0x2
+            Color3 -> 0x3
+            Color4 -> 0x4
+
+    Effect.setPixel x y bits
+    |> Effect.map Ok
+    |> InternalTask.fromEffect
+
+Shader : U8, U8, Palette -> Palette
+runShader : Shader -> Task {} []
+runShader = \shader ->
+    Task.loop (0, 0) \(x, y) ->
+        if x == screenWidth && y == screenHeight then
+            Task.ok (Done {})
+        else if x == screenWidth then
+            (0, (y + 1))
+            |> Step
+            |> Task.ok
+        else
+            color <- getPixel x y |> Task.await
+            newColor = shader x y color
+            {} <- setPixel x y newColor |> Task.await
+            ((x + 1), y)
+            |> Step
+            |> Task.ok
+
 # TODO: add doc and test for encoding into correct format
 tone :
     {
@@ -500,21 +543,21 @@ toColorFlags = \{ primary, secondary, tertiary, quaternary } ->
 expect toColorFlags { primary: Color2, secondary: Color4, tertiary: None, quaternary: None } == 0x0042
 expect toColorFlags { primary: Color1, secondary: Color2, tertiary: Color3, quaternary: Color4 } == 0x4321
 
+extractColor = \pos ->
+    when pos is
+        0x0 -> None
+        0x1 -> Color1
+        0x2 -> Color2
+        0x3 -> Color3
+        0x4 -> Color4
+        _ -> crash "got invalid draw color from the host"
+
 fromColorFlags : U16 -> DrawColors
 fromColorFlags = \flags ->
-    pos1 = Num.bitwiseAnd 0x000F flags
-    pos2 = Num.bitwiseAnd 0x00F0 flags |> Num.shiftRightZfBy 4
-    pos3 = Num.bitwiseAnd 0x0F00 flags |> Num.shiftRightZfBy 8
-    pos4 = Num.bitwiseAnd 0xF000 flags |> Num.shiftRightZfBy 12
-
-    extractColor = \pos ->
-        when pos is
-            0x0 -> None
-            0x1 -> Color1
-            0x2 -> Color2
-            0x3 -> Color3
-            0x4 -> Color4
-            _ -> crash "got invalid draw color from the host"
+    pos1 = Num.bitwiseAnd 0x000F flags |> Num.toU8
+    pos2 = Num.bitwiseAnd 0x00F0 flags |> Num.shiftRightZfBy 4 |> Num.toU8
+    pos3 = Num.bitwiseAnd 0x0F00 flags |> Num.shiftRightZfBy 8 |> Num.toU8
+    pos4 = Num.bitwiseAnd 0xF000 flags |> Num.shiftRightZfBy 12 |> Num.toU8
 
     primary = extractColor pos1
     secondary = extractColor pos2

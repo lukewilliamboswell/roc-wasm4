@@ -30,6 +30,8 @@ hosted Effect
         setPreserveFrameBuffer,
         setHideGamepadOverlay,
         tone,
+        getPixel,
+        setPixel,
     ]
     imports []
     generates Effect with [after, map, always, forever, loop]
@@ -57,3 +59,5 @@ diskr : Effect (List U8)
 setPreserveFrameBuffer : Bool -> Effect {}
 setHideGamepadOverlay : Bool -> Effect {}
 tone : U32, U32, U16, U8 -> Effect {}
+getPixel : U8, U8 -> Effect U8
+setPixel : U8, U8, U8 -> Effect {}

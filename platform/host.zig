@@ -304,4 +304,26 @@ export fn roc_fx_tone(frequency: u32, duration: u32, volume: u16, flags: u8) cal
     w4.tone(frequency, duration, volume, flags);
 }
 
-// TODO: figure out nice api for raw frame buffer functions (maybe just get and set pixel, maybe something fancier)
+export fn roc_fx_setPixel(x: u8, y: u8, draw_color: u8) callconv(.C) void {
+    // Draw if inbounds and not transparent color.
+    if (x < w4.SCREEN_SIZE and y < w4.SCREEN_SIZE and draw_color != 0) {
+        const stroke_color = (draw_color - 1) & 0x3;
+        const idx = (w4.SCREEN_SIZE * y + x) >> 2;
+        const shift: u3 = @intCast((x & 0x3) << 1);
+        const mask = @as(u8, 0x3) << shift;
+        w4.FRAMEBUFFER[idx] = (stroke_color << shift) | (w4.FRAMEBUFFER[idx] & ~mask);
+    }
+}
+
+// For this instead of returning a result, just decide we can return the None color.
+export fn roc_fx_getPixel(x: u8, y: u8) callconv(.C) u8 {
+    if (x >= w4.SCREEN_SIZE or y >= w4.SCREEN_SIZE) {
+        return 0;
+    }
+
+    const idx = (w4.SCREEN_SIZE * y + x) >> 2;
+    const shift: u3 = @intCast((x & 0x3) << 1);
+    const mask = @as(u8, 0x3) << shift;
+    const stroke_color = (w4.FRAMEBUFFER[idx] & mask) >> shift;
+    return stroke_color + 1;
+}
