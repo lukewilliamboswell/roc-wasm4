@@ -58,8 +58,8 @@ update = \model ->
 runGame : Model -> Task Model []
 runGame = \prev ->
 
-    # Read gamepad
-    gamepad <- W4.readGamepad Player1 |> Task.await
+    # Get gamepad
+    gamepad <- W4.getGamepad Player1 |> Task.await
 
     # Update frame
     model = { prev & frameCount: prev.frameCount + 1 }
@@ -142,11 +142,11 @@ drawSnakeBody = \snake ->
     List.walk snake.body (Task.ok {}) \task, part ->
         {} <- task |> Task.await
 
-        W4.rect (part.x * 8) (part.y * 8) 8 8
+        W4.rect { x: (part.x * 8), y: (part.y * 8), width: 8, height: 8 }
 
 drawSnakeHead : Snake -> Task {} []
 drawSnakeHead = \snake ->
-    W4.rect (snake.head.x * 8) (snake.head.y * 8) 8 8
+    W4.rect { x: (snake.head.x * 8), y: (snake.head.y * 8), width: 8, height: 8 }
 
 updateSnake : Snake, Gamepad, U64, Fruit -> (Snake, [AteFruit, DidNotEat])
 updateSnake = \s0, { left, right, up, down }, frameCount, fruit ->
@@ -210,8 +210,8 @@ getRandomFruit = \{ head, body } ->
     # Will the perf of this be bad with a large snake?
     # The better alternative may be to have a free square list and randomly select one.
     Task.loop {} \{} ->
-        x <- W4.randRangeLessThan 0 20 |> Task.await
-        y <- W4.randRangeLessThan 0 20 |> Task.await
+        x <- W4.randBetween { start: 0, before: 20 } |> Task.await
+        y <- W4.randBetween { start: 0, before: 20 } |> Task.await
 
         fruit = { x, y }
         if fruit == head || List.contains body fruit then

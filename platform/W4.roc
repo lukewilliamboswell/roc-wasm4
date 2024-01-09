@@ -1,3 +1,7 @@
+## # roc-wasm4
+##
+## Build [wasm4](https://wasm4.org) games using Roc
+##
 interface W4
     exposes [
         Palette,
@@ -6,6 +10,8 @@ interface W4
         Netplay,
         Player,
         Shader,
+        screenWidth,
+        screenHeight,
         text,
         setPalette,
         getPalette,
@@ -14,18 +20,16 @@ interface W4
         setPrimaryColor,
         setTextColors,
         setShapeColors,
-        readGamepad,
-        readMouse,
-        readNetplay,
+        getGamepad,
+        getMouse,
+        getNetplay,
         rect,
         oval,
         line,
         hline,
         vline,
-        screenWidth,
-        screenHeight,
         rand,
-        randRangeLessThan,
+        randBetween,
         trace,
         saveToDisk,
         loadFromDisk,
@@ -40,10 +44,22 @@ interface W4
     ]
     imports [InternalTask, Task.{ Task }, Effect.{ Effect }]
 
-# TODO: add api docs
-
+## The [Palette] consists of four colors. There is also `None` which is used to
+## represent a transparent or no change color. Each pixel on the screen will be
+## drawn using one of these colors.
+##
+## You may find it helpful to create an alias for your game.
+##
+## ```
+## red = Color2
+## green = Color3
+##
+## W4.setTextColors { fg: red, bg: green }
+## ```
+##
 Palette : [None, Color1, Color2, Color3, Color4]
 
+## Represents the four colors in the [Palette].
 DrawColors : {
     primary : Palette,
     secondary : Palette,
@@ -51,6 +67,19 @@ DrawColors : {
     quaternary : Palette,
 }
 
+## Represents the current state of a [Player] gamepad.
+##
+## ```
+## Gamepad : {
+##     button1 : Bool,
+##     button2 : Bool,
+##     left : Bool,
+##     right : Bool,
+##     up : Bool,
+##     down : Bool,
+## }
+## ```
+##
 Gamepad : {
     button1 : Bool,
     button2 : Bool,
@@ -60,6 +89,18 @@ Gamepad : {
     down : Bool,
 }
 
+## Represents the current state of the mouse.
+##
+## ```
+## Mouse : {
+##     x : I16,
+##     y : I16,
+##     left : Bool,
+##     right : Bool,
+##     middle : Bool,
+## }
+## ```
+##
 Mouse : {
     x : I16,
     y : I16,
@@ -68,28 +109,85 @@ Mouse : {
     middle : Bool,
 }
 
+## Represents the current state of [Netplay](https://wasm4.org/docs/guides/multiplayer#netplay).
+##
+## > Netplay connects gamepad inputs over the Internet using WebRTC
+##
+## ```
+## Netplay : [
+##     Enabled Player,
+##     Disabled,
+## ]
+## ```
+##
 Netplay : [
     Enabled Player,
     Disabled,
 ]
 
+## Represents [Player].
+##
+## [WASM-4 supports realtime multiplayer](https://wasm4.org/docs/guides/multiplayer) of up to 4 players, either locally or online.
+##
 Player : [Player1, Player2, Player3, Player4]
+
+## Represents fragment shader for raw operations with the framebuffer
+##
+## ```
+## Shader : U8, U8, Palette -> Palette
+## ```
+##
+Shader : U8, U8, Palette -> Palette
 
 screenWidth = 160
 screenHeight = 160
 
+## Set the color [Palette] for your game.
+##
+## ```
+## W4.setPalette {
+##     color1: 0xffffff,
+##     color2: 0xff0000,
+##     color3: 0x000ff00,
+##     color4: 0x0000ff,
+## }
+## ```
+##
+## Note this will overwrite any existing colors that are set.
+##
 setPalette : { color1 : U32, color2 : U32, color3 : U32, color4 : U32 } -> Task {} []
 setPalette = \{ color1, color2, color3, color4 } ->
     Effect.setPalette color1 color2 color3 color4
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
+## Get the color [Palette] for your game.
+##
+## ```
+## {color1, color2, color3, color4} <- W4.getPalette |> Task.await
+## ```
+##
 getPalette : Task { color1 : U32, color2 : U32, color3 : U32, color4 : U32 } []
 getPalette =
     Effect.getPalette
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
+## Set the draw colors for the next draw command. This
+##
+## ```
+## blue = Color1
+## white = Color4
+## W4.setDrawColors {
+##     primary : blue,
+##     secondary : white,
+##     tertiary : None,
+##     quaternary : None,
+## }
+## ```
+##
+## Note this will overwrite any existing colors that are set.
+##
 setDrawColors : DrawColors -> Task {} []
 setDrawColors = \colors ->
     colors
@@ -98,6 +196,12 @@ setDrawColors = \colors ->
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
+## Get the currently set draw colors.
+##
+## ```
+## {primary, secondary} <- W4.getDrawColors |> Task.await
+## ```
+##
 getDrawColors : Task DrawColors []
 getDrawColors =
     Effect.getDrawColors
@@ -115,13 +219,21 @@ getDrawColors =
 ## Background color is the Secondary draw color
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/guides/text)
+##
 text : Str, { x : I32, y : I32 } -> Task {} []
 text = \str, { x, y } ->
     Effect.text str x y
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
-## Helper for colors when drawing text
+## Helper for setting the draw colors for text
+##
+## ```
+## blue = Color1
+## white = Color4
+## W4.setTextColors { fg : blue, bg : white }
+## ```
+##
 setTextColors : { fg : Palette, bg : Palette } -> Task {} []
 setTextColors = \{ fg, bg } ->
     setDrawColors {
@@ -131,20 +243,19 @@ setTextColors = \{ fg, bg } ->
         quaternary: None,
     }
 
-# TODO: maybe change the follow functions to either take a {x: I32, y: I32} or (I32, I32) just to cleary group points and width/height
-
 ## Draw a rectangle to the screen.
 ##
 ## ```
-## W4.rect x y width height
+## W4.rect {x: 0, y: 10, width: 40, height: 60}
 ## ```
 ##
 ## Fill color is the Primary draw color
 ## Border color is the Secondary draw color
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#rect-x-y-width-height)
-rect : I32, I32, U32, U32 -> Task {} []
-rect = \x, y, width, height ->
+##
+rect : { x : I32, y : I32, width : U32, height : U32 } -> Task {} []
+rect = \{ x, y, width, height } ->
     Effect.rect x y width height
     |> Effect.map Ok
     |> InternalTask.fromEffect
@@ -152,30 +263,32 @@ rect = \x, y, width, height ->
 ## Draw an oval to the screen.
 ##
 ## ```
-## W4.oval x y width height
+## W4.oval {x, y, width: 20, height: 30}
 ## ```
 ##
 ## Fill color is the Primary draw color
 ## Border color is the Secondary draw color
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#oval-x-y-width-height)
-oval : I32, I32, U32, U32 -> Task {} []
-oval = \x, y, width, height ->
+##
+oval : { x : I32, y : I32, width : U32, height : U32 } -> Task {} []
+oval = \{ x, y, width, height } ->
     Effect.oval x y width height
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
-## Draw an line between two points to the screen.
+## Draw a line between two points to the screen.
 ##
 ## ```
-## W4.line x1 y1 x2 y2
+## W4.line {x: 0, y: 0}, {x: 10, y: 10}
 ## ```
 ##
 ## Line color is the Primary draw color
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#line-x1-y1-x2-y2)
-line : I32, I32, I32, I32 -> Task {} []
-line = \x1, y1, x2, y2 ->
+##
+line : { x : I32, y : I32 }, { x : I32, y : I32 } -> Task {} []
+line = \{ x: x1, y: y1 }, { x: x2, y: y2 } ->
     Effect.line x1 y1 x2 y2
     |> Effect.map Ok
     |> InternalTask.fromEffect
@@ -183,14 +296,15 @@ line = \x1, y1, x2, y2 ->
 ## Draw a horizontal line starting at (x, y) with len to the screen.
 ##
 ## ```
-## W4.hline x y len
+## W4.hline {x: 10, y: 20, len: 30}
 ## ```
 ##
 ## Line color is the Primary draw color
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#line-x1-y1-x2-y2)
-hline : I32, I32, U32 -> Task {} []
-hline = \x, y, len ->
+##
+hline : { x : I32, y : I32, len : U32 } -> Task {} []
+hline = \{ x, y, len } ->
     Effect.hline x y len
     |> Effect.map Ok
     |> InternalTask.fromEffect
@@ -198,19 +312,30 @@ hline = \x, y, len ->
 ## Draw a vertical line starting at (x, y) with len to the screen.
 ##
 ## ```
-## W4.vline x y len
+## W4.vline {x: 10, y: 20, len: 30}
 ## ```
 ##
 ## Line color is the Primary draw color
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#line-x1-y1-x2-y2)
-vline : I32, I32, U32 -> Task {} []
-vline = \x, y, len ->
+##
+vline : { x : I32, y : I32, len : U32 } -> Task {} []
+vline = \{ x, y, len } ->
     Effect.vline x y len
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
 ## Helper for colors when drawing a shape
+##
+## ```
+## blue = Color1
+## white = Color4
+## W4.setShapeColors { border : blue, fill : white }
+## ```
+##
+## Note this will overwrite any existing colors, and sets the
+## tertiary and quaternary values to `None`.
+##
 setShapeColors : { border : W4.Palette, fill : W4.Palette } -> Task {} []
 setShapeColors = \{ border, fill } ->
     setDrawColors {
@@ -221,6 +346,15 @@ setShapeColors = \{ border, fill } ->
     }
 
 ## Helper for primary drawing color
+##
+## ```
+## blue = Color1
+## W4.setPrimaryColor blue
+## ```
+##
+## Note this will overwrite any existing colors, and sets the
+## secondary, tertiary and quaternary values to `None`.
+##
 setPrimaryColor : W4.Palette -> Task {} []
 setPrimaryColor = \primary ->
     setDrawColors {
@@ -230,9 +364,14 @@ setPrimaryColor = \primary ->
         quaternary: None,
     }
 
-## Read the controls for a Gamepad
-readGamepad : Player -> Task Gamepad []
-readGamepad = \player ->
+## Get the controls for a [Gamepad].
+##
+## ```
+## {button1,button2,left,right,up,down} <- W4.getGamepad Player1 |> Task.await
+## ```
+##
+getGamepad : Player -> Task Gamepad []
+getGamepad = \player ->
 
     gamepadNumber =
         when player is
@@ -241,7 +380,7 @@ readGamepad = \player ->
             Player3 -> 3
             Player4 -> 4
 
-    Effect.readGamepad gamepadNumber
+    Effect.getGamepad gamepadNumber
     |> Effect.map \flags ->
         Ok {
             # 1 BUTTON_1
@@ -259,10 +398,15 @@ readGamepad = \player ->
         }
     |> InternalTask.fromEffect
 
-## Read the mouse input
-readMouse : Task Mouse []
-readMouse =
-    Effect.readMouse
+## Get the current [Mouse] position
+##
+## ```
+## {x,y,left,right,middle} <- W4.getMouse |> Task.await
+## ```
+##
+getMouse : Task Mouse []
+getMouse =
+    Effect.getMouse
     |> Effect.map \{ x, y, buttons } ->
         Ok {
             x: x,
@@ -276,10 +420,27 @@ readMouse =
         }
     |> InternalTask.fromEffect
 
-## Read the netplay status
-readNetplay : Task Netplay []
-readNetplay =
-    Effect.readNetplay
+## Get the [Netplay] status
+##
+## ```
+## netplay <- W4.getNetplay |> Task.await
+## when netplay is
+##     Enabled Player1 -> # ..
+##     Enabled Player2 -> # ..
+##     Enabled Player3 -> # ..
+##     Enabled Player4 -> # ..
+##     Disabled -> # ..
+## ```
+##
+## Note: All WASM-4 games that support local multiplayer automatically support netplay.
+## There are no additional steps developers need to take to make their games netplay-ready.
+## Netplay can be used to implement advanced features such as non-shared screen multiplayer
+##
+## [Refer w4 docs for more information](https://wasm4.org/docs/guides/multiplayer)
+##
+getNetplay : Task Netplay []
+getNetplay =
+    Effect.getNetplay
     |> Effect.map \flags ->
         enabled = Num.bitwiseAnd 0b0000_0100 flags > 0
         if enabled then
@@ -295,18 +456,31 @@ readNetplay =
             Ok Disabled
     |> InternalTask.fromEffect
 
-## Generate a psuedo-random number
+## Generate a pseudo-random number
+##
+## ```
+## # pseudo-random number between Num.minI32 and Num.maxI32
+## i <- W4.rand |> Task.await
+## ```
+##
 rand : Task I32 []
 rand =
     Effect.rand
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
-## Generate a psuedo-random number in specified range
+## Generate a pseudo-random number in the range
+##
 ## The range has an inclusive start and exclusive end
-randRangeLessThan : I32, I32 -> Task I32 []
-randRangeLessThan = \start, end ->
-    Effect.randRangeLessThan start end
+##
+## ```
+## # random number in the range 0-99
+## i <- W4.randBetween {start: 0, before: 100} |> Task.await
+## ```
+##
+randBetween : { start : I32, before : I32 } -> Task I32 []
+randBetween = \{ start, before } ->
+    Effect.randRangeLessThan start before
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
@@ -317,22 +491,28 @@ randRangeLessThan = \start, end ->
 ## ```
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/guides/trace)
+##
 trace : Str -> Task {} []
 trace = \str ->
     Effect.trace str
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
-## Writes the passed in data to persistant storage.
-## Any previously saved data on the disk is replaced.
+## Saves data to persistent storage. Any previously saved data on the disk is replaced.
+##
 ## Returns `Err SaveFailed` on failure.
 ##
 ## ```
-## W4.saveToDisk [0x10]
+## result <- W4.saveToDisk [0x10] |> Task.attempt
+## when result is
+##    Ok {} -> # success
+##    Err SaveFailed -> # handle failure
 ## ```
 ##
 ## Games can persist up to 1024 bytes of data.
+##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/guides/diskw)
+##
 saveToDisk : List U8 -> Task {} [SaveFailed]
 saveToDisk = \data ->
     Effect.diskw data
@@ -343,53 +523,64 @@ saveToDisk = \data ->
             Err SaveFailed
     |> InternalTask.fromEffect
 
-## Reads all saved data from persistant storage.
+## Gets all saved data from persistent storage.
 ##
 ## ```
 ## data <- W4.loadFromDisk |> Task.await
 ## ```
 ##
 ## Games can persist up to 1024 bytes of data.
+##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/guides/diskw)
+##
 loadFromDisk : Task (List U8) []
 loadFromDisk =
     Effect.diskr
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
+## Set a flag to keep the framebuffer between frames
+##
+## This can be helpful if you only want to update part of the screen
+##
 preserveFrameBuffer : Task {} []
 preserveFrameBuffer =
     Effect.setPreserveFrameBuffer Bool.true
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
+## Set a flag to clear the framebuffer between frames
 clearFrameBufferEachUpdate : Task {} []
 clearFrameBufferEachUpdate =
     Effect.setPreserveFrameBuffer Bool.false
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
+## Set a flag to hide the game overlay
 hideGamepadOverlay : Task {} []
 hideGamepadOverlay =
     Effect.setHideGamepadOverlay Bool.true
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
+## Set a flag to show the game overlay
 showGamepadOverlay : Task {} []
 showGamepadOverlay =
     Effect.setHideGamepadOverlay Bool.false
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
-getPixel : U8, U8 -> Task Palette []
-getPixel = \x, y ->
+## Get the color for an individual pixel in the framebuffer
+getPixel : { x : U8, y : U8 } -> Task Palette []
+getPixel = \{ x, y } ->
     Effect.getPixel x y
     |> Effect.map extractColor
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
-setPixel : U8, U8, Palette -> Task {} []
-setPixel = \x, y, color ->
+## Set the color for an individual pixel in the framebuffer
+setPixel : { x : U8, y : U8 }, Palette -> Task {} []
+setPixel = \{ x, y }, color ->
     bits =
         when color is
             None -> 0x0
@@ -402,7 +593,7 @@ setPixel = \x, y, color ->
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
-Shader : U8, U8, Palette -> Palette
+# Run a fragment [Shader] on the raw framebuffer
 runShader : Shader -> Task {} []
 runShader = \shader ->
     Task.loop (0, 0) \(x, y) ->
@@ -413,14 +604,14 @@ runShader = \shader ->
             |> Step
             |> Task.ok
         else
-            color <- getPixel x y |> Task.await
+            color <- getPixel { x, y } |> Task.await
             newColor = shader x y color
-            {} <- setPixel x y newColor |> Task.await
+            {} <- setPixel { x, y } newColor |> Task.await
             ((x + 1), y)
             |> Step
             |> Task.ok
 
-# TODO: add doc and test for encoding into correct format
+## Plays a tone sound
 tone :
     {
         startFreq ? U16,

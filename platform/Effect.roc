@@ -7,14 +7,13 @@ hosted Effect
         forever,
         loop,
         text,
-        # TODO: pick between get and read or some other name (just be consistent)?
         setPalette,
         getPalette,
         setDrawColors,
         getDrawColors,
-        readGamepad,
-        readMouse,
-        readNetplay,
+        getGamepad,
+        getMouse,
+        getNetplay,
         rect,
         oval,
         line,
@@ -41,9 +40,9 @@ setPalette : U32, U32, U32, U32 -> Effect {}
 getPalette : Effect { color1 : U32, color2 : U32, color3 : U32, color4 : U32 }
 setDrawColors : U16 -> Effect {}
 getDrawColors : Effect U16
-readGamepad : U8 -> Effect U8
-readMouse : Effect { x : i16, y : i16, buttons : U8 }
-readNetplay : Effect U8
+getGamepad : U8 -> Effect U8
+getMouse : Effect { x : i16, y : i16, buttons : U8 }
+getNetplay : Effect U8
 rect : I32, I32, U32, U32 -> Effect {}
 oval : I32, I32, U32, U32 -> Effect {}
 line : I32, I32, I32, I32 -> Effect {}

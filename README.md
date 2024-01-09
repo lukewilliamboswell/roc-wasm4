@@ -4,8 +4,6 @@ Roc platform for the [wasm4](https://wasm4.org) game engine 🎮🕹️👾
 
 The intent for this platform is to have some fun, learn more about Roc and platform development, and contribute something for others to enjoy.
 
-🚧 *Work In Progress* 🏗️ we are still working on improving API, writing more examples, and including documentation. 
-
 ### Setup
 
 Make sure you have [roc](https://www.roc-lang.org/install), [zig v0.11.0](https://ziglang.org/download/), and [w4](https://wasm4.org) in your `PATH` environment variable.
@@ -36,7 +34,7 @@ The `build.zig` script reports any warnings or errors for the app using `roc che
 
 📖 Platform docs hosted at [lukewilliamboswell.github.io/roc-wasm4/](https://lukewilliamboswell.github.io/roc-wasm4/)
 
-To generate locally use `roc docs platform/main.roc`, and then host the docs using a file server e.g. `simple-http-server generated-docs/`.
+To generate locally use `roc docs platform/main.roc`, and then use a file server `simple-http-server generated-docs/`.
 
 ### Distribution
 
