@@ -277,7 +277,7 @@ oval = \{ x, y, width, height } ->
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
-## Draw an line between two points to the screen.
+## Draw a line between two points to the screen.
 ##
 ## ```
 ## W4.line {x: 0, y: 0}, {x: 10, y: 10}
@@ -333,7 +333,7 @@ vline = \{ x, y, len } ->
 ## W4.setShapeColors { border : blue, fill : white }
 ## ```
 ##
-## Note this will overwrite any existing colors that are set, and sets the
+## Note this will overwrite any existing colors, and sets the
 ## tertiary and quaternary values to `None`.
 ##
 setShapeColors : { border : W4.Palette, fill : W4.Palette } -> Task {} []
@@ -352,7 +352,7 @@ setShapeColors = \{ border, fill } ->
 ## W4.setPrimaryColor blue
 ## ```
 ##
-## Note this will overwrite any existing colors that are set, and sets the
+## Note this will overwrite any existing colors, and sets the
 ## secondary, tertiary and quaternary values to `None`.
 ##
 setPrimaryColor : W4.Palette -> Task {} []
@@ -456,10 +456,10 @@ getNetplay =
             Ok Disabled
     |> InternalTask.fromEffect
 
-## Generate a psuedo-random number
+## Generate a pseudo-random number
 ##
 ## ```
-## # psuedo-random number between Num.minI32 and Num.maxI32
+## # pseudo-random number between Num.minI32 and Num.maxI32
 ## i <- W4.rand |> Task.await
 ## ```
 ##
@@ -469,7 +469,8 @@ rand =
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
-## Generate a psuedo-random number in specified range
+## Generate a pseudo-random number in the range
+##
 ## The range has an inclusive start and exclusive end
 ##
 ## ```
@@ -497,8 +498,8 @@ trace = \str ->
     |> Effect.map Ok
     |> InternalTask.fromEffect
 
-## Writes the passed in data to persistant storage.
-## Any previously saved data on the disk is replaced.
+## Saves data to persistent storage. Any previously saved data on the disk is replaced.
+##
 ## Returns `Err SaveFailed` on failure.
 ##
 ## ```
@@ -522,7 +523,7 @@ saveToDisk = \data ->
             Err SaveFailed
     |> InternalTask.fromEffect
 
-## Gets all saved data from persistant storage.
+## Gets all saved data from persistent storage.
 ##
 ## ```
 ## data <- W4.loadFromDisk |> Task.await
