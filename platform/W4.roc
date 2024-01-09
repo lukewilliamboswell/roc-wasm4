@@ -228,7 +228,7 @@ setTextColors = \{ fg, bg } ->
 ## Draw a rectangle to the screen.
 ##
 ## ```
-## W4.rect x y width height
+## W4.rect {x: 0, y: 10, width: 40, height: 60}
 ## ```
 ##
 ## Fill color is the Primary draw color
@@ -244,15 +244,15 @@ rect = \{ x, y, width, height } ->
 ## Draw an oval to the screen.
 ##
 ## ```
-## W4.oval x y width height
+## W4.oval {x, y, width: 20, height: 30}
 ## ```
 ##
 ## Fill color is the Primary draw color
 ## Border color is the Secondary draw color
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#oval-x-y-width-height)
-oval : I32, I32, U32, U32 -> Task {} []
-oval = \x, y, width, height ->
+oval : { x : I32, y : I32, width : U32, height : U32 } -> Task {} []
+oval = \{ x, y, width, height } ->
     Effect.oval x y width height
     |> Effect.map Ok
     |> InternalTask.fromEffect
@@ -260,14 +260,14 @@ oval = \x, y, width, height ->
 ## Draw an line between two points to the screen.
 ##
 ## ```
-## W4.line x1 y1 x2 y2
+## W4.line {x: 0, y: 0}, {x: 10, y: 10}
 ## ```
 ##
 ## Line color is the Primary draw color
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#line-x1-y1-x2-y2)
-line : I32, I32, I32, I32 -> Task {} []
-line = \x1, y1, x2, y2 ->
+line : { x : I32, y : I32 }, { x : I32, y : I32 } -> Task {} []
+line = \{ x: x1, y: y1 }, { x: x2, y: y2 } ->
     Effect.line x1 y1 x2 y2
     |> Effect.map Ok
     |> InternalTask.fromEffect
