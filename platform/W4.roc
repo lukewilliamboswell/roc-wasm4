@@ -31,6 +31,7 @@ interface W4
         rand,
         randBetween,
         trace,
+        debug,
         saveToDisk,
         loadFromDisk,
         preserveFrameBuffer,
@@ -503,6 +504,17 @@ trace = \str ->
     Effect.trace str
     |> Effect.map Ok
     |> InternalTask.fromEffect
+
+## Prints a message with a debug formatting of the value to the console.
+##
+## ```
+## W4.debug "my int" 7
+## ```
+##
+debug : Str, val -> Task {} [] where val implements Inspect.Inspect
+debug = \msg, val ->
+    trace "$(msg): $(Inspect.toStr val)"
+
 
 ## Saves data to persistent storage. Any previously saved data on the disk is replaced.
 ##
