@@ -8,7 +8,7 @@ The intent for this platform is to have some fun, learn more about Roc and platf
 
 Clone this repository.
 
-Make sure you have [roc](https://www.roc-lang.org/install), [zig](https://ziglang.org/download/) version 0.11.0, and [w4](https://wasm4.org) in your `PATH` environment variable.
+Make sure you have [roc](https://www.roc-lang.org/install) newer than 2023-1-8, [zig](https://ziglang.org/download/) version 0.11.0, and [w4](https://wasm4.org) in your `PATH` environment variable.
 
 ### Run
 
