@@ -19,6 +19,7 @@ Model : {
     snake : Snake,
     fruit : Fruit,
     fruitSprite : Sprite,
+    gameStarted : Bool,
 }
 
 main : Program
@@ -27,8 +28,6 @@ main = { init, update }
 init : Task Model []
 init =
     {} <- setColorPalette |> Task.await
-
-    startingFruit <- getRandomFruit startingSnake |> Task.await
 
     fruitSprite = Sprite.new {
         data: [0x00, 0xa0, 0x02, 0x00, 0x0e, 0xf0, 0x36, 0x5c, 0xd6, 0x57, 0xd5, 0x57, 0x35, 0x5c, 0x0f, 0xf0],
@@ -40,29 +39,54 @@ init =
     Task.ok {
         frameCount: 0,
         snake: startingSnake,
-        fruit: startingFruit,
+        fruit: {x: 0, y: 0},
         fruitSprite,
+        gameStarted: Bool.false,
     }
 
 update : Model -> Task Model []
-update = \model ->
-    if snakeIsDead model.snake then
-        {} <- drawGame model |> Task.await
-        {} <- W4.setTextColors { fg: blue, bg: white } |> Task.await
-        # TODO: maybe count and display score under game over message.
-        {} <- W4.text "Game Over!" { x: 40, y: 72 } |> Task.await
-        Task.ok model
+update = \prev ->
+    # Update frame count
+    model = { prev & frameCount: prev.frameCount + 1 }
+
+    if !model.gameStarted then
+        runTitleScreen model
+    else if snakeIsDead model.snake then
+        runEndScreen model
     else
         runGame model
 
+runTitleScreen : Model -> Task Model []
+runTitleScreen = \model ->
+    {} <- W4.text "Press X to start!" { x: 15, y: 72 } |> Task.await
+
+    gamepad <- W4.getGamepad Player1 |> Task.await
+
+    if gamepad.button1 then
+        # Seed the randomness with number of frames since the start of the game.
+        # This makes the game feel like it is truely randomly seeded cause players won't always start on the same frame.
+        {} <- W4.seedRand model.frameCount |> Task.await
+
+        # Generate the starting fruit.
+        fruit <- getRandomFruit startingSnake |> Task.await
+
+        Task.ok { model & gameStarted: Bool.true, fruit }
+    else
+        Task.ok model
+
+runEndScreen : Model -> Task Model []
+runEndScreen = \model ->
+    {} <- drawGame model |> Task.await
+    {} <- W4.setTextColors { fg: blue, bg: white } |> Task.await
+
+    {} <- W4.text "Game Over!" { x: 40, y: 72 } |> Task.await
+    Task.ok model
+
 runGame : Model -> Task Model []
-runGame = \prev ->
+runGame = \model ->
 
     # Get gamepad
     gamepad <- W4.getGamepad Player1 |> Task.await
-
-    # Update frame
-    model = { prev & frameCount: prev.frameCount + 1 }
 
     # Update snake
     (snake, ate) =

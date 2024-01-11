@@ -28,6 +28,7 @@ interface W4
         line,
         hline,
         vline,
+        seedRand,
         rand,
         randBetween,
         trace,
@@ -463,12 +464,34 @@ getNetplay =
             Ok Disabled
     |> InternalTask.fromEffect
 
+## Seeds the global pseudo-random number generator.
+##
+## ```
+## {} <- W4.seedRand framesSinceStart |> Task.await
+## ```
+##
+## Wasm4 exposes no way to seed a random number generator.
+## As such, anything random will be exactly the same on every run by default.
+## To work around this, it is suggested to count the number of frames the user is on
+## the title screen before starting the game and use that to seed the prng.
+##
+seedRand : U64 -> Task {} []
+seedRand = \s ->
+    Effect.seedRand s
+    |> Effect.map Ok
+    |> InternalTask.fromEffect
+
 ## Generate a pseudo-random number.
 ##
 ## ```
 ## # pseudo-random number between Num.minI32 and Num.maxI32 (inclusive of both)
 ## i <- W4.rand |> Task.await
 ## ```
+##
+## Warning: Wasm4 exposes no way to seed a random number generator.
+## As such, anything random will be exactly the same on every run by default.
+## To work around this, it is suggested to count the number of frames the user is on
+## the title screen before starting the game and use that to seed the prng.
 ##
 rand : Task I32 []
 rand =
@@ -484,6 +507,11 @@ rand =
 ## # random number in the range 0-99
 ## i <- W4.randBetween {start: 0, before: 100} |> Task.await
 ## ```
+##
+## Warning: Wasm4 exposes no way to seed a random number generator.
+## As such, anything random will be exactly the same on every run by default.
+## To work around this, it is suggested to count the number of frames the user is on
+## the title screen before starting the game and use that to seed the prng.
 ##
 randBetween : { start : I32, before : I32 } -> Task I32 []
 randBetween = \{ start, before } ->
