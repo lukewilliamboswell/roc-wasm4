@@ -19,6 +19,7 @@ hosted Effect
         line,
         hline,
         vline,
+        seedRand,
         rand,
         randRangeLessThan,
         blit,
@@ -48,6 +49,7 @@ oval : I32, I32, U32, U32 -> Effect {}
 line : I32, I32, I32, I32 -> Effect {}
 hline : I32, I32, U32 -> Effect {}
 vline : I32, I32, U32 -> Effect {}
+seedRand : U64 -> Effect {}
 rand : Effect I32
 randRangeLessThan : I32, I32 -> Effect I32
 blit : List U8, I32, I32, U32, U32, U32 -> Effect {}

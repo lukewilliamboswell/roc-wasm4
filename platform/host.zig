@@ -239,6 +239,11 @@ export fn roc_fx_getNetplay() callconv(.C) u8 {
     return w4.NETPLAY.*;
 }
 
+export fn roc_fx_seedRand(seed: u64) callconv(.C) void {
+    prng = std.rand.DefaultPrng.init(seed);
+    rnd = prng.random();
+}
+
 export fn roc_fx_rand() callconv(.C) i32 {
     return rnd.int(i32);
 }
