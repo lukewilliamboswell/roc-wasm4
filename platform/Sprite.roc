@@ -83,7 +83,7 @@ blit = \@Sprite { data, bpp, stride, region }, { x, y, flags ? [] } ->
 ## ```
 ##
 ## Note: If your program should never generate an invalid subregion,
-## [subOrCrash] is enables avoiding the result and simpler code.
+## [subOrCrash] enables avoiding the result and simpler code.
 ##
 sub : Sprite, SubRegion -> Result Sprite [OutOfBounds]
 sub = \@Sprite sprite, subRegion ->
@@ -107,7 +107,7 @@ sub = \@Sprite sprite, subRegion ->
 ## This is really useful for static sprite sheet data that needs subSprites extracted.
 ##
 ## ```
-## subSpriteResult = Sprite.sub sprite { srcX: 20, srcY: 0, width: 20, height: 20 }
+## subSprite = Sprite.subOrCrash sprite { srcX: 20, srcY: 0, width: 20, height: 20 }
 ## ```
 ##
 ## Warning: Will crash if the subregion is not contained within the sprite.
