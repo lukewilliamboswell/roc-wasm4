@@ -16,7 +16,7 @@ Program : {
 
 Model : [
     TitleScreen TitleScreenState,
-    Game GameState
+    Game GameState,
 ]
 
 main : Program
@@ -42,11 +42,13 @@ init =
 
     {} <- W4.setPalette palette |> Task.await
 
-    Task.ok 
-        (TitleScreen {
-            frameCount: 0,
-            rocciAnim: createRocciAnim {},
-        })
+    Task.ok
+        (
+            TitleScreen {
+                frameCount: 0,
+                rocciAnim: createRocciAnim {},
+            }
+        )
 
 update : Model -> Task Model []
 update = \model ->
@@ -55,14 +57,15 @@ update = \model ->
             state
             |> updateFrameCount
             |> runTitleScreen
+
         Game state ->
             state
             |> updateFrameCount
             |> runGame
 
-updateFrameCount : { frameCount: U64 }a -> { frameCount : U64 }a
+updateFrameCount : { frameCount : U64 }a -> { frameCount : U64 }a
 updateFrameCount = \prev ->
-    {prev & frameCount: Num.addWrap prev.frameCount 1}
+    { prev & frameCount: Num.addWrap prev.frameCount 1 }
 
 # ===== Title Screen ======================================
 
@@ -73,18 +76,18 @@ TitleScreenState : {
 
 runTitleScreen : TitleScreenState -> Task Model []
 runTitleScreen = \prev ->
-    state = {
-        prev &
+    state = { prev &
         rocciAnim: updateAnimation prev.frameCount prev.rocciAnim,
     }
 
     {} <- W4.text "Rocci Bird!!!" { x: 32, y: 12 } |> Task.await
     {} <- W4.text "Press X to start!" { x: 16, y: 72 } |> Task.await
 
-    shift = 
-        (state.frameCount // 15 + 1) % 2
+    shift =
+        (state.frameCount // 15 + 1)
+        % 2
         |> Num.toI32
-    {} <- drawAnimation state.rocciAnim { x : 70, y: 40 + shift } |> Task.await
+    {} <- drawAnimation state.rocciAnim { x: 70, y: 40 + shift } |> Task.await
     gamepad <- W4.getGamepad Player1 |> Task.await
 
     if gamepad.button1 then
@@ -102,20 +105,20 @@ GameState : {
     frameCount : U64,
     rocciAnim : Animation,
     player : {
-        y: F32,
+        y : F32,
         yVel : F32,
-    }
+    },
 }
 
-initGame : { frameCount: U64, rocciAnim: Animation }* -> Model
-initGame = \{frameCount, rocciAnim} ->
+initGame : { frameCount : U64, rocciAnim : Animation }* -> Model
+initGame = \{ frameCount, rocciAnim } ->
     Game {
         frameCount,
         rocciAnim,
         player: {
             y: 60,
             yVel: 0.5,
-        }
+        },
     }
 
 runGame : GameState -> Task Model []
@@ -125,34 +128,31 @@ runGame = \prev ->
 
     gamepad <- W4.getGamepad Player1 |> Task.await
 
-    yVel = 
+    yVel =
         if gamepad.button1 then
             -3
         else
             prev.player.yVel + gravity
     y = prev.player.y + yVel
 
-    state = {
-        prev &
+    state = { prev &
         rocciAnim: updateAnimation prev.frameCount prev.rocciAnim,
         player: { y, yVel },
     }
 
     yPixel = Num.floor state.player.y
-    {} <- drawAnimation state.rocciAnim { x : 20, y: yPixel } |> Task.await
+    {} <- drawAnimation state.rocciAnim { x: 20, y: yPixel } |> Task.await
 
     Task.ok (Game state)
 
-
-
 # ===== Animations ========================================
 
-AnimationState: [Completed, RunOnce, Loop]
+AnimationState : [Completed, RunOnce, Loop]
 Animation : {
-    framesPerUpdate: U64,
-    index: U64,
-    cells: List Sprite,
-    state: AnimationState
+    framesPerUpdate : U64,
+    index : U64,
+    cells : List Sprite,
+    state : AnimationState,
 }
 
 updateAnimation : U64, Animation -> Animation
@@ -164,21 +164,22 @@ updateAnimation = \frameCount, anim ->
         when anim.state is
             Completed ->
                 anim
-            Loop -> 
+
+            Loop ->
                 { anim & index: nextIndex }
-            RunOnce -> 
+
+            RunOnce ->
                 if nextIndex == 0 then
                     { anim & index: nextIndex, state: Completed }
                 else
                     { anim & index: nextIndex }
 
-
-
-drawAnimation : Animation, { x: I32, y: I32, flags ? List [FlipX, FlipY, Rotate] } -> Task {} []
+drawAnimation : Animation, { x : I32, y : I32, flags ? List [FlipX, FlipY, Rotate] } -> Task {} []
 drawAnimation = \anim, params ->
     when List.get anim.cells (Num.toNat anim.index) is
         Ok sprite ->
             Sprite.blit sprite params
+
         Err _ ->
             crash "animation cell out of bounds at index: \(anim.index |> Num.toStr)"
 
@@ -189,36 +190,114 @@ wrappedInc = \val, count ->
     else
         next
 
-
 createRocciAnim : {} -> Animation
-createRocciAnim = \{} ->
-    {
-        framesPerUpdate: 10,
-        index: 0,
-        state: Loop,
-        cells: [
+createRocciAnim = \{} -> {
+    framesPerUpdate: 10,
+    index: 0,
+    state: Loop,
+    cells: [
         Sprite.new {
             data: [
-                0x55,0x55,0x55,0x55,0x55,
-                0x40,0x01,0x55,0x55,0x55,
-                0x50,0x00,0x25,0x55,0x55,
-                0x54,0x00,0x29,0x55,0x55,
-                0x55,0x00,0x2a,0x54,0x25,
-                0x55,0x40,0x2a,0x90,0x29,
-                0x55,0x50,0x2a,0xa0,0x15,
-                0x55,0x54,0x2a,0xa8,0x15,
-                0x55,0x55,0x82,0xaa,0x15,
-                0x55,0x55,0x80,0x00,0x55,
-                0x55,0x55,0x80,0x01,0x55,
-                0x55,0x56,0x80,0x15,0x55,
-                0x55,0x56,0x80,0x55,0x55,
-                0x55,0x56,0x85,0x55,0x55,
-                0x55,0x56,0x95,0x55,0x55,
-                0x55,0x5a,0xa5,0x55,0x55,
-                0x55,0x5a,0x95,0x55,0x55,
-                0x55,0x5a,0x55,0x55,0x55,
-                0x55,0x59,0x55,0x55,0x55,
-                0x55,0x55,0x55,0x55,0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x40,
+                0x01,
+                0x55,
+                0x55,
+                0x55,
+                0x50,
+                0x00,
+                0x25,
+                0x55,
+                0x55,
+                0x54,
+                0x00,
+                0x29,
+                0x55,
+                0x55,
+                0x55,
+                0x00,
+                0x2a,
+                0x54,
+                0x25,
+                0x55,
+                0x40,
+                0x2a,
+                0x90,
+                0x29,
+                0x55,
+                0x50,
+                0x2a,
+                0xa0,
+                0x15,
+                0x55,
+                0x54,
+                0x2a,
+                0xa8,
+                0x15,
+                0x55,
+                0x55,
+                0x82,
+                0xaa,
+                0x15,
+                0x55,
+                0x55,
+                0x80,
+                0x00,
+                0x55,
+                0x55,
+                0x55,
+                0x80,
+                0x01,
+                0x55,
+                0x55,
+                0x56,
+                0x80,
+                0x15,
+                0x55,
+                0x55,
+                0x56,
+                0x80,
+                0x55,
+                0x55,
+                0x55,
+                0x56,
+                0x85,
+                0x55,
+                0x55,
+                0x55,
+                0x56,
+                0x95,
+                0x55,
+                0x55,
+                0x55,
+                0x5a,
+                0xa5,
+                0x55,
+                0x55,
+                0x55,
+                0x5a,
+                0x95,
+                0x55,
+                0x55,
+                0x55,
+                0x5a,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x59,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
             ],
             bpp: BPP2,
             width: 20,
@@ -226,26 +305,106 @@ createRocciAnim = \{} ->
         },
         Sprite.new {
             data: [
-                0x55,0x55,0x55,0x55,0x55,
-                0x54,0x55,0x55,0x55,0x55,
-                0x50,0x55,0x55,0x55,0x55,
-                0x50,0x15,0x55,0x55,0x55,
-                0x40,0x15,0x55,0x54,0x25,
-                0x40,0x05,0x55,0x50,0x29,
-                0x40,0x00,0x55,0x40,0x15,
-                0x40,0x00,0x2a,0x80,0x15,
-                0x40,0x02,0xaa,0xaa,0x15,
-                0x50,0x0a,0xaa,0xa0,0x55,
-                0x54,0x2a,0xaa,0x01,0x55,
-                0x55,0x2a,0x80,0x15,0x55,
-                0x55,0x56,0x80,0x55,0x55,
-                0x55,0x56,0x85,0x55,0x55,
-                0x55,0x56,0x95,0x55,0x55,
-                0x55,0x5a,0xa5,0x55,0x55,
-                0x55,0x5a,0x95,0x55,0x55,
-                0x55,0x5a,0x55,0x55,0x55,
-                0x55,0x59,0x55,0x55,0x55,
-                0x55,0x55,0x55,0x55,0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x54,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x50,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x50,
+                0x15,
+                0x55,
+                0x55,
+                0x55,
+                0x40,
+                0x15,
+                0x55,
+                0x54,
+                0x25,
+                0x40,
+                0x05,
+                0x55,
+                0x50,
+                0x29,
+                0x40,
+                0x00,
+                0x55,
+                0x40,
+                0x15,
+                0x40,
+                0x00,
+                0x2a,
+                0x80,
+                0x15,
+                0x40,
+                0x02,
+                0xaa,
+                0xaa,
+                0x15,
+                0x50,
+                0x0a,
+                0xaa,
+                0xa0,
+                0x55,
+                0x54,
+                0x2a,
+                0xaa,
+                0x01,
+                0x55,
+                0x55,
+                0x2a,
+                0x80,
+                0x15,
+                0x55,
+                0x55,
+                0x56,
+                0x80,
+                0x55,
+                0x55,
+                0x55,
+                0x56,
+                0x85,
+                0x55,
+                0x55,
+                0x55,
+                0x56,
+                0x95,
+                0x55,
+                0x55,
+                0x55,
+                0x5a,
+                0xa5,
+                0x55,
+                0x55,
+                0x55,
+                0x5a,
+                0x95,
+                0x55,
+                0x55,
+                0x55,
+                0x5a,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x59,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
             ],
             bpp: BPP2,
             width: 20,
@@ -253,30 +412,110 @@ createRocciAnim = \{} ->
         },
         Sprite.new {
             data: [
-                0x55,0x55,0x55,0x55,0x55,
-                0x55,0x55,0x55,0x55,0x55,
-                0x55,0x55,0x55,0x55,0x55,
-                0x55,0x55,0x55,0x55,0x55,
-                0x55,0x55,0x55,0x54,0x25,
-                0x55,0x55,0x55,0x50,0x29,
-                0x55,0x55,0x55,0x40,0x15,
-                0x40,0x15,0x55,0x00,0x15,
-                0x50,0x00,0x2a,0xaa,0x15,
-                0x54,0x00,0xaa,0xa0,0x55,
-                0x55,0x00,0xaa,0x81,0x55,
-                0x55,0x40,0xaa,0x15,0x55,
-                0x55,0x50,0xa0,0x55,0x55,
-                0x55,0x56,0x85,0x55,0x55,
-                0x55,0x56,0x95,0x55,0x55,
-                0x55,0x5a,0xa5,0x55,0x55,
-                0x55,0x5a,0x95,0x55,0x55,
-                0x55,0x5a,0x55,0x55,0x55,
-                0x55,0x59,0x55,0x55,0x55,
-                0x55,0x55,0x55,0x55,0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x54,
+                0x25,
+                0x55,
+                0x55,
+                0x55,
+                0x50,
+                0x29,
+                0x55,
+                0x55,
+                0x55,
+                0x40,
+                0x15,
+                0x40,
+                0x15,
+                0x55,
+                0x00,
+                0x15,
+                0x50,
+                0x00,
+                0x2a,
+                0xaa,
+                0x15,
+                0x54,
+                0x00,
+                0xaa,
+                0xa0,
+                0x55,
+                0x55,
+                0x00,
+                0xaa,
+                0x81,
+                0x55,
+                0x55,
+                0x40,
+                0xaa,
+                0x15,
+                0x55,
+                0x55,
+                0x50,
+                0xa0,
+                0x55,
+                0x55,
+                0x55,
+                0x56,
+                0x85,
+                0x55,
+                0x55,
+                0x55,
+                0x56,
+                0x95,
+                0x55,
+                0x55,
+                0x55,
+                0x5a,
+                0xa5,
+                0x55,
+                0x55,
+                0x55,
+                0x5a,
+                0x95,
+                0x55,
+                0x55,
+                0x55,
+                0x5a,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x59,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
+                0x55,
             ],
             bpp: BPP2,
             width: 20,
             height: 20,
         },
-        ]
-    }
+    ],
+}
