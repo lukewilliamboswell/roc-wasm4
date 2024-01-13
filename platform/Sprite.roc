@@ -10,16 +10,8 @@ interface Sprite
 Sprite := {
     data : List U8,
     bpp : [BPP1, BPP2],
-    width : U32,
-    height : U32,
-
-    # This is data for rendering using blitSub.
-    # It enables creating a subsprite that can be passed around.
-    # The subsprite can still be rendered with the regular blit api.
-    subData : [
-        Some SubRegion,
-        None,
-    ],
+    stride : U32,
+    region : SubRegion,
 }
 
 ## A subregion of a [Sprite]
@@ -47,9 +39,13 @@ new = \{ data, bpp, width, height } ->
     @Sprite {
         data,
         bpp,
-        width,
-        height,
-        subData: None,
+        stride: width,
+        region: {
+            srcX: 0,
+            srcY: 0,
+            width,
+            height,
+        },
     }
 
 ## Draw a [Sprite] to the framebuffer.
@@ -60,10 +56,8 @@ new = \{ data, bpp, width, height } ->
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#blit-spriteptr-x-y-width-height-flags)
 blit : Sprite, { x : I32, y : I32, flags ? List [FlipX, FlipY, Rotate] } -> Task {} []
-blit = \@Sprite sprite, { x, y, flags ? [] } ->
-    { data, bpp, width: stride } = sprite
-
-    { srcX, srcY, width, height } = subDataWithDefault sprite
+blit = \@Sprite { data, bpp, stride, region }, { x, y, flags ? [] } ->
+    { srcX, srcY, width, height } = region
 
     format =
         when bpp is
@@ -93,7 +87,7 @@ blit = \@Sprite sprite, { x, y, flags ? [] } ->
 ##
 sub : Sprite, SubRegion -> Result Sprite [OutOfBounds]
 sub = \@Sprite sprite, subRegion ->
-    currentRegion = subDataWithDefault sprite
+    currentRegion = sprite.region
 
     outOfBoundX = subRegion.srcX + subRegion.width > currentRegion.width
     outOfBoundY = subRegion.srcY + subRegion.height > currentRegion.height
@@ -107,7 +101,7 @@ sub = \@Sprite sprite, subRegion ->
             width: subRegion.width,
             height: subRegion.height,
         }
-        Ok (@Sprite { sprite & subData: Some newRegion })
+        Ok (@Sprite { sprite & region: newRegion })
 
 ## Equivalent to the [sub] function, but will crash on error.
 ## This is really useful for static sprite sheet data that needs subSprites extracted.
@@ -126,14 +120,3 @@ subOrCrash = \sprite, subRegion ->
 
         Err OutOfBounds ->
             crash "Out of bounds subregion when generating subsprite"
-
-subDataWithDefault = \{ width, height, subData } ->
-    when subData is
-        Some data -> data
-        None ->
-            {
-                srcX: 0,
-                srcY: 0,
-                width,
-                height,
-            }
