@@ -14,11 +14,10 @@ Program : {
     update : Model -> Task Model [],
 }
 
-Model : {
-    frameCount : U64,
-    rocciAnim : Animation,
-    gameStarted : Bool,
-}
+Model : [
+    TitleScreen TitleScreenState,
+    Game GameState
+]
 
 main : Program
 main = { init, update }
@@ -43,49 +42,110 @@ init =
 
     {} <- W4.setPalette palette |> Task.await
 
-    Task.ok {
-        frameCount: 0,
-        rocciAnim: createRocciAnim {},
-        gameStarted: Bool.false,
-    }
+    Task.ok 
+        (TitleScreen {
+            frameCount: 0,
+            rocciAnim: createRocciAnim {},
+        })
 
 update : Model -> Task Model []
-update = \prev ->
-    # Update frame count
-    model = { prev & frameCount: Num.addWrap prev.frameCount 1 }
+update = \model ->
+    when model is
+        TitleScreen state ->
+            state
+            |> updateFrameCount
+            |> runTitleScreen
+        Game state ->
+            state
+            |> updateFrameCount
+            |> runGame
 
-    if !model.gameStarted then
-        runTitleScreen model
-    else
-        runGame model
+updateFrameCount : { frameCount: U64 }a -> { frameCount : U64 }a
+updateFrameCount = \prev ->
+    {prev & frameCount: Num.addWrap prev.frameCount 1}
 
-runTitleScreen : Model -> Task Model []
+# ===== Title Screen ======================================
+
+TitleScreenState : {
+    frameCount : U64,
+    rocciAnim : Animation,
+}
+
+runTitleScreen : TitleScreenState -> Task Model []
 runTitleScreen = \prev ->
-    model = {prev & rocciAnim: updateAnimation prev.frameCount prev.rocciAnim }
+    state = {
+        prev &
+        rocciAnim: updateAnimation prev.frameCount prev.rocciAnim,
+    }
 
     {} <- W4.text "Rocci Bird!!!" { x: 32, y: 12 } |> Task.await
     {} <- W4.text "Press X to start!" { x: 16, y: 72 } |> Task.await
 
     shift = 
-        (model.frameCount // 15 + 1) % 2
+        (state.frameCount // 15 + 1) % 2
         |> Num.toI32
-    {} <- drawAnimation model.rocciAnim { x : 70, y: 40 + shift } |> Task.await
+    {} <- drawAnimation state.rocciAnim { x : 70, y: 40 + shift } |> Task.await
     gamepad <- W4.getGamepad Player1 |> Task.await
 
     if gamepad.button1 then
         # Seed the randomness with number of frames since the start of the game.
         # This makes the game feel like it is truely randomly seeded cause players won't always start on the same frame.
-        {} <- W4.seedRand model.frameCount |> Task.await
+        {} <- W4.seedRand state.frameCount |> Task.await
 
-        Task.ok { model & gameStarted: Bool.true }
+        Task.ok (initGame state)
     else
-        Task.ok model
+        Task.ok (TitleScreen state)
 
-runGame : Model -> Task Model []
-runGame = \model ->
+# ===== Main Game =========================================
 
-    # Return model for next frame
-    Task.ok model
+GameState : {
+    frameCount : U64,
+    rocciAnim : Animation,
+    player : {
+        y: F32,
+        yVel : F32,
+    }
+}
+
+initGame : { frameCount: U64, rocciAnim: Animation }* -> Model
+initGame = \{frameCount, rocciAnim} ->
+    Game {
+        frameCount,
+        rocciAnim,
+        player: {
+            y: 60,
+            yVel: 0.5,
+        }
+    }
+
+runGame : GameState -> Task Model []
+runGame = \prev ->
+    # With out explicit typing `f32`, roc fails to compile this.
+    gravity = 0.10f32
+
+    gamepad <- W4.getGamepad Player1 |> Task.await
+
+    yVel = 
+        if gamepad.button1 then
+            -3
+        else
+            prev.player.yVel + gravity
+    y = prev.player.y + yVel
+
+    state = {
+        prev &
+        rocciAnim: updateAnimation prev.frameCount prev.rocciAnim,
+        player: { y, yVel },
+    }
+
+    yPixel = Num.floor state.player.y
+    {} <- drawAnimation state.rocciAnim { x : 20, y: yPixel } |> Task.await
+
+    Task.ok (Game state)
+
+
+
+# ===== Animations ========================================
 
 AnimationState: [Completed, RunOnce, Loop]
 Animation : {
