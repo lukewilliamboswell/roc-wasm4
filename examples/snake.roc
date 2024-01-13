@@ -39,7 +39,7 @@ init =
     Task.ok {
         frameCount: 0,
         snake: startingSnake,
-        fruit: {x: 0, y: 0},
+        fruit: { x: 0, y: 0 },
         fruitSprite,
         gameStarted: Bool.false,
     }

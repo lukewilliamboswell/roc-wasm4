@@ -543,7 +543,6 @@ debug : Str, val -> Task {} [] where val implements Inspect.Inspect
 debug = \msg, val ->
     trace "$(msg): $(Inspect.toStr val)"
 
-
 ## Saves data to persistent storage. Any previously saved data on the disk is replaced.
 ##
 ## Returns `Err SaveFailed` on failure.
