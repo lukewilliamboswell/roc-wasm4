@@ -17,6 +17,7 @@ Program : {
 Model : [
     TitleScreen TitleScreenState,
     Game GameState,
+    GameOver GameOverState,
 ]
 
 main : Program
@@ -57,6 +58,11 @@ update = \model ->
             state
             |> updateFrameCount
             |> runGame
+
+        GameOver state ->
+            state
+            |> updateFrameCount
+            |> runGameOver
 
 updateFrameCount : { frameCount : U64 }a -> { frameCount : U64 }a
 updateFrameCount = \prev ->
@@ -127,13 +133,13 @@ initGame = \{ frameCount, grassSprite } ->
         },
     }
 
+# With out explicit typing `f32`, roc fails to compile this.
+# TODO: finetune gravity and jump speed
+gravity = 0.10f32
+jumpSpeed = -3f32
+
 runGame : GameState -> Task Model []
 runGame = \prev ->
-    # With out explicit typing `f32`, roc fails to compile this.
-    # TODO: finetune gravity and jump speed
-    gravity = 0.10f32
-    jumpSpeed = -3f32
-
     gamepad <- W4.getGamepad Player1 |> Task.await
     mouse <- W4.getMouse |> Task.await
 
@@ -165,7 +171,59 @@ runGame = \prev ->
     yPixel = Num.floor state.player.y
     {} <- drawAnimation state.rocciFlapAnim { x: 20, y: yPixel } |> Task.await
 
-    Task.ok (Game state)
+    if y < 115 then
+        Task.ok (Game state)
+    else
+        Task.ok (initGameOver state)
+
+# ===== Game Over =========================================
+
+GameOverState : {
+    frameCount : U64,
+    rocciFallAnim : Animation,
+    grassSprite : Sprite,
+    player : {
+        y : F32,
+        yVel : F32,
+    },
+}
+
+initGameOver : { frameCount : U64, grassSprite : Sprite, player : { y : F32, yVel : F32 } }* -> Model
+initGameOver = \{ frameCount, grassSprite, player } ->
+    GameOver {
+        frameCount,
+        rocciFallAnim: createRocciFallAnim frameCount,
+        grassSprite,
+        player,
+    }
+
+runGameOver : GameOverState -> Task Model []
+runGameOver = \prev ->
+    yVel = prev.player.yVel + gravity
+    nextAnim = updateAnimation prev.frameCount prev.rocciFallAnim
+
+    y =
+        next = prev.player.y + yVel
+        if next > 128 then
+            128
+        else
+            next
+
+    state = { prev &
+        rocciFallAnim: nextAnim,
+        player: { y, yVel },
+    }
+
+    {} <- setTextColors |> Task.await
+    {} <- W4.text "Game Over!" { x: 44, y: 12 } |> Task.await
+
+    {} <- setSpriteColors |> Task.await
+    {} <- Sprite.blit state.grassSprite { x: 0, y: W4.screenHeight - 20 } |> Task.await
+
+    yPixel = Num.floor state.player.y
+    {} <- drawAnimation state.rocciFallAnim { x: 20, y: yPixel } |> Task.await
+
+    Task.ok (GameOver state)
 
 # ===== Animations ========================================
 
@@ -267,6 +325,25 @@ createRocciFlapAnim = \frameCount -> {
         { frames: 6, sprite: Sprite.subOrCrash rocciSpriteSheet { srcX: 20, srcY: 0, width: 20, height: 20 } },
         { frames: 17, sprite: Sprite.subOrCrash rocciSpriteSheet { srcX: 40, srcY: 0, width: 20, height: 20 } },
         { frames: 17, sprite: Sprite.subOrCrash rocciSpriteSheet { srcX: 0, srcY: 0, width: 20, height: 20 } },
+    ],
+}
+
+rocciFallSpriteSheet = Sprite.new {
+    data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x04, 0x00, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x28, 0x14, 0x00, 0x00, 0x00, 0x0a, 0x05, 0x00, 0x00, 0x00, 0xa8, 0x54, 0x00, 0x00, 0x00, 0x2a, 0x15, 0x00, 0x00, 0x00, 0x28, 0x54, 0x00, 0x00, 0x00, 0x0a, 0x55, 0x00, 0x00, 0x00, 0x29, 0x54, 0x00, 0x00, 0x00, 0x2a, 0x55, 0x00, 0x00, 0x00, 0x59, 0x54, 0x00, 0x00, 0x00, 0x1a, 0x55, 0x00, 0x00, 0x00, 0x5a, 0x54, 0x00, 0x00, 0x00, 0x5a, 0x55, 0x00, 0x00, 0x01, 0x5a, 0x54, 0x00, 0x00, 0x01, 0x5a, 0x54, 0x00, 0x00, 0x01, 0x5a, 0x90, 0x00, 0x00, 0x01, 0x6a, 0x54, 0x00, 0x00, 0x01, 0x6a, 0x90, 0x00, 0x00, 0x01, 0x6a, 0x90, 0x00, 0x00, 0x01, 0x6a, 0x80, 0x00, 0x00, 0x01, 0x6a, 0x80, 0x00, 0x00, 0x01, 0x6a, 0x80, 0x00, 0x00, 0x01, 0xaa, 0x80, 0x00, 0x00, 0x01, 0xaa, 0x00, 0x00, 0x00, 0x00, 0xaa, 0x00, 0x00, 0x00, 0x00, 0xa8, 0x00, 0x00, 0x00, 0x00, 0xa8, 0x00, 0x00, 0x00, 0x00, 0x54, 0x00, 0x00, 0x00, 0x00, 0x54, 0x00, 0x00, 0x00, 0x00, 0x50, 0x00, 0x00, 0x00, 0x00, 0x50, 0x00, 0x00, 0x00, 0x0a, 0x50, 0x00, 0x00, 0x00, 0x0a, 0x50, 0x00, 0x00, 0x00, 0x02, 0x40, 0x00, 0x00, 0x00, 0x02, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+    bpp: BPP2,
+    width: 40,
+    height: 20,
+}
+
+createRocciFallAnim : U64 -> Animation
+createRocciFallAnim = \frameCount -> {
+    lastUpdated: frameCount,
+    index: 0,
+    state: Loop,
+    cells: [
+        # TODO: finetune timing.
+        { frames: 10, sprite: Sprite.subOrCrash rocciFallSpriteSheet { srcX: 0, srcY: 0, width: 20, height: 20 } },
+        { frames: 10, sprite: Sprite.subOrCrash rocciFallSpriteSheet { srcX: 20, srcY: 0, width: 20, height: 20 } },
     ],
 }
 
