@@ -82,8 +82,7 @@ runTitleScreen = \prev ->
     {} <- W4.text "Press X to start!" { x: 16, y: 72 } |> Task.await
 
     {} <- setSpriteColors |> Task.await
-    {} <- Sprite.blit state.pipeSprite { x: 140, y: 90 } |> Task.await
-    {} <- Sprite.blit state.pipeSprite { x: 140, y: -110, flags: [FlipY] } |> Task.await
+    {} <- drawPipe state.pipeSprite { x: 140, gapStart: 50 } |> Task.await
     {} <- Sprite.blit state.grassSprite { x: 0, y: W4.screenHeight - 20 } |> Task.await
 
     shift =
@@ -220,6 +219,14 @@ wrappedInc = \val, count ->
         0
     else
         next
+
+# ===== Misc Drawing and Color ============================
+gapHeight = 40
+
+drawPipe : Sprite, { x : I32, gapStart : I32 } -> Task {} []
+drawPipe = \sprite, { x, gapStart } ->
+    {} <- Sprite.blit sprite { x, y: gapStart - W4.screenHeight, flags: [FlipY] } |> Task.await
+    Sprite.blit sprite { x, y: gapStart + gapHeight }
 
 setTextColors : Task {} []
 setTextColors =
