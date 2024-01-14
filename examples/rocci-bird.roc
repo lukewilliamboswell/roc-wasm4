@@ -91,8 +91,11 @@ runTitleScreen = \prev ->
 
     {} <- drawAnimation state.rocciIdleAnim { x: 70, y: 40 + shift } |> Task.await
     gamepad <- W4.getGamepad Player1 |> Task.await
+    mouse <- W4.getMouse |> Task.await
 
-    if gamepad.button1 then
+    start = gamepad.button1 || gamepad.up || mouse.left
+
+    if start then
         # Seed the randomness with number of frames since the start of the game.
         # This makes the game feel like it is truely randomly seeded cause players won't always start on the same frame.
         {} <- W4.seedRand state.frameCount |> Task.await
@@ -128,18 +131,21 @@ initGame = \{ frameCount, grassSprite } ->
 runGame : GameState -> Task Model []
 runGame = \prev ->
     # With out explicit typing `f32`, roc fails to compile this.
+    # TODO: finetune gravity and jump speed
     gravity = 0.10f32
+    jumpSpeed = -3f32
 
     gamepad <- W4.getGamepad Player1 |> Task.await
+    mouse <- W4.getMouse |> Task.await
 
     # TODO: add timeout for press.
-    flap = gamepad.button1
+    flap = gamepad.button1 || gamepad.up || mouse.left
 
     (yVel, nextAnim) =
         if flap then
             anim = prev.rocciFlapAnim
             (
-                -3,
+                jumpSpeed,
                 { anim & index: 0, state: RunOnce },
             )
         else
