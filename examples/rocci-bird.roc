@@ -224,6 +224,14 @@ runGame = \prev ->
     if !collided && y < 134 then
         Task.ok (Game state)
     else
+        {} <- W4.tone {
+                    startFreq: 170,
+                    endFreq: 40,
+                    channel: Noise,
+                    sustainTime: 20,
+                    releaseTime: 40,
+                } |> Task.await
+
         Task.ok (initGameOver state)
 
 # ===== Game Over =========================================
