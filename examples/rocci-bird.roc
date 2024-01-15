@@ -209,6 +209,21 @@ runGame = \prev ->
         pipes,
     }
 
+    pointSoundTask =
+        if gainPoint > 0 then
+            W4.tone {
+                startFreq: 995,
+                endFreq: 1000,
+                channel: Pulse2 Half,
+                decayTime: 10,
+                releaseTime: 10,
+                peakVolume: 75,
+                volume: 25,
+            }
+        else
+            Task.ok {}
+
+    {} <- pointSoundTask |> Task.await
     {} <- drawPipes state.pipeSprite state.pipes |> Task.await
     {} <- drawGround state.groundSprite |> Task.await
 
@@ -225,12 +240,13 @@ runGame = \prev ->
         Task.ok (Game state)
     else
         {} <- W4.tone {
-                    startFreq: 170,
-                    endFreq: 40,
-                    channel: Noise,
-                    sustainTime: 20,
-                    releaseTime: 40,
-                } |> Task.await
+                startFreq: 170,
+                endFreq: 40,
+                channel: Noise,
+                sustainTime: 20,
+                releaseTime: 40,
+            }
+            |> Task.await
 
         Task.ok (initGameOver state)
 
