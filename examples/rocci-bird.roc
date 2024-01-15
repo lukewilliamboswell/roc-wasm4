@@ -120,6 +120,7 @@ GameState : {
         yVel : F32,
     },
     pipes : List Pipe,
+    lastFlap : Bool,
     rocciFlapAnim : Animation,
     pipeSprite : Sprite,
     groundSprite : Sprite,
@@ -135,6 +136,7 @@ initGame = \{ frameCount, pipeSprite, groundSprite, pipe } ->
             yVel: 0.5,
         },
         pipes: [pipe],
+        lastFlap: Bool.true,
         rocciFlapAnim: createRocciFlapAnim frameCount,
         pipeSprite,
         groundSprite,
@@ -154,7 +156,7 @@ runGame = \prev ->
     flapAllowed = prev.player.y > 20 && prev.rocciFlapAnim.state == Completed
 
     (yVel, nextAnim) =
-        if flap && flapAllowed then
+        if !prev.lastFlap && flap && flapAllowed then
             anim = prev.rocciFlapAnim
             (
                 jumpSpeed,
@@ -174,6 +176,7 @@ runGame = \prev ->
         rocciFlapAnim: nextAnim,
         player: { y, yVel },
         score: prev.score + gainPoint,
+        lastFlap: flap,
         pipes: prev.pipes
         |> updatePipes
         |> List.appendIfOk pipe,
