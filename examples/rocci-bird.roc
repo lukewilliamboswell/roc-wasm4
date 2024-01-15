@@ -133,21 +133,29 @@ GameState : {
 }
 
 initGame : TitleScreenState -> Model
-initGame = \{ frameCount, groundSprite } ->
-    Game {
+initGame =
+    \{
         frameCount,
-        score: 0,
-        player: {
-            y: playerStartY,
-            yVel: jumpSpeed,
-        },
-        lastPipeGenerated: frameCount,
-        pipes: [],
-        lastFlap: Bool.true,
-        rocciFlapAnim: createRocciFlapAnim frameCount,
-        pipeSprite: createPipeSprite {},
         groundSprite,
-    }
+        # plants,
+        # plantSpriteSheet,
+    } ->
+        Game {
+            frameCount,
+            score: 0,
+            player: {
+                y: playerStartY,
+                yVel: jumpSpeed,
+            },
+            lastPipeGenerated: frameCount,
+            pipes: [],
+            lastFlap: Bool.true,
+            rocciFlapAnim: createRocciFlapAnim frameCount,
+            pipeSprite: createPipeSprite {},
+            groundSprite,
+            # plants,
+            # plantSpriteSheet,
+        }
 
 # Useful to throw in WolframAlpha to help calculate these:
 # y =  v^2 /(2a); y = -a/2*t^2 + vt; y = 20; t = 18; a > 0
