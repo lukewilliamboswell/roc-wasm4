@@ -200,11 +200,13 @@ runGame = \prev ->
     yPixel =
         Num.floor state.player.y
         |> Num.min 134
-    {} <- drawAnimation state.rocciFlapAnim { x: 20, y: yPixel } |> Task.await
+
+    collided <- playerCollided yPixel |> Task.await
+    {} <- drawAnimation state.rocciFlapAnim { x: playerX, y: yPixel } |> Task.await
 
     {} <- drawScore state.score |> Task.await
 
-    if y < 134 then
+    if !collided && y < 134 then
         Task.ok (Game state)
     else
         Task.ok (initGameOver state)
@@ -261,7 +263,7 @@ runGameOver = \prev ->
     {} <- drawScore state.score |> Task.await
 
     yPixel = Num.floor state.player.y
-    {} <- drawAnimation state.rocciFallAnim { x: 20, y: yPixel } |> Task.await
+    {} <- drawAnimation state.rocciFallAnim { x: playerX, y: yPixel } |> Task.await
 
     Task.ok (GameOver state)
 
@@ -351,7 +353,36 @@ wrappedInc = \val, count ->
     else
         next
 
-# ===== Misc Drawing and Color ============================
+# ===== Misc, Drawing, and Color ==========================
+
+playerX = 20
+
+playerCollided : I32 -> Task Bool []
+playerCollided = \playerY ->
+    # This is written in a kinda silly but simple way.
+    # It checks to ensure a few points in the sprite are all background colored.
+    # This must be run before drawing the player.
+    collisionPoints = [
+        { x: 11, y: 2 },
+        { x: 13, y: 3 },
+        { x: 3, y: 5 },
+        { x: 11, y: 6 },
+        { x: 9, y: 8 },
+        { x: 5, y: 9 },
+        { x: 7, y: 10 },
+    ]
+
+    List.walk collisionPoints (Task.ok Bool.false) \collidedTask, { x, y } ->
+        collided <- collidedTask |> Task.await
+        if collided then
+            Task.ok Bool.true
+        else
+            point = {
+                x: Num.toU8 (playerX + x),
+                y: Num.toU8 (playerY + y),
+            }
+            color <- W4.getPixel point |> Task.await
+            Task.ok (color != Color1)
 
 drawScore : U8 -> Task {} []
 drawScore = \score ->
