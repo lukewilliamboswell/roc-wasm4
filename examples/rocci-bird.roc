@@ -35,48 +35,45 @@ init =
 
     {} <- W4.setPalette palette |> Task.await
 
-    frameCount <- loadFrameCount |> Task.await
-    Task.ok (initTitleScreen frameCount)
+    Task.ok (initTitleScreen 0)
 
 update : Model -> Task Model []
 update = \model ->
     when model is
         TitleScreen prev ->
-            state <- updateFrameCount prev |> Task.await
-            runTitleScreen state
+            prev
+            |> updateFrameCount
+            |> runTitleScreen
 
         Game prev ->
-            state <- updateFrameCount prev |> Task.await
-            runGame state
+            prev
+            |> updateFrameCount
+            |> runGame
 
         GameOver prev ->
-            state <- updateFrameCount prev |> Task.await
-            runGameOver state
+            prev
+            |> updateFrameCount
+            |> runGameOver
 
-updateFrameCount : { frameCount : U64 }a -> Task { frameCount : U64 }a []
+updateFrameCount : { frameCount : U64 }a -> { frameCount : U64 }a
 updateFrameCount = \prev ->
     frameCount = Num.addWrap prev.frameCount 1
-    {} <- saveFrameCount frameCount |> Task.await
-    Task.ok { prev & frameCount }
+    { prev & frameCount }
 
 # ===== Title Screen ======================================
 
 TitleScreenState : {
     frameCount : U64,
-    pipe : Pipe,
     rocciIdleAnim : Animation,
     groundSprite : Sprite,
-    pipeSprite : Sprite,
 }
 
 initTitleScreen : U64 -> Model
 initTitleScreen = \frameCount ->
     TitleScreen {
         frameCount,
-        pipe: { x: 140, gapStart: 50 },
         rocciIdleAnim: createRocciIdleAnim frameCount,
         groundSprite: createGroundSprite {},
-        pipeSprite: createPipeSprite {},
     }
 
 runTitleScreen : TitleScreenState -> Task Model []
@@ -89,12 +86,11 @@ runTitleScreen = \prev ->
     {} <- W4.text "Rocci Bird!!!" { x: 32, y: 12 } |> Task.await
     {} <- W4.text "Click to start!" { x: 24, y: 72 } |> Task.await
 
-    {} <- drawPipe state.pipeSprite state.pipe |> Task.await
     {} <- drawGround state.groundSprite |> Task.await
 
     shift = idleShift state.frameCount state.rocciIdleAnim
 
-    {} <- drawAnimation state.rocciIdleAnim { x: 70, y: 40 + shift } |> Task.await
+    {} <- drawAnimation state.rocciIdleAnim { x: playerX, y: 40 + shift } |> Task.await
     gamepad <- W4.getGamepad Player1 |> Task.await
     mouse <- W4.getMouse |> Task.await
 
@@ -104,6 +100,7 @@ runTitleScreen = \prev ->
         # Seed the randomness with number of frames since the start of the game.
         # This makes the game feel like it is truely randomly seeded cause players won't always start on the same frame.
         {} <- W4.seedRand state.frameCount |> Task.await
+        {} <- W4.tone flapTone |> Task.await
 
         Task.ok (initGame state)
     else
@@ -127,22 +124,23 @@ GameState : {
 }
 
 initGame : TitleScreenState -> Model
-initGame = \{ frameCount, pipeSprite, groundSprite, pipe } ->
+initGame = \{ frameCount, groundSprite } ->
     Game {
         frameCount,
         score: 0,
         player: {
-            y: 60,
-            yVel: 0.5,
+            y: 40,
+            yVel: -3.0,
         },
         lastPipeGenerated: frameCount,
-        pipes: [pipe],
+        pipes: [],
         lastFlap: Bool.true,
         rocciFlapAnim: createRocciFlapAnim frameCount,
-        pipeSprite,
+        pipeSprite: createPipeSprite {},
         groundSprite,
     }
 
+playerX = 70
 gravity = 0.15
 jumpSpeed = -3.0
 
@@ -184,7 +182,7 @@ runGame = \prev ->
         |> List.appendIfOk pipe
 
     gainPoint = Num.toU8 (List.countIf prev.pipes \{ x } -> x == 18)
-    y = Num.max 0 (prev.player.y + yVel)
+    y = prev.player.y + yVel
     state = { prev &
         rocciFlapAnim: nextAnim,
         player: { y, yVel },
@@ -372,12 +370,17 @@ wrappedInc = \val, count ->
     else
         next
 
-# ===== Misc ==============================================
-
-playerX = 20
+# ===== Collision =========================================
 
 playerCollided : I32, U64 -> Task Bool []
 playerCollided = \playerY, animIndex ->
+    if playerY >= -1 then
+        onScreenCollided playerY animIndex
+    else
+        offScreenCollided
+
+onScreenCollided : I32, U64 -> Task Bool []
+onScreenCollided = \playerY, animIndex ->
     # This is written in a kinda silly but simple way.
     # It checks to ensure a few points in the sprite are all background colored.
     # This must be run before drawing the player.
@@ -415,33 +418,13 @@ playerCollided = \playerY, animIndex ->
             color <- W4.getPixel point |> Task.await
             Task.ok (color != Color1)
 
-# Since wasm4 doesn't have a proper source of randomness,
-# save and restore the frame count as the seed.
-# This was a random recommendation online and seems reasonable.
-loadFrameCount : Task U64 []
-loadFrameCount =
-    data <- W4.loadFromDisk |> Task.await
-
-    when Num.bytesToU64 data 0 is
-        Ok count ->
-            Task.ok count
-
-        Err OutOfBounds ->
-            Task.ok 0
-
-saveFrameCount : U64 -> Task {} []
-saveFrameCount = \frameCount ->
-    b0 = frameCount |> Num.bitwiseAnd 0xFF |> Num.toU8
-    b1 = frameCount |> Num.shiftRightZfBy 8 |> Num.bitwiseAnd 0xFF |> Num.toU8
-    b2 = frameCount |> Num.shiftRightZfBy 16 |> Num.bitwiseAnd 0xFF |> Num.toU8
-    b3 = frameCount |> Num.shiftRightZfBy 24 |> Num.bitwiseAnd 0xFF |> Num.toU8
-    b4 = frameCount |> Num.shiftRightZfBy 32 |> Num.bitwiseAnd 0xFF |> Num.toU8
-    b5 = frameCount |> Num.shiftRightZfBy 40 |> Num.bitwiseAnd 0xFF |> Num.toU8
-    b6 = frameCount |> Num.shiftRightZfBy 48 |> Num.bitwiseAnd 0xFF |> Num.toU8
-    b7 = frameCount |> Num.shiftRightZfBy 56 |> Num.bitwiseAnd 0xFF |> Num.toU8
-
-    W4.saveToDisk [b0, b1, b2, b3, b4, b5, b6, b7]
-    |> Task.onErr \_ -> Task.ok {}
+offScreenCollided =
+    point = {
+        x: Num.toU8 (playerX + 13),
+        y: Num.toU8 0,
+    }
+    color <- W4.getPixel point |> Task.await
+    Task.ok (color != Color1)
 
 # ===== Sounds ============================================
 
