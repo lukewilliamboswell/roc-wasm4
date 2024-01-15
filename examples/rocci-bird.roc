@@ -40,7 +40,7 @@ init =
         (
             TitleScreen {
                 frameCount,
-                pipe : {x: 140, gapStart: 50 },
+                pipe: { x: 140, gapStart: 50 },
                 rocciIdleAnim: createRocciIdleAnim frameCount,
                 groundSprite: createGroundSprite {},
                 pipeSprite: createPipeSprite {},
@@ -135,7 +135,7 @@ initGame = \{ frameCount, pipeSprite, groundSprite, pipe } ->
             y: 60,
             yVel: 0.5,
         },
-        pipes : [pipe]
+        pipes: [pipe],
     }
 
 # With out explicit typing `f32`, roc fails to compile this.
@@ -164,11 +164,15 @@ runGame = \prev ->
                 updateAnimation prev.frameCount prev.rocciFlapAnim,
             )
 
+    pipe <- maybeGeneratePipe prev.frameCount |> Task.attempt
+
     y = prev.player.y + yVel
     state = { prev &
         rocciFlapAnim: nextAnim,
         player: { y, yVel },
-        pipes: updatePipes prev.pipes,
+        pipes: prev.pipes
+        |> updatePipes
+        |> List.appendIfOk pipe,
     }
 
     {} <- drawPipes state.pipeSprite state.pipes |> Task.await
@@ -261,6 +265,13 @@ updatePipes = \pipes ->
     |> List.map \pipe -> { pipe & x: pipe.x - 1 }
     |> List.dropIf \pipe -> pipe.x < -20
 
+maybeGeneratePipe : U64 -> Task Pipe [NoPipe]
+maybeGeneratePipe = \framecount ->
+    if framecount % 90 == 0 then
+        gapStart <- W4.randBetween { start: 0, before: 16 } |> Task.await
+        Task.ok { x: W4.screenWidth, gapStart: gapStart * 5 + 10 }
+    else
+        Task.err NoPipe
 
 # ===== Animations ========================================
 
