@@ -200,7 +200,7 @@ runGame = \prev ->
         |> updatePipes
         |> List.appendIfOk pipe
 
-    gainPoint = Num.toU8 (List.countIf prev.pipes \{ x } -> x == 18)
+    gainPoint = Num.toU8 (List.countIf prev.pipes \{ x } -> x == playerX - 2)
     y = prev.player.y + yVel
     state = { prev &
         rocciFlapAnim: nextAnim,
