@@ -190,7 +190,7 @@ runGame = \prev ->
     state = { prev &
         rocciFlapAnim: nextAnim,
         player: { y, yVel },
-        score: prev.score + gainPoint,
+        score: Num.addWrap prev.score gainPoint,
         lastFlap: flap,
         lastPipeGenerated,
         pipes,
