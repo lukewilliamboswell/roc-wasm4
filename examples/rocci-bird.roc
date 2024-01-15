@@ -141,8 +141,13 @@ initGame = \{ frameCount, groundSprite } ->
     }
 
 playerX = 70
-gravity = 0.15
-jumpSpeed = -3.0
+
+# Useful to throw in WolframAlpha to help calculate these:
+# y =  v^2 /(2a); y = -a/2*t^2 + vt; y = 20; t = 18; a > 0
+# y is max jump height in pixels.
+# t is frames to reach max jump height (remember 60fps).
+gravity = 0.12
+jumpSpeed = -2.2
 
 runGame : GameState -> Task Model []
 runGame = \prev ->
@@ -150,10 +155,9 @@ runGame = \prev ->
     mouse <- W4.getMouse |> Task.await
 
     flap = gamepad.button1 || gamepad.up || mouse.left
-    flapAllowed = prev.rocciFlapAnim.state == Completed
 
     { yVel, nextAnim, flapSoundTask } =
-        if !prev.lastFlap && flap && flapAllowed then
+        if !prev.lastFlap && flap && flapAllowed prev.rocciFlapAnim then
             anim = prev.rocciFlapAnim
             {
                 yVel: jumpSpeed,
@@ -516,6 +520,10 @@ createRocciIdleAnim = \frameCount -> {
         { frames: 17, sprite: Sprite.subOrCrash rocciSpriteSheet { srcX: 32, srcY: 0, width: 16, height: 16 } },
     ],
 }
+
+flapAllowed : Animation -> Bool
+flapAllowed = \{ index } ->
+    index >= 1
 
 createRocciFlapAnim : U64 -> Animation
 createRocciFlapAnim = \frameCount -> {
