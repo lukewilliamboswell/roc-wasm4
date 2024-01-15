@@ -134,8 +134,8 @@ initGame = \{ frameCount, groundSprite } ->
 
 # With out explicit typing `f32`, roc fails to compile this.
 # TODO: finetune gravity and jump speed
-gravity = 0.10f32
-jumpSpeed = -3f32
+gravity = 0.15f32
+jumpSpeed = -3.0f32
 
 runGame : GameState -> Task Model []
 runGame = \prev ->
@@ -166,10 +166,12 @@ runGame = \prev ->
 
     {} <- drawGround state.groundSprite |> Task.await
 
-    yPixel = Num.floor state.player.y
+    yPixel =
+        Num.floor state.player.y
+        |> Num.min 134
     {} <- drawAnimation state.rocciFlapAnim { x: 20, y: yPixel } |> Task.await
 
-    if y < 135 then
+    if y < 134 then
         Task.ok (Game state)
     else
         Task.ok (initGameOver state)
