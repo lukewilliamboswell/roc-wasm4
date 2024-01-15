@@ -40,6 +40,7 @@ init =
         (
             TitleScreen {
                 frameCount,
+                pipe : {x: 140, gapStart: 50 },
                 rocciIdleAnim: createRocciIdleAnim frameCount,
                 groundSprite: createGroundSprite {},
                 pipeSprite: createPipeSprite {},
@@ -72,6 +73,7 @@ updateFrameCount = \prev ->
 
 TitleScreenState : {
     frameCount : U64,
+    pipe : Pipe,
     rocciIdleAnim : Animation,
     groundSprite : Sprite,
     pipeSprite : Sprite,
@@ -87,7 +89,7 @@ runTitleScreen = \prev ->
     {} <- W4.text "Rocci Bird!!!" { x: 32, y: 12 } |> Task.await
     {} <- W4.text "Press X to start!" { x: 16, y: 72 } |> Task.await
 
-    {} <- drawPipe state.pipeSprite { x: 140, gapStart: 50 } |> Task.await
+    {} <- drawPipe state.pipeSprite state.pipe |> Task.await
     {} <- drawGround state.groundSprite |> Task.await
 
     shift =
@@ -113,23 +115,27 @@ runTitleScreen = \prev ->
 GameState : {
     frameCount : U64,
     rocciFlapAnim : Animation,
+    pipeSprite : Sprite,
     groundSprite : Sprite,
     player : {
         y : F32,
         yVel : F32,
     },
+    pipes : List Pipe,
 }
 
-initGame : { frameCount : U64, groundSprite : Sprite }* -> Model
-initGame = \{ frameCount, groundSprite } ->
+initGame : TitleScreenState -> Model
+initGame = \{ frameCount, pipeSprite, groundSprite, pipe } ->
     Game {
         frameCount,
         rocciFlapAnim: createRocciFlapAnim frameCount,
+        pipeSprite,
         groundSprite,
         player: {
             y: 60,
             yVel: 0.5,
         },
+        pipes : [pipe]
     }
 
 # With out explicit typing `f32`, roc fails to compile this.
@@ -162,8 +168,10 @@ runGame = \prev ->
     state = { prev &
         rocciFlapAnim: nextAnim,
         player: { y, yVel },
+        pipes: updatePipes prev.pipes,
     }
 
+    {} <- drawPipes state.pipeSprite state.pipes |> Task.await
     {} <- drawGround state.groundSprite |> Task.await
 
     yPixel =
@@ -181,20 +189,24 @@ runGame = \prev ->
 GameOverState : {
     frameCount : U64,
     rocciFallAnim : Animation,
+    pipeSprite : Sprite,
     groundSprite : Sprite,
     player : {
         y : F32,
         yVel : F32,
     },
+    pipes : List Pipe,
 }
 
-initGameOver : { frameCount : U64, groundSprite : Sprite, player : { y : F32, yVel : F32 } }* -> Model
-initGameOver = \{ frameCount, groundSprite, player } ->
+initGameOver : GameState -> Model
+initGameOver = \{ frameCount, pipeSprite, groundSprite, player, pipes } ->
     GameOver {
         frameCount,
         rocciFallAnim: createRocciFallAnim frameCount,
+        pipeSprite,
         groundSprite,
         player,
+        pipes,
     }
 
 runGameOver : GameOverState -> Task Model []
@@ -217,12 +229,38 @@ runGameOver = \prev ->
     {} <- setTextColors |> Task.await
     {} <- W4.text "Game Over!" { x: 44, y: 12 } |> Task.await
 
+    {} <- drawPipes state.pipeSprite state.pipes |> Task.await
     {} <- drawGround state.groundSprite |> Task.await
 
     yPixel = Num.floor state.player.y
     {} <- drawAnimation state.rocciFallAnim { x: 20, y: yPixel } |> Task.await
 
     Task.ok (GameOver state)
+
+# ===== Pipes =============================================
+
+Pipe : { x : I32, gapStart : I32 }
+
+gapHeight = 40
+
+drawPipes : Sprite, List Pipe -> Task {} []
+drawPipes = \sprite, pipes ->
+    List.walk pipes (Task.ok {}) \task, pipe ->
+        {} <- task |> Task.await
+        drawPipe sprite pipe
+
+drawPipe : Sprite, Pipe -> Task {} []
+drawPipe = \sprite, { x, gapStart } ->
+    {} <- setSpriteColors |> Task.await
+    {} <- Sprite.blit sprite { x, y: gapStart - W4.screenHeight, flags: [FlipY] } |> Task.await
+    Sprite.blit sprite { x, y: gapStart + gapHeight }
+
+updatePipes : List Pipe -> List Pipe
+updatePipes = \pipes ->
+    pipes
+    |> List.map \pipe -> { pipe & x: pipe.x - 1 }
+    |> List.dropIf \pipe -> pipe.x < -20
+
 
 # ===== Animations ========================================
 
@@ -279,13 +317,6 @@ wrappedInc = \val, count ->
         next
 
 # ===== Misc Drawing and Color ============================
-gapHeight = 40
-
-drawPipe : Sprite, { x : I32, gapStart : I32 } -> Task {} []
-drawPipe = \sprite, { x, gapStart } ->
-    {} <- setSpriteColors |> Task.await
-    {} <- Sprite.blit sprite { x, y: gapStart - W4.screenHeight, flags: [FlipY] } |> Task.await
-    Sprite.blit sprite { x, y: gapStart + gapHeight }
 
 drawGround : Sprite -> Task {} []
 drawGround = \sprite ->
