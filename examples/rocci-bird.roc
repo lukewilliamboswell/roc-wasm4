@@ -289,7 +289,8 @@ runGameOver = \prev ->
     {} <- W4.text "Right to restart" { x: 20, y: 72 } |> Task.await
     # If this is commented out, the code will not compile.
     # Error in alias analysis
-    {} <- W4.text "" { x: 0, y: 0 } |> Task.await
+    # Might as well use it for something, I guess.
+    {} <- W4.text "Art by Luke DeVault" { x: 4, y: 149 } |> Task.await
 
     {} <- drawScore state.score |> Task.await
 
