@@ -157,32 +157,37 @@ runGame = \prev ->
     flap = gamepad.button1 || gamepad.up || mouse.left
     flapAllowed = prev.player.y > 20 && prev.rocciFlapAnim.state == Completed
 
-    (yVel, nextAnim, soundTask) =
-        if !prev.lastFlap && flap && flapAllowed then
-            anim = prev.rocciFlapAnim
-            (
-                jumpSpeed,
-                { anim & index: 0, state: RunOnce },
-                W4.tone {
-                    startFreq: 700,
-                    endFreq: 870,
-                    channel: Pulse1 Quarter,
-                    attackTime: 10,
-                    sustainTime: 0,
-                    decayTime: 3,
-                    releaseTime: 5,
-                    volume: 10,
-                    peakVolume: 20,
-                },
-            )
+    actuallyFlap = !prev.lastFlap && flap && flapAllowed
+    yVel =
+        if actuallyFlap then
+            jumpSpeed
         else
-            (
-                prev.player.yVel + gravity,
-                updateAnimation prev.frameCount prev.rocciFlapAnim,
-                Task.ok {},
-            )
+            prev.player.yVel + gravity
 
-    {} <- soundTask |> Task.await
+    nextAnim =
+        if actuallyFlap then
+            anim = prev.rocciFlapAnim
+            { anim & index: 0, state: RunOnce }
+        else
+            updateAnimation prev.frameCount prev.rocciFlapAnim
+
+    flapSoundTask =
+        if actuallyFlap then
+            W4.tone {
+                startFreq: 700,
+                endFreq: 870,
+                channel: Pulse1 Quarter,
+                attackTime: 10,
+                sustainTime: 0,
+                decayTime: 3,
+                releaseTime: 5,
+                volume: 10,
+                peakVolume: 20,
+            }
+        else
+            Task.ok {}
+
+    {} <- flapSoundTask |> Task.await
     pipe <- maybeGeneratePipe prev.lastPipeGenerated prev.frameCount |> Task.attempt
 
     lastPipeGenerated =
