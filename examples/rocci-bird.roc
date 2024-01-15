@@ -114,28 +114,30 @@ runTitleScreen = \prev ->
 
 GameState : {
     frameCount : U64,
-    rocciFlapAnim : Animation,
-    pipeSprite : Sprite,
-    groundSprite : Sprite,
+    score : U8,
     player : {
         y : F32,
         yVel : F32,
     },
     pipes : List Pipe,
+    rocciFlapAnim : Animation,
+    pipeSprite : Sprite,
+    groundSprite : Sprite,
 }
 
 initGame : TitleScreenState -> Model
 initGame = \{ frameCount, pipeSprite, groundSprite, pipe } ->
     Game {
         frameCount,
-        rocciFlapAnim: createRocciFlapAnim frameCount,
-        pipeSprite,
-        groundSprite,
+        score: 0,
         player: {
             y: 60,
             yVel: 0.5,
         },
         pipes: [pipe],
+        rocciFlapAnim: createRocciFlapAnim frameCount,
+        pipeSprite,
+        groundSprite,
     }
 
 # With out explicit typing `f32`, roc fails to compile this.
@@ -166,10 +168,12 @@ runGame = \prev ->
 
     pipe <- maybeGeneratePipe prev.frameCount |> Task.attempt
 
+    gainPoint = Num.toU8 (List.countIf prev.pipes \{ x } -> x == 18)
     y = prev.player.y + yVel
     state = { prev &
         rocciFlapAnim: nextAnim,
         player: { y, yVel },
+        score: prev.score + gainPoint,
         pipes: prev.pipes
         |> updatePipes
         |> List.appendIfOk pipe,
@@ -183,6 +187,8 @@ runGame = \prev ->
         |> Num.min 134
     {} <- drawAnimation state.rocciFlapAnim { x: 20, y: yPixel } |> Task.await
 
+    {} <- drawScore state.score |> Task.await
+
     if y < 134 then
         Task.ok (Game state)
     else
@@ -192,25 +198,27 @@ runGame = \prev ->
 
 GameOverState : {
     frameCount : U64,
-    rocciFallAnim : Animation,
-    pipeSprite : Sprite,
-    groundSprite : Sprite,
+    score : U8,
     player : {
         y : F32,
         yVel : F32,
     },
     pipes : List Pipe,
+    rocciFallAnim : Animation,
+    pipeSprite : Sprite,
+    groundSprite : Sprite,
 }
 
 initGameOver : GameState -> Model
-initGameOver = \{ frameCount, pipeSprite, groundSprite, player, pipes } ->
+initGameOver = \{ frameCount, score, pipeSprite, groundSprite, player, pipes } ->
     GameOver {
         frameCount,
+        score,
+        player,
+        pipes,
         rocciFallAnim: createRocciFallAnim frameCount,
         pipeSprite,
         groundSprite,
-        player,
-        pipes,
     }
 
 runGameOver : GameOverState -> Task Model []
@@ -230,11 +238,12 @@ runGameOver = \prev ->
         player: { y, yVel },
     }
 
-    {} <- setTextColors |> Task.await
-    {} <- W4.text "Game Over!" { x: 44, y: 12 } |> Task.await
-
     {} <- drawPipes state.pipeSprite state.pipes |> Task.await
     {} <- drawGround state.groundSprite |> Task.await
+
+    {} <- setTextColors |> Task.await
+    {} <- W4.text "Game Over!" { x: 44, y: 68 } |> Task.await
+    {} <- drawScore state.score |> Task.await
 
     yPixel = Num.floor state.player.y
     {} <- drawAnimation state.rocciFallAnim { x: 20, y: yPixel } |> Task.await
@@ -328,6 +337,18 @@ wrappedInc = \val, count ->
         next
 
 # ===== Misc Drawing and Color ============================
+
+drawScore : U8 -> Task {} []
+drawScore = \score ->
+    {} <- setTextColors |> Task.await
+    x =
+        if score < 10 then
+            76
+        else if score < 100 then
+            72
+        else
+            68
+    W4.text "$(Num.toStr score)" { x, y: 4 }
 
 drawGround : Sprite -> Task {} []
 drawGround = \sprite ->
