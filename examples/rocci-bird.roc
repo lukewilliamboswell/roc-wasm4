@@ -150,11 +150,11 @@ runGame = \prev ->
     gamepad <- W4.getGamepad Player1 |> Task.await
     mouse <- W4.getMouse |> Task.await
 
-    # TODO: add timeout for press.
     flap = gamepad.button1 || gamepad.up || mouse.left
+    flapAllowed = prev.player.y > 20 && prev.rocciFlapAnim.state == Completed
 
     (yVel, nextAnim) =
-        if flap then
+        if flap && flapAllowed then
             anim = prev.rocciFlapAnim
             (
                 jumpSpeed,
@@ -169,7 +169,7 @@ runGame = \prev ->
     pipe <- maybeGeneratePipe prev.frameCount |> Task.attempt
 
     gainPoint = Num.toU8 (List.countIf prev.pipes \{ x } -> x == 18)
-    y = prev.player.y + yVel
+    y = Num.max 0 (prev.player.y + yVel)
     state = { prev &
         rocciFlapAnim: nextAnim,
         player: { y, yVel },
@@ -394,10 +394,9 @@ createRocciFlapAnim = \frameCount -> {
     index: 2,
     state: Completed,
     cells: [
-        # TODO: finetune timing and add eventual fall animation.
         { frames: 6, sprite: Sprite.subOrCrash rocciSpriteSheet { srcX: 16, srcY: 0, width: 16, height: 16 } },
         { frames: 12, sprite: Sprite.subOrCrash rocciSpriteSheet { srcX: 32, srcY: 0, width: 16, height: 16 } },
-        { frames: 12, sprite: Sprite.subOrCrash rocciSpriteSheet { srcX: 0, srcY: 0, width: 16, height: 16 } },
+        { frames: 1, sprite: Sprite.subOrCrash rocciSpriteSheet { srcX: 0, srcY: 0, width: 16, height: 16 } },
     ],
 }
 
@@ -407,7 +406,6 @@ createRocciFallAnim = \frameCount -> {
     index: 0,
     state: Loop,
     cells: [
-        # TODO: finetune timing.
         { frames: 10, sprite: Sprite.subOrCrash rocciSpriteSheet { srcX: 48, srcY: 0, width: 16, height: 16 } },
         { frames: 10, sprite: Sprite.subOrCrash rocciSpriteSheet { srcX: 64, srcY: 0, width: 16, height: 16 } },
     ],
