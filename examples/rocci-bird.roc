@@ -90,7 +90,7 @@ runTitleScreen = \prev ->
 
     shift = idleShift state.frameCount state.rocciIdleAnim
 
-    {} <- drawAnimation state.rocciIdleAnim { x: playerX, y: 40 + shift } |> Task.await
+    {} <- drawAnimation state.rocciIdleAnim { x: playerX, y: playerStartY + shift } |> Task.await
     gamepad <- W4.getGamepad Player1 |> Task.await
     mouse <- W4.getMouse |> Task.await
 
@@ -129,8 +129,8 @@ initGame = \{ frameCount, groundSprite } ->
         frameCount,
         score: 0,
         player: {
-            y: 40,
-            yVel: -3.0,
+            y: playerStartY,
+            yVel: jumpSpeed,
         },
         lastPipeGenerated: frameCount,
         pipes: [],
@@ -139,8 +139,6 @@ initGame = \{ frameCount, groundSprite } ->
         pipeSprite: createPipeSprite {},
         groundSprite,
     }
-
-playerX = 70
 
 # Useful to throw in WolframAlpha to help calculate these:
 # y =  v^2 /(2a); y = -a/2*t^2 + vt; y = 20; t = 18; a > 0
@@ -157,7 +155,7 @@ runGame = \prev ->
     flap = gamepad.button1 || gamepad.up || mouse.left
 
     { yVel, nextAnim, flapSoundTask } =
-        if !prev.lastFlap && flap && flapAllowed prev.rocciFlapAnim then
+        if !prev.lastFlap && flap && flapAllowed prev.frameCount prev.rocciFlapAnim then
             anim = prev.rocciFlapAnim
             {
                 yVel: jumpSpeed,
@@ -374,7 +372,10 @@ wrappedInc = \val, count ->
     else
         next
 
-# ===== Collision =========================================
+# ===== Player ============================================
+
+playerStartY = 40
+playerX = 70
 
 playerCollided : I32, U64 -> Task Bool []
 playerCollided = \playerY, animIndex ->
@@ -521,9 +522,14 @@ createRocciIdleAnim = \frameCount -> {
     ],
 }
 
-flapAllowed : Animation -> Bool
-flapAllowed = \{ index } ->
-    index >= 1
+flapAllowed : U64, Animation -> Bool
+flapAllowed = \frameCount, { index, lastUpdated } ->
+    if index == 2 then
+        Bool.true
+    else if index == 1 then
+        frameCount - lastUpdated > 6
+    else
+        Bool.false
 
 createRocciFlapAnim : U64 -> Animation
 createRocciFlapAnim = \frameCount -> {
