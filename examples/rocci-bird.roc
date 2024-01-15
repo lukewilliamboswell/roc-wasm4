@@ -201,7 +201,7 @@ runGame = \prev ->
         Num.floor state.player.y
         |> Num.min 134
 
-    collided <- playerCollided yPixel |> Task.await
+    collided <- playerCollided yPixel state.rocciFlapAnim.index |> Task.await
     {} <- drawAnimation state.rocciFlapAnim { x: playerX, y: yPixel } |> Task.await
 
     {} <- drawScore state.score |> Task.await
@@ -357,12 +357,12 @@ wrappedInc = \val, count ->
 
 playerX = 20
 
-playerCollided : I32 -> Task Bool []
-playerCollided = \playerY ->
+playerCollided : I32, U64 -> Task Bool []
+playerCollided = \playerY, animIndex ->
     # This is written in a kinda silly but simple way.
     # It checks to ensure a few points in the sprite are all background colored.
     # This must be run before drawing the player.
-    collisionPoints = [
+    basePoints = [
         { x: 11, y: 2 },
         { x: 13, y: 3 },
         { x: 3, y: 5 },
@@ -370,7 +370,19 @@ playerCollided = \playerY ->
         { x: 9, y: 8 },
         { x: 5, y: 9 },
         { x: 7, y: 10 },
+        { x: 5, y: 12 },
     ]
+
+    collisionPoints =
+        if animIndex == 2 then
+            basePoints
+            |> List.append { x: 2, y: 1 }
+            |> List.append { x: 7, y: 1 }
+        else if animIndex == 1 then
+            basePoints
+            |> List.append { x: 2, y: 2 }
+        else
+            basePoints
 
     List.walk collisionPoints (Task.ok Bool.false) \collidedTask, { x, y } ->
         collided <- collidedTask |> Task.await
