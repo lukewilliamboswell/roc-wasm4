@@ -35,29 +35,29 @@ init =
 
     {} <- W4.setPalette palette |> Task.await
 
-    Task.ok (initTitleScreen 0)
+    frameCount <- loadFrameCount |> Task.await
+    Task.ok (initTitleScreen frameCount)
 
 update : Model -> Task Model []
 update = \model ->
     when model is
-        TitleScreen state ->
-            state
-            |> updateFrameCount
-            |> runTitleScreen
+        TitleScreen prev ->
+            state <- updateFrameCount prev |> Task.await
+            runTitleScreen state
 
-        Game state ->
-            state
-            |> updateFrameCount
-            |> runGame
+        Game prev ->
+            state <- updateFrameCount prev |> Task.await
+            runGame state
 
-        GameOver state ->
-            state
-            |> updateFrameCount
-            |> runGameOver
+        GameOver prev ->
+            state <- updateFrameCount prev |> Task.await
+            runGameOver state
 
-updateFrameCount : { frameCount : U64 }a -> { frameCount : U64 }a
+updateFrameCount : { frameCount : U64 }a -> Task { frameCount : U64 }a []
 updateFrameCount = \prev ->
-    { prev & frameCount: Num.addWrap prev.frameCount 1 }
+    frameCount = Num.addWrap prev.frameCount 1
+    {} <- saveFrameCount frameCount |> Task.await
+    Task.ok { prev & frameCount }
 
 # ===== Title Screen ======================================
 
@@ -441,6 +441,34 @@ playerCollided = \playerY, animIndex ->
             }
             color <- W4.getPixel point |> Task.await
             Task.ok (color != Color1)
+
+# Since wasm4 doesn't have a proper source of randomness,
+# save and restore the frame count as the seed.
+# This was a random recommendation online and seems reasonable.
+loadFrameCount : Task U64 []
+loadFrameCount =
+    data <- W4.loadFromDisk |> Task.await
+
+    when Num.bytesToU64 data 0 is
+        Ok count ->
+            Task.ok count
+
+        Err OutOfBounds ->
+            Task.ok 0
+
+saveFrameCount : U64 -> Task {} []
+saveFrameCount = \frameCount ->
+    b0 = frameCount |> Num.bitwiseAnd 0xFF |> Num.toU8
+    b1 = frameCount |> Num.shiftRightZfBy 8 |> Num.bitwiseAnd 0xFF |> Num.toU8
+    b2 = frameCount |> Num.shiftRightZfBy 16 |> Num.bitwiseAnd 0xFF |> Num.toU8
+    b3 = frameCount |> Num.shiftRightZfBy 24 |> Num.bitwiseAnd 0xFF |> Num.toU8
+    b4 = frameCount |> Num.shiftRightZfBy 32 |> Num.bitwiseAnd 0xFF |> Num.toU8
+    b5 = frameCount |> Num.shiftRightZfBy 40 |> Num.bitwiseAnd 0xFF |> Num.toU8
+    b6 = frameCount |> Num.shiftRightZfBy 48 |> Num.bitwiseAnd 0xFF |> Num.toU8
+    b7 = frameCount |> Num.shiftRightZfBy 56 |> Num.bitwiseAnd 0xFF |> Num.toU8
+
+    W4.saveToDisk [b0, b1, b2, b3, b4, b5, b6, b7]
+    |> Task.onErr \_ -> Task.ok {}
 
 drawScore : U8 -> Task {} []
 drawScore = \score ->
