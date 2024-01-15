@@ -35,17 +35,7 @@ init =
 
     {} <- W4.setPalette palette |> Task.await
 
-    frameCount = 0
-    Task.ok
-        (
-            TitleScreen {
-                frameCount,
-                pipe: { x: 140, gapStart: 50 },
-                rocciIdleAnim: createRocciIdleAnim frameCount,
-                groundSprite: createGroundSprite {},
-                pipeSprite: createPipeSprite {},
-            }
-        )
+    Task.ok (initTitleScreen 0)
 
 update : Model -> Task Model []
 update = \model ->
@@ -79,6 +69,16 @@ TitleScreenState : {
     pipeSprite : Sprite,
 }
 
+initTitleScreen : U64 -> Model
+initTitleScreen = \frameCount ->
+    TitleScreen {
+        frameCount,
+        pipe: { x: 140, gapStart: 50 },
+        rocciIdleAnim: createRocciIdleAnim frameCount,
+        groundSprite: createGroundSprite {},
+        pipeSprite: createPipeSprite {},
+    }
+
 runTitleScreen : TitleScreenState -> Task Model []
 runTitleScreen = \prev ->
     state = { prev &
@@ -87,9 +87,7 @@ runTitleScreen = \prev ->
 
     {} <- setTextColors |> Task.await
     {} <- W4.text "Rocci Bird!!!" { x: 32, y: 12 } |> Task.await
-    {} <- W4.text "Press X to start!" { x: 16, y: 72 } |> Task.await
-    {} <- W4.text "up" { x: 64, y: 84 } |> Task.await
-    {} <- W4.text "click" { x: 64, y: 96 } |> Task.await
+    {} <- W4.text "Click to start!" { x: 24, y: 72 } |> Task.await
 
     {} <- drawPipe state.pipeSprite state.pipe |> Task.await
     {} <- drawGround state.groundSprite |> Task.await
@@ -298,8 +296,8 @@ runGameOver = \prev ->
     {} <- drawGround state.groundSprite |> Task.await
 
     {} <- setTextColors |> Task.await
-    {} <- W4.text "Game Over!" { x: 44, y: 64 } |> Task.await
-    {} <- W4.text "Press R to Restart" { x: 8, y: 80 } |> Task.await
+    {} <- W4.text "Game Over!" { x: 44, y: 56 } |> Task.await
+    {} <- W4.text "Right to restart" { x: 20, y: 72 } |> Task.await
     # If this is commented out, the code will not compile.
     # Error in alias analysis
     {} <- W4.text "" { x: 0, y: 0 } |> Task.await
@@ -309,7 +307,11 @@ runGameOver = \prev ->
     yPixel = Num.floor state.player.y
     {} <- drawAnimation state.rocciFallAnim { x: playerX, y: yPixel } |> Task.await
 
-    Task.ok (GameOver state)
+    mouse <- W4.getMouse |> Task.await
+    if mouse.right then
+        Task.ok (initTitleScreen state.frameCount)
+    else
+        Task.ok (GameOver state)
 
 # ===== Pipes =============================================
 
