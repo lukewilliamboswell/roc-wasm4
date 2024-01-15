@@ -92,8 +92,7 @@ runTitleScreen = \prev ->
     {} <- drawPipe state.pipeSprite state.pipe |> Task.await
     {} <- drawGround state.groundSprite |> Task.await
 
-    shift =
-        (state.frameCount // halfRocciIdleAnimTime + 1) % 2 |> Num.toI32
+    shift = idleShift state.frameCount state.rocciIdleAnim
 
     {} <- drawAnimation state.rocciIdleAnim { x: 70, y: 40 + shift } |> Task.await
     gamepad <- W4.getGamepad Player1 |> Task.await
@@ -144,10 +143,8 @@ initGame = \{ frameCount, pipeSprite, groundSprite, pipe } ->
         groundSprite,
     }
 
-# With out explicit typing `f32`, roc fails to compile this.
-# TODO: finetune gravity and jump speed
-gravity = 0.15f32
-jumpSpeed = -3.0f32
+gravity = 0.15
+jumpSpeed = -3.0
 
 runGame : GameState -> Task Model []
 runGame = \prev ->
@@ -155,37 +152,22 @@ runGame = \prev ->
     mouse <- W4.getMouse |> Task.await
 
     flap = gamepad.button1 || gamepad.up || mouse.left
-    flapAllowed = prev.player.y > 20 && prev.rocciFlapAnim.state == Completed
+    flapAllowed = prev.rocciFlapAnim.state == Completed
 
-    actuallyFlap = !prev.lastFlap && flap && flapAllowed
-    yVel =
-        if actuallyFlap then
-            jumpSpeed
-        else
-            prev.player.yVel + gravity
-
-    nextAnim =
-        if actuallyFlap then
+    { yVel, nextAnim, flapSoundTask } =
+        if !prev.lastFlap && flap && flapAllowed then
             anim = prev.rocciFlapAnim
-            { anim & index: 0, state: RunOnce }
-        else
-            updateAnimation prev.frameCount prev.rocciFlapAnim
-
-    flapSoundTask =
-        if actuallyFlap then
-            W4.tone {
-                startFreq: 700,
-                endFreq: 870,
-                channel: Pulse1 Quarter,
-                attackTime: 10,
-                sustainTime: 0,
-                decayTime: 3,
-                releaseTime: 5,
-                volume: 10,
-                peakVolume: 20,
+            {
+                yVel: jumpSpeed,
+                nextAnim: { anim & index: 0, state: RunOnce },
+                flapSoundTask: W4.tone flapTone,
             }
         else
-            Task.ok {}
+            {
+                yVel: prev.player.yVel + gravity,
+                nextAnim: updateAnimation prev.frameCount prev.rocciFlapAnim,
+                flapSoundTask: Task.ok {},
+            }
 
     {} <- flapSoundTask |> Task.await
     pipe <- maybeGeneratePipe prev.lastPipeGenerated prev.frameCount |> Task.attempt
@@ -214,15 +196,7 @@ runGame = \prev ->
 
     pointSoundTask =
         if gainPoint > 0 then
-            W4.tone {
-                startFreq: 995,
-                endFreq: 1000,
-                channel: Pulse2 Half,
-                decayTime: 10,
-                releaseTime: 10,
-                peakVolume: 75,
-                volume: 25,
-            }
+            W4.tone pointTone
         else
             Task.ok {}
 
@@ -242,14 +216,7 @@ runGame = \prev ->
     if !collided && y < 134 then
         Task.ok (Game state)
     else
-        {} <- W4.tone {
-                startFreq: 170,
-                endFreq: 40,
-                channel: Noise,
-                sustainTime: 20,
-                releaseTime: 40,
-            }
-            |> Task.await
+        {} <- W4.tone deathTone |> Task.await
 
         Task.ok (initGameOver state)
 
@@ -405,7 +372,7 @@ wrappedInc = \val, count ->
     else
         next
 
-# ===== Misc, Drawing, and Color ==========================
+# ===== Misc ==============================================
 
 playerX = 20
 
@@ -476,6 +443,40 @@ saveFrameCount = \frameCount ->
     W4.saveToDisk [b0, b1, b2, b3, b4, b5, b6, b7]
     |> Task.onErr \_ -> Task.ok {}
 
+# ===== Sounds ============================================
+
+flapTone = {
+    startFreq: 700,
+    endFreq: 870,
+    channel: Pulse1 Quarter,
+    attackTime: 10,
+    sustainTime: 0,
+    decayTime: 3,
+    releaseTime: 5,
+    volume: 10,
+    peakVolume: 20,
+}
+
+pointTone = {
+    startFreq: 995,
+    endFreq: 1000,
+    channel: Pulse2 Half,
+    decayTime: 10,
+    releaseTime: 10,
+    peakVolume: 75,
+    volume: 25,
+}
+
+deathTone = {
+    startFreq: 170,
+    endFreq: 40,
+    channel: Noise,
+    sustainTime: 20,
+    releaseTime: 40,
+}
+
+# ===== Drawing and Color =================================
+
 drawScore : U8 -> Task {} []
 drawScore = \score ->
     {} <- setTextColors |> Task.await
@@ -505,14 +506,21 @@ setGroundColors : Task {} []
 setGroundColors =
     W4.setDrawColors { primary: Color1, secondary: Color2, tertiary: Color3, quaternary: Color4 }
 
-halfRocciIdleAnimTime = 20
-
 rocciSpriteSheet = Sprite.new {
     data: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x15, 0x56, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x81, 0x00, 0x00, 0x00, 0x80, 0x40, 0x05, 0x56, 0x81, 0x80, 0x14, 0x00, 0x01, 0x80, 0x00, 0x00, 0x01, 0x80, 0x00, 0x02, 0x85, 0x00, 0x00, 0x02, 0x81, 0x40, 0x01, 0x56, 0xa5, 0xa0, 0x15, 0x00, 0x05, 0xa0, 0x00, 0x00, 0x05, 0xa0, 0x00, 0x0a, 0x95, 0x00, 0x00, 0x0a, 0x85, 0x40, 0x00, 0x56, 0xa9, 0x00, 0x15, 0x56, 0xa5, 0x00, 0x00, 0x00, 0x15, 0x00, 0x00, 0x06, 0x55, 0x00, 0x00, 0x06, 0x55, 0x40, 0x00, 0x06, 0xaa, 0x00, 0x15, 0x5a, 0xaa, 0x00, 0x15, 0x56, 0xaa, 0x00, 0x00, 0x16, 0x95, 0x00, 0x00, 0x06, 0x95, 0x00, 0x00, 0x09, 0x55, 0x00, 0x15, 0x6a, 0xa9, 0x00, 0x05, 0x56, 0xa9, 0x00, 0x00, 0x16, 0x94, 0x00, 0x00, 0x16, 0x95, 0x00, 0x00, 0x09, 0x54, 0x00, 0x05, 0x6a, 0x94, 0x00, 0x01, 0x56, 0xa4, 0x00, 0x00, 0x1a, 0x94, 0x00, 0x00, 0x16, 0x94, 0x00, 0x00, 0x09, 0x50, 0x00, 0x00, 0x69, 0x50, 0x00, 0x00, 0x56, 0x90, 0x00, 0x00, 0x1a, 0xa0, 0x00, 0x00, 0x1a, 0xa0, 0x00, 0x00, 0x29, 0x40, 0x00, 0x00, 0x29, 0x40, 0x00, 0x00, 0x26, 0x40, 0x00, 0x00, 0x0a, 0xa0, 0x00, 0x00, 0x0a, 0xa0, 0x00, 0x00, 0x29, 0x00, 0x00, 0x00, 0x29, 0x00, 0x00, 0x00, 0x29, 0x00, 0x00, 0x00, 0x0a, 0x80, 0x00, 0x00, 0x0a, 0x80, 0x00, 0x00, 0x2a, 0x00, 0x00, 0x00, 0x2a, 0x00, 0x00, 0x00, 0x2a, 0x00, 0x00, 0x00, 0x05, 0x40, 0x00, 0x00, 0x05, 0x40, 0x00, 0x00, 0x28, 0x00, 0x00, 0x00, 0x28, 0x00, 0x00, 0x00, 0x28, 0x00, 0x00, 0x00, 0xa5, 0x00, 0x00, 0x00, 0xa5, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
     bpp: BPP2,
     width: 80,
     height: 16,
 }
+
+idleShift : U64, Animation -> I32
+idleShift = \frameCount, { index, lastUpdated } ->
+    if index == 2 then
+        0
+    else if index == 1 && frameCount - lastUpdated > 3 then
+        0
+    else
+        1
 
 createRocciIdleAnim : U64 -> Animation
 createRocciIdleAnim = \frameCount -> {
