@@ -55,7 +55,7 @@ new = \{ data, bpp, width, height } ->
 ## ```
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#blit-spriteptr-x-y-width-height-flags)
-blit : Sprite, { x : I32, y : I32, flags ? List [FlipX, FlipY, Rotate] } -> Task {} []
+blit : Sprite, { x : I32, y : I32, flags ? List [FlipX, FlipY, Rotate] } -> Task {} *
 blit = \@Sprite { data, bpp, stride, region }, { x, y, flags ? [] } ->
     { srcX, srcY, width, height } = region
 
