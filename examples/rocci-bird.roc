@@ -126,6 +126,10 @@ GameState : {
     rocciFlapAnim : Animation,
     pipeSprite : Sprite,
     groundSprite : Sprite,
+    # If I add these fields and simply wire them into initGame,
+    # I will start getting memory errors and out of bounds accesses.
+    # plants : List Plant,
+    # plantSpriteSheet : Sprite,
 }
 
 initGame : TitleScreenState -> Model
