@@ -119,6 +119,7 @@ GameState : {
         y : F32,
         yVel : F32,
     },
+    lastPipeGenerated : U64,
     pipes : List Pipe,
     lastFlap : Bool,
     rocciFlapAnim : Animation,
@@ -135,6 +136,7 @@ initGame = \{ frameCount, pipeSprite, groundSprite, pipe } ->
             y: 60,
             yVel: 0.5,
         },
+        lastPipeGenerated: frameCount,
         pipes: [pipe],
         lastFlap: Bool.true,
         rocciFlapAnim: createRocciFlapAnim frameCount,
@@ -168,7 +170,18 @@ runGame = \prev ->
                 updateAnimation prev.frameCount prev.rocciFlapAnim,
             )
 
-    pipe <- maybeGeneratePipe prev.frameCount |> Task.attempt
+    pipe <- maybeGeneratePipe prev.lastPipeGenerated prev.frameCount |> Task.attempt
+
+    lastPipeGenerated =
+        if Result.isOk pipe then
+            prev.frameCount
+        else
+            prev.lastPipeGenerated
+
+    pipes =
+        prev.pipes
+        |> updatePipes
+        |> List.appendIfOk pipe
 
     gainPoint = Num.toU8 (List.countIf prev.pipes \{ x } -> x == 18)
     y = Num.max 0 (prev.player.y + yVel)
@@ -177,9 +190,8 @@ runGame = \prev ->
         player: { y, yVel },
         score: prev.score + gainPoint,
         lastFlap: flap,
-        pipes: prev.pipes
-        |> updatePipes
-        |> List.appendIfOk pipe,
+        lastPipeGenerated,
+        pipes,
     }
 
     {} <- drawPipes state.pipeSprite state.pipes |> Task.await
@@ -277,9 +289,9 @@ updatePipes = \pipes ->
     |> List.map \pipe -> { pipe & x: pipe.x - 1 }
     |> List.dropIf \pipe -> pipe.x < -20
 
-maybeGeneratePipe : U64 -> Task Pipe [NoPipe]
-maybeGeneratePipe = \framecount ->
-    if framecount % 90 == 0 then
+maybeGeneratePipe : U64, U64 -> Task Pipe [NoPipe]
+maybeGeneratePipe = \lastgenerated, framecount ->
+    if framecount - lastgenerated > 90 then
         gapStart <- W4.randBetween { start: 0, before: 16 } |> Task.await
         Task.ok { x: W4.screenWidth, gapStart: gapStart * 5 + 10 }
     else
