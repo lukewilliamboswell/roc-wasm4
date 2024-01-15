@@ -307,8 +307,9 @@ runGameOver = \prev ->
     yPixel = Num.floor state.player.y
     {} <- drawAnimation state.rocciFallAnim { x: playerX, y: yPixel } |> Task.await
 
+    gamepad <- W4.getGamepad Player1 |> Task.await
     mouse <- W4.getMouse |> Task.await
-    if mouse.right then
+    if mouse.right || gamepad.button2 then
         Task.ok (initTitleScreen state.frameCount)
     else
         Task.ok (GameOver state)
