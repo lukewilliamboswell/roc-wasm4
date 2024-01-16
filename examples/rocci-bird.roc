@@ -35,8 +35,10 @@ init =
 
     {} <- W4.setPalette palette |> Task.await
 
+    frameCount <- loadFromDisk |> Task.await
+    {} <- W4.seedRand frameCount |> Task.await
     plants <- startingPlants |> Task.await
-    Task.ok (initTitleScreen 0 plants)
+    Task.ok (initTitleScreen frameCount plants)
 
 update : Model -> Task Model []
 update = \model ->
@@ -101,6 +103,7 @@ runTitleScreen = \prev ->
     if start then
         # Seed the randomness with number of frames since the start of the game.
         # This makes the game feel like it is truely randomly seeded cause players won't always start on the same frame.
+        {} <- saveToDisk state.frameCount |> Task.await
         {} <- W4.seedRand state.frameCount |> Task.await
         {} <- W4.tone flapTone |> Task.await
 
@@ -527,6 +530,35 @@ setSpriteColors =
 setGroundColors : Task {} []
 setGroundColors =
     W4.setDrawColors { primary: Color1, secondary: Color2, tertiary: Color3, quaternary: Color4 }
+
+# ===== Saving and Loading ================================
+
+# Due to limitations in randomness of wasm4 we would always get the same title screen.
+# This save just a single byte of randomness from the frameCount in order to give us a bit more randomness.
+saveToDisk : U64 -> Task {} []
+saveToDisk = \frameCount ->
+    data =
+        frameCount
+        |> Num.bitwiseAnd 0xFF
+        |> Num.toU8
+
+    W4.saveToDisk [data]
+    |> Task.onErr \_ -> Task.ok {}
+
+loadFromDisk : Task U64 []
+loadFromDisk =
+    data <- W4.loadFromDisk
+        |> Task.onErr \_ -> Task.ok []
+        |> Task.await
+
+    when data is
+        [byte, ..] ->
+            byte
+            |> Num.toU64
+            |> Task.ok
+
+        _ ->
+            Task.ok 0
 
 # ===== Animations ========================================
 
