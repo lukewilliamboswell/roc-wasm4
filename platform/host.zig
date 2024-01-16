@@ -15,9 +15,10 @@ const ALIGN = 2 * @alignOf(usize);
 
 const TRACE_ALLOC = false;
 
-const MEM_BASE = 0x19A0;
-const MEM_SIZE = 58976;
-const MEM: *[MEM_SIZE]u8 = @ptrFromInt(MEM_BASE);
+// Full mem size is 58976, but we have to limit due to the free set and other values here.
+const MEM_SIZE = 40960;
+const MEM: [MEM_SIZE]u8 align(ALIGN) = undefined;
+var mem_base: usize = undefined;
 // We allocate memory to max alignment for simplicity.
 const MEM_CHUNK_SIZE = ALIGN;
 var free_set = std.bit_set.ArrayBitSet(u64, MEM_SIZE / MEM_CHUNK_SIZE).initFull();
@@ -56,7 +57,7 @@ export fn roc_alloc(requested_size: usize, alignment: u32) callconv(.C) *anyopaq
     }
     free_set.setRangeValue(range, false);
 
-    const size_addr = MEM_BASE + start_index * MEM_CHUNK_SIZE;
+    const size_addr = mem_base + start_index * MEM_CHUNK_SIZE;
     const data_addr = size_addr + MEM_CHUNK_SIZE;
 
     const size_ptr: *usize = @ptrFromInt(size_addr);
@@ -86,7 +87,7 @@ export fn roc_dealloc(c_ptr: *anyopaque, alignment: u32) callconv(.C) void {
     const size_ptr: *usize = @ptrFromInt(size_addr);
     const size = size_ptr.*;
 
-    const start_index = (size_addr - MEM_BASE) / MEM_CHUNK_SIZE;
+    const start_index = (size_addr - mem_base) / MEM_CHUNK_SIZE;
     const exclusive_end_index = start_index + size / MEM_CHUNK_SIZE + 1;
     if (TRACE_ALLOC) {
         w4.tracef("free -> start %d, end %d", start_index, exclusive_end_index);
@@ -145,6 +146,8 @@ extern fn roc__mainForHost_2_caller(*anyopaque, *anyopaque, **anyopaque) callcon
 extern fn roc__mainForHost_2_size() callconv(.C) i64;
 
 export fn start() void {
+    mem_base = @intFromPtr(&MEM);
+    // w4.tracef("size: %d", free_set.capacity());
     const update_size = @as(usize, @intCast(roc__mainForHost_1_size()));
     if (update_size != 0) {
         w4.trace("This platform does not allow for the update function to have captures");
