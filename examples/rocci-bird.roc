@@ -94,7 +94,7 @@ runTitleScreen = \prev ->
     {} <- W4.text "Rocci Bird!!!" { x: 32, y: 12 } |> Task.await
     {} <- W4.text "Click to start!" { x: 24, y: 72 } |> Task.await
 
-    {} <- drawGround state.groundSprite |> Task.await
+    {} <- drawGround state.groundSprite 0 |> Task.await
     {} <- drawPlants state.plantSpriteSheet state.plants |> Task.await
 
     shift = idleShift state.frameCount state.rocciIdleAnim
@@ -124,16 +124,17 @@ GameState : {
         y : F32,
         yVel : F32,
     },
-    lastPipeGenerated : U64,
-    pipes : List Pipe,
-    lastPlantGenerated : U64,
-    plants : List Plant,
     lastFlap : Bool,
     rocciSpriteSheet : Sprite,
     rocciFlapAnim : Animation,
+    pipes : List Pipe,
+    lastPipeGenerated : U64,
     pipeSprite : Sprite,
-    groundSprite : Sprite,
+    plants : List Plant,
+    lastPlantGenerated : U64,
     plantSpriteSheet : Sprite,
+    groundSprite : Sprite,
+    groundX : I32,
 }
 
 initGame : TitleScreenState -> Model
@@ -156,6 +157,7 @@ initGame =
             pipeSprite: createPipeSprite {},
             groundSprite,
             plantSpriteSheet,
+            groundX: 0,
         }
 
 # Useful to throw in WolframAlpha to help calculate these:
@@ -225,6 +227,7 @@ runGame = \prev ->
         pipes,
         lastPlantGenerated,
         plants,
+        groundX: (prev.groundX - 1) % W4.screenWidth,
     }
 
     pointSoundTask =
@@ -235,7 +238,7 @@ runGame = \prev ->
 
     {} <- pointSoundTask |> Task.await
     {} <- drawPipes state.pipeSprite state.pipes |> Task.await
-    {} <- drawGround state.groundSprite |> Task.await
+    {} <- drawGround state.groundSprite state.groundX |> Task.await
     {} <- drawPlants state.plantSpriteSheet state.plants |> Task.await
 
     yPixel =
@@ -263,17 +266,18 @@ GameOverState : {
         y : F32,
         yVel : F32,
     },
-    pipes : List Pipe,
-    plants : List Plant,
     rocciSpriteSheet : Sprite,
     rocciFallAnim : Animation,
+    pipes : List Pipe,
     pipeSprite : Sprite,
-    groundSprite : Sprite,
+    plants : List Plant,
     plantSpriteSheet : Sprite,
+    groundSprite : Sprite,
+    groundX : I32,
 }
 
 initGameOver : GameState -> Model
-initGameOver = \{ frameCount, rocciSpriteSheet, score, pipeSprite, groundSprite, player, pipes, plants, plantSpriteSheet } ->
+initGameOver = \{ frameCount, rocciSpriteSheet, score, pipeSprite, groundSprite, player, pipes, plants, plantSpriteSheet, groundX } ->
     GameOver {
         frameCount,
         score,
@@ -285,6 +289,7 @@ initGameOver = \{ frameCount, rocciSpriteSheet, score, pipeSprite, groundSprite,
         pipeSprite,
         groundSprite,
         plantSpriteSheet,
+        groundX,
     }
 
 runGameOver : GameOverState -> Task Model []
@@ -305,7 +310,7 @@ runGameOver = \prev ->
     }
 
     {} <- drawPipes state.pipeSprite state.pipes |> Task.await
-    {} <- drawGround state.groundSprite |> Task.await
+    {} <- drawGround state.groundSprite state.groundX |> Task.await
     {} <- drawPlants state.plantSpriteSheet state.plants |> Task.await
 
     yPixel = Num.floor state.player.y
@@ -528,10 +533,11 @@ drawScore = \score ->
             68
     W4.text "$(Num.toStr score)" { x, y: 4 }
 
-drawGround : Sprite -> Task {} []
-drawGround = \sprite ->
+drawGround : Sprite, I32 -> Task {} []
+drawGround = \sprite, x ->
     {} <- setGroundColors |> Task.await
-    Sprite.blit sprite { x: 0, y: W4.screenHeight - 13 }
+    {} <- Sprite.blit sprite { x, y: W4.screenHeight - 13 } |> Task.await
+    Sprite.blit sprite { x: x + W4.screenWidth, y: W4.screenHeight - 13 }
 
 setTextColors : Task {} []
 setTextColors =
