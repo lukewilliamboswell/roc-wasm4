@@ -4,6 +4,11 @@ pub fn build(b: *std.Build) !void {
     const optimize = b.standardOptimizeOption(.{});
     const roc_src = b.option([]const u8, "app", "the roc application to build");
 
+    // Full mem size is 58976, but we have to limit due to needing space for other data and code.
+    // This has to also leave room for all roc code and constants. That makes it hard to tune.
+    // Luckily, end users can set this manually when building.
+    const mem_size = b.option(u16, "mem-size", "the amount of space reserved for dynamic memory allocation") orelse 40960;
+
     const roc_check = b.addSystemCommand(&[_][]const u8{ "roc", "check" });
     const roc_lib = b.addSystemCommand(&[_][]const u8{ "roc", "build", "--target=wasm32", "--no-link", "--output", "zig-cache/app.o" });
     // By setting this to true, we ensure zig always rebuilds the roc app since it can't tell if any transitive dependencies have changed.
@@ -39,6 +44,9 @@ pub fn build(b: *std.Build) !void {
         .target = .{ .cpu_arch = .wasm32, .os_tag = .freestanding },
         .optimize = optimize,
     });
+    const options = b.addOptions();
+    options.addOption(usize, "mem_size", mem_size);
+    lib.addOptions("config", options);
 
     lib.import_memory = true;
     lib.initial_memory = 65536;

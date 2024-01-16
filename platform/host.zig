@@ -1,6 +1,8 @@
 const std = @import("std");
 const assert = std.debug.assert;
 
+const config = @import("config");
+
 const w4 = @import("vendored/wasm4.zig");
 
 const str = @import("vendored/str.zig");
@@ -11,13 +13,21 @@ const RocList = list.RocList;
 
 const utils = @import("vendored/utils.zig");
 
-const ALIGN = 2 * @alignOf(usize);
+const ALIGN = @alignOf(u128);
+const Range = std.bit_set.Range;
+comptime {
+    assert(ALIGN >= @sizeOf(Range));
+    if (config.mem_size % ALIGN != 0) {
+        @compileLog("The expected alignment is ", ALIGN);
+        @compileError("-Dmem-size must multiple of the alignment");
+    }
+}
 
 const TRACE_ALLOC = false;
 
-const MEM_BASE = 0x19A0;
-const MEM_SIZE = 58976;
-const MEM: *[MEM_SIZE]u8 = @ptrFromInt(MEM_BASE);
+const MEM_SIZE = config.mem_size;
+const MEM: [MEM_SIZE]u8 align(ALIGN) = undefined;
+var mem_base: usize = undefined;
 // We allocate memory to max alignment for simplicity.
 const MEM_CHUNK_SIZE = ALIGN;
 var free_set = std.bit_set.ArrayBitSet(u64, MEM_SIZE / MEM_CHUNK_SIZE).initFull();
@@ -29,10 +39,10 @@ var rnd = prng.random();
 export fn roc_alloc(requested_size: usize, alignment: u32) callconv(.C) *anyopaque {
     _ = alignment;
     // Leave extra space to store allocation size.
-    if (TRACE_ALLOC) {
-        w4.tracef("alloc -> requested size %d", requested_size);
-    }
     const size = requested_size + MEM_CHUNK_SIZE;
+    if (TRACE_ALLOC) {
+        w4.tracef("alloc -> requested size %d, full size %d, chunks %d", requested_size, size, size / MEM_CHUNK_SIZE);
+    }
 
     var chunk_size: usize = 0;
     var start_index: usize = 0;
@@ -46,23 +56,36 @@ export fn roc_alloc(requested_size: usize, alignment: u32) callconv(.C) *anyopaq
         }
     }
     if (chunk_size < size) {
+        w4.tracef("Ran out of memory: try increasing memory size with `-Dmem-size`. Current mem size is %d", MEM_SIZE);
         @panic("ran out of memory");
     }
 
-    const exclusive_end_index = current_index + 1;
+    const exclusive_end_index = current_index;
     const range = .{ .start = start_index, .end = exclusive_end_index };
     if (TRACE_ALLOC) {
         w4.tracef("alloc -> start %d, end %d", start_index, exclusive_end_index);
     }
     free_set.setRangeValue(range, false);
 
-    const size_addr = MEM_BASE + start_index * MEM_CHUNK_SIZE;
-    const data_addr = size_addr + MEM_CHUNK_SIZE;
+    const base_addr = mem_base + start_index * MEM_CHUNK_SIZE;
+    const data_addr = base_addr + MEM_CHUNK_SIZE;
 
-    const size_ptr: *usize = @ptrFromInt(size_addr);
-    size_ptr.* = chunk_size;
+    const data_ptr: [*]usize = @ptrFromInt(data_addr);
 
-    return @ptrFromInt(data_addr);
+    // Zero all memory before passing to Roc.
+    var i: usize = 0;
+    while (i < (chunk_size - MEM_CHUNK_SIZE) / MEM_CHUNK_SIZE) : (i += 1) {
+        const usizes = MEM_CHUNK_SIZE / @sizeOf(usize);
+        comptime var j = 0;
+        inline while (j < usizes) : (j += 1) {
+            data_ptr[i * usizes + j] = 0;
+        }
+    }
+
+    const range_ptr: *Range = @ptrFromInt(base_addr);
+    range_ptr.* = range;
+
+    return @ptrCast(data_ptr);
 }
 
 export fn roc_realloc(old_ptr: *anyopaque, new_size: usize, old_size: usize, alignment: u32) callconv(.C) ?*anyopaque {
@@ -82,22 +105,18 @@ export fn roc_realloc(old_ptr: *anyopaque, new_size: usize, old_size: usize, ali
 export fn roc_dealloc(c_ptr: *anyopaque, alignment: u32) callconv(.C) void {
     _ = alignment;
     const data_addr = @intFromPtr(c_ptr);
-    const size_addr = data_addr - MEM_CHUNK_SIZE;
-    const size_ptr: *usize = @ptrFromInt(size_addr);
-    const size = size_ptr.*;
+    const base_addr = data_addr - MEM_CHUNK_SIZE;
+    const range_ptr: *Range = @ptrFromInt(base_addr);
+    const range = range_ptr.*;
 
-    const start_index = (size_addr - MEM_BASE) / MEM_CHUNK_SIZE;
-    const exclusive_end_index = start_index + size / MEM_CHUNK_SIZE + 1;
     if (TRACE_ALLOC) {
-        w4.tracef("free -> start %d, end %d", start_index, exclusive_end_index);
+        w4.tracef("free -> start %d, end %d", range.start, range.end);
     }
-    const range = .{ .start = start_index, .end = exclusive_end_index };
     free_set.setRangeValue(range, true);
 }
 
-export fn roc_panic(msg: *RocStr, tag_id: u32) callconv(.C) void {
-    _ = msg;
-    _ = tag_id;
+export fn roc_panic(msg: *RocStr, _: u32) callconv(.C) void {
+    w4.tracef("ROC PANICKED: %s", msg.asU8ptr());
     @panic("ROC PANICKED");
 }
 
@@ -145,6 +164,8 @@ extern fn roc__mainForHost_2_caller(*anyopaque, *anyopaque, **anyopaque) callcon
 extern fn roc__mainForHost_2_size() callconv(.C) i64;
 
 export fn start() void {
+    mem_base = @intFromPtr(&MEM);
+    // w4.tracef("size: %d", free_set.capacity());
     const update_size = @as(usize, @intCast(roc__mainForHost_1_size()));
     if (update_size != 0) {
         w4.trace("This platform does not allow for the update function to have captures");
