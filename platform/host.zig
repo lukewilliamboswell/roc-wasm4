@@ -1,6 +1,8 @@
 const std = @import("std");
 const assert = std.debug.assert;
 
+const config = @import("config");
+
 const w4 = @import("vendored/wasm4.zig");
 
 const str = @import("vendored/str.zig");
@@ -11,16 +13,19 @@ const RocList = list.RocList;
 
 const utils = @import("vendored/utils.zig");
 
-const ALIGN = 2 * @alignOf(usize);
+const ALIGN = @alignOf(u128);
 const Range = std.bit_set.Range;
 comptime {
-    std.debug.assert(ALIGN >= @sizeOf(Range));
+    assert(ALIGN >= @sizeOf(Range));
+    if (config.mem_size % ALIGN != 0) {
+        @compileLog("The expected alignment is ", ALIGN);
+        @compileError("-Dmem-size must multiple of the alignment");
+    }
 }
 
 const TRACE_ALLOC = false;
 
-// Full mem size is 58976, but we have to limit due to the free set and other values here.
-const MEM_SIZE = 40960;
+const MEM_SIZE = config.mem_size;
 const MEM: [MEM_SIZE]u8 align(ALIGN) = undefined;
 var mem_base: usize = undefined;
 // We allocate memory to max alignment for simplicity.
@@ -51,6 +56,7 @@ export fn roc_alloc(requested_size: usize, alignment: u32) callconv(.C) *anyopaq
         }
     }
     if (chunk_size < size) {
+        w4.tracef("Ran out of memory: try increasing memory size with `-Dmem-size`. Current mem size is %d", MEM_SIZE);
         @panic("ran out of memory");
     }
 
@@ -109,9 +115,8 @@ export fn roc_dealloc(c_ptr: *anyopaque, alignment: u32) callconv(.C) void {
     free_set.setRangeValue(range, true);
 }
 
-export fn roc_panic(msg: *RocStr, tag_id: u32) callconv(.C) void {
-    _ = msg;
-    _ = tag_id;
+export fn roc_panic(msg: *RocStr, _: u32) callconv(.C) void {
+    w4.tracef("ROC PANICKED: %s", msg.asU8ptr());
     @panic("ROC PANICKED");
 }
 
