@@ -35,7 +35,8 @@ init =
 
     {} <- W4.setPalette palette |> Task.await
 
-    Task.ok (initTitleScreen 0)
+    plants <- startingPlants |> Task.await
+    Task.ok (initTitleScreen 0 plants)
 
 update : Model -> Task Model []
 update = \model ->
@@ -70,11 +71,11 @@ TitleScreenState : {
     plantSpriteSheet : Sprite,
 }
 
-initTitleScreen : U64 -> Model
-initTitleScreen = \frameCount ->
+initTitleScreen : U64, List Plant -> Model
+initTitleScreen = \frameCount, plants ->
     TitleScreen {
         frameCount,
-        plants: startingPlants,
+        plants,
         rocciIdleAnim: createRocciIdleAnim frameCount,
         groundSprite: createGroundSprite {},
         plantSpriteSheet: createPlantSpriteSheet {},
@@ -300,7 +301,8 @@ runGameOver = \prev ->
     gamepad <- W4.getGamepad Player1 |> Task.await
     mouse <- W4.getMouse |> Task.await
     if mouse.right || gamepad.button2 then
-        Task.ok (initTitleScreen state.frameCount)
+        plants <- startingPlants |> Task.await
+        Task.ok (initTitleScreen state.frameCount plants)
     else
         Task.ok (GameOver state)
 
@@ -399,25 +401,35 @@ maybeGeneratePipe = \lastgenerated, framecount ->
 
 Plant : { x : I32, type : U32 }
 
+plantTypes = 30
+
 plantY = W4.screenHeight - 22
 
-startingPlants = [
-    { x: 12 * 0, type: 0 },
-    { x: 12 * 1, type: 1 },
-    { x: 12 * 2, type: 2 },
-    { x: 12 * 3, type: 3 },
-    { x: 12 * 4, type: 4 },
-    { x: 12 * 5, type: 5 },
-    { x: 12 * 6, type: 6 },
-    { x: 12 * 7, type: 7 },
-    { x: 12 * 8, type: 8 },
-    { x: 12 * 9, type: 9 },
-    { x: 12 * 10, type: 10 },
-    { x: 12 * 11, type: 11 },
-    { x: 12 * 12, type: 12 },
-    { x: 12 * 13, type: 13 },
-    { x: 12 * 14, type: 14 },
-]
+randomPlant : I32 -> Task Plant []
+randomPlant = \x ->
+    type <-
+        # This breaks alias analysis somehow.
+        # Pretty sure those two types are technically the same...
+        # expected type '()', found type 'union { ((),), ((),) }'
+        # W4.randBetween { start: 0, before: plantTypes }
+        # Biased but a least working solution:
+        W4.rand
+        |> Task.map Num.toU32
+        |> Task.map \t -> t % plantTypes
+        |> Task.await
+
+    Task.ok { x, type }
+
+startingPlants : Task (List Plant) []
+startingPlants =
+    List.range { start: At 0, end: At 14 }
+    |> List.walk (Task.ok []) \task, i ->
+        plant <- randomPlant (i * 12) |> Task.await
+        current <- task |> Task.await
+
+        current
+        |> List.append plant
+        |> Task.ok
 
 drawPlants : Sprite, List Plant -> Task {} []
 drawPlants = \spriteSheet, plants ->
