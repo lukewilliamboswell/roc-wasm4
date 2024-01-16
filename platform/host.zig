@@ -72,6 +72,12 @@ export fn roc_alloc(requested_size: usize, alignment: u32) callconv(.C) *anyopaq
 
     const data_ptr: [*]usize = @ptrFromInt(data_addr);
 
+    // TODO: I don't think this is actually needed.
+    // I think other, now fixed, allocator bugs caused the issue.
+    // That said, this is safe to do and I am leaving it in for now.
+    // Can be removed if more perf is needed it.
+    // Could even make it part of the comptime config.
+
     // Zero all memory before passing to Roc.
     var i: usize = 0;
     while (i < (chunk_size - MEM_CHUNK_SIZE) / MEM_CHUNK_SIZE) : (i += 1) {
