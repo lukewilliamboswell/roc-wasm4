@@ -135,12 +135,7 @@ GameState : {
 
 initGame : TitleScreenState -> Model
 initGame =
-    \{
-        frameCount,
-        groundSprite,
-        # plants,
-        # plantSpriteSheet,
-    } ->
+    \{ frameCount, groundSprite } ->
         Game {
             frameCount,
             score: 0,
