@@ -25,6 +25,17 @@ The `build.zig` script reports any warnings or errors for the app using `roc che
 
 ![snake demo](/examples/snake.gif)
 
+### Rocci-Bird Demo
+
+Thank you Brendan Hansknecht and Luke DeVault (art) for this demo.
+
+[Link to play online](https://bren077s.itch.io/rocci-bird)
+
+- Unix/Macos `zig build -Dapp=examples/rocci-bird.roc run`
+- Windows `zig build -Dapp=".\examples\rocci-bird.roc" run`
+
+![rocci-bird demo](/examples/rocci-bird.gif)
+
 ### Sound Demo
 
 - Unix/Macos `zig build -Dapp=examples/sound.roc run`
