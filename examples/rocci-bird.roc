@@ -306,7 +306,7 @@ runGameOver = \prev ->
 
     gamepad <- W4.getGamepad Player1 |> Task.await
     mouse <- W4.getMouse |> Task.await
-    if mouse.right || gamepad.button2 then
+    if mouse.right || gamepad.button2 || gamepad.right then
         plants <- startingPlants |> Task.await
         Task.ok (initTitleScreen state.frameCount plants)
     else
