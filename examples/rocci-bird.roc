@@ -285,14 +285,18 @@ runGameOver = \prev ->
     {} <- drawPipes state.pipeSprite state.pipes |> Task.await
     {} <- drawGround state.groundSprite |> Task.await
 
+    {} <- W4.setShapeColors { border: Color4, fill: Color1 } |> Task.await
+    {} <- W4.rect { x: 16, y: 52, width: 136, height: 32 } |> Task.await
     {} <- setTextColors |> Task.await
     {} <- W4.text "Game Over!" { x: 44, y: 56 } |> Task.await
     {} <- W4.text "Right to restart" { x: 20, y: 72 } |> Task.await
     # If this is commented out, the code will not compile.
     # Error in alias analysis
     # Might as well use it for something, I guess.
-    {} <- W4.text "Art by Luke DeVault" { x: 4, y: 149 } |> Task.await
+    {} <- W4.text "Art by Luke DeVault" { x: 4, y: 151 } |> Task.await
 
+    {} <- W4.setShapeColors { border: Color4, fill: Color1 } |> Task.await
+    {} <- W4.rect { x: 66, y: 2, width: 28, height: 12 } |> Task.await
     {} <- drawScore state.score |> Task.await
 
     yPixel = Num.floor state.player.y
