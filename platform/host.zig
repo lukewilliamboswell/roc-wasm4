@@ -72,13 +72,15 @@ export fn roc_alloc(requested_size: usize, alignment: u32) callconv(.C) *anyopaq
 
     const data_ptr: [*]usize = @ptrFromInt(data_addr);
 
-    // Zero all memory before passing to Roc.
-    var i: usize = 0;
-    while (i < (chunk_size - MEM_CHUNK_SIZE) / MEM_CHUNK_SIZE) : (i += 1) {
-        const usizes = MEM_CHUNK_SIZE / @sizeOf(usize);
-        comptime var j = 0;
-        inline while (j < usizes) : (j += 1) {
-            data_ptr[i * usizes + j] = 0;
+    if (config.zero_on_alloc) {
+        // Zero all memory before passing to Roc.
+        var i: usize = 0;
+        while (i < (chunk_size - MEM_CHUNK_SIZE) / MEM_CHUNK_SIZE) : (i += 1) {
+            const usizes = MEM_CHUNK_SIZE / @sizeOf(usize);
+            comptime var j = 0;
+            inline while (j < usizes) : (j += 1) {
+                data_ptr[i * usizes + j] = 0;
+            }
         }
     }
 

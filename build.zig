@@ -9,6 +9,10 @@ pub fn build(b: *std.Build) !void {
     // Luckily, end users can set this manually when building.
     const mem_size = b.option(u16, "mem-size", "the amount of space reserved for dynamic memory allocation") orelse 40960;
 
+    // Enable this if you hit any sort of memory corruption.
+    // It will cost performance.
+    const zero_on_alloc = b.option(bool, "zero-on-alloc", "zeros all newly allocated memory") orelse false;
+
     const roc_check = b.addSystemCommand(&[_][]const u8{ "roc", "check" });
     const roc_lib = b.addSystemCommand(&[_][]const u8{ "roc", "build", "--target=wasm32", "--no-link", "--output", "zig-cache/app.o" });
     // By setting this to true, we ensure zig always rebuilds the roc app since it can't tell if any transitive dependencies have changed.
@@ -46,6 +50,7 @@ pub fn build(b: *std.Build) !void {
     });
     const options = b.addOptions();
     options.addOption(usize, "mem_size", mem_size);
+    options.addOption(bool, "zero_on_alloc", zero_on_alloc);
     lib.addOptions("config", options);
 
     lib.import_memory = true;
