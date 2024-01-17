@@ -13,19 +13,18 @@ pub fn build(b: *std.Build) !void {
     // It will cost performance.
     const zero_on_alloc = b.option(bool, "zero-on-alloc", "zeros all newly allocated memory") orelse false;
 
-    const roc_check = b.addSystemCommand(&[_][]const u8{ "roc", "check" });
-    const roc_lib = b.addSystemCommand(&[_][]const u8{ "roc", "build", "--target=wasm32", "--no-link", "--output", "zig-cache/app.o" });
+    const roc_lib = b.addSystemCommand(&[_][]const u8{
+        // Allow warnings by accepting exit code 2 as well.
+        "sh", "-c", "roc build --target=wasm32 --no-link --output zig-cache/app.o $0 $1; test $? -eq 0 -o $? -eq 2",
+    });
     // By setting this to true, we ensure zig always rebuilds the roc app since it can't tell if any transitive dependencies have changed.
-    roc_check.has_side_effects = true;
     roc_lib.has_side_effects = true;
 
     if (roc_src) |val| {
         roc_lib.addFileArg(.{ .path = val });
-        roc_check.addFileArg(.{ .path = val });
     } else {
         const default_path = "examples/snake.roc";
         roc_lib.addFileArg(.{ .path = default_path });
-        roc_check.addFileArg(.{ .path = default_path });
     }
 
     switch (optimize) {
@@ -37,9 +36,6 @@ pub fn build(b: *std.Build) !void {
         },
         else => {},
     }
-
-    // Run roc check before building
-    roc_lib.step.dependOn(&roc_check.step);
 
     // TODO: change to addExecutable with entry disabled when we update to zig 0.12.0.
     const lib = b.addSharedLibrary(.{
