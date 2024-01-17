@@ -14,7 +14,7 @@ Make sure you have [roc](https://www.roc-lang.org/install) newer than 2023-1-8, 
 
 For the *web runtime* use `zig build run`
 
-For the *native runtime* use `zig build run-native`
+For the *native runtime* use `zig build run-native` (Note: native can often be much slower than web especially for non-optimized builds)
 
 The `build.zig` script reports any warnings or errors for the app using `roc check`, it then builds an object file using `roc build --target=wasm32 --no-link` and links this with the host to produce the final `.wasm` game cartridge.
 
@@ -49,10 +49,21 @@ Thank you Brendan Hansknecht and Luke DeVault (art) for this demo.
 
 To generate locally use `roc docs platform/main.roc`, and then use a file server `simple-http-server generated-docs/`.
 
+### Hot Reloading
+
+Well it isn't perfect, hot reloading can be quite nice when developing a game. For this, I suggest using the [entr](https://github.com/eradman/entr) command line tool.
+
+In one terminal run the build command: `find . -name "*.roc" -o -name "*.zig" | entr -cc zig build -Dapp=<app>`.
+
+In another terminal run wasm4: `w4 run zig-out/lib/cart.wasm --hot`.
+
+If the hot reloading breaks (which it often does when changing the data layout or state), simply press `R` to reload the cart.
+
 ### Distribution
 
 To release a game, first build it with optimizations by adding `-Doptimize=ReleaseSmall`.
 Then bundle it [like any other wasm4 game](https://wasm4.org/docs/guides/distribution/) using the generated cartidge located in `zig-out/lib/cart.wasm`.
+If your cartidge is too large, you can try lowering the dynamic memory space with `-Dmem-size=<size>`. The default is `40960` bytes.
 
 For example, a web release can be built with:
 ```shell
