@@ -4,7 +4,7 @@ app "rocci-bird"
     }
     imports [
         w4.Task.{ Task },
-        w4.W4.{ Gamepad },
+        w4.W4,
         w4.Sprite.{ Sprite },
     ]
     provides [main, Model] to w4

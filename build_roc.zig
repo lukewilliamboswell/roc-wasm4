@@ -11,15 +11,8 @@ pub fn main() !void {
     defer std.process.argsFree(allocator, args);
 
     // Setup buffered stdout and stderr
-    const stdout_file = std.io.getStdOut().writer();
-    var bwout = std.io.bufferedWriter(stdout_file);
-    const stdout = bwout.writer();
-    defer bwout.flush() catch unreachable;
-
-    const stderr_file = std.io.getStdErr().writer();
-    var bwerr = std.io.bufferedWriter(stderr_file);
-    const stderr = bwerr.writer();
-    defer bwerr.flush() catch unreachable;
+    const stdout = std.io.getStdOut().writer();
+    const stderr = std.io.getStdErr().writer();
 
     // Early exit on not enough args
     if (args.len < 2) {

@@ -53,7 +53,7 @@ To generate locally use `roc docs platform/main.roc`, and then use a file server
 
 Well it isn't perfect, hot reloading can be quite nice when developing a game. For this, I suggest using the [entr](https://github.com/eradman/entr) command line tool.
 
-In one terminal run the build command: `find . -name "*.roc" -o -name "*.zig" | entr -cc zig build -Dapp=<app>`.
+In one terminal run the build command: `find . -name "*.roc" -o -name "*.zig" | entr -ccr zig build -Dapp=<app>`.
 
 In another terminal run wasm4: `w4 run zig-out/lib/cart.wasm --hot`.
 
