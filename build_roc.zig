@@ -53,10 +53,16 @@ pub fn main() !void {
 
     // `roc check` succeeded or only had warnings.
     // Proceed to `roc build`
-    const roc_build_args = [_][]const u8{ "roc", "build", "--target", "wasm32", "--no-link", "--output", "zig-cache/app.o", optimize_flag, app_name };
+    var roc_build_args = try std.ArrayList([]const u8).initCapacity(allocator, 10);
+    defer roc_build_args.deinit();
+    try roc_build_args.appendSlice(&[_][]const u8{ "roc", "build", "--target", "wasm32", "--no-link", "--output", "zig-cache/app.o" });
+    if (optimize_flag.len != 0) {
+        try roc_build_args.append(optimize_flag);
+    }
+    try roc_build_args.append(app_name);
     var roc_build = try std.ChildProcess.exec(.{
         .allocator = allocator,
-        .argv = &roc_build_args,
+        .argv = roc_build_args.items,
     });
     defer allocator.free(roc_build.stdout);
     defer allocator.free(roc_build.stderr);
