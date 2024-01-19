@@ -35,7 +35,7 @@ init =
 
     {} <- W4.setPalette palette |> Task.await
 
-    frameCount <- loadFromDisk |> Task.await
+    frameCount <- loadRandFromDisk |> Task.await
     {} <- W4.seedRand frameCount |> Task.await
     plants <- startingPlants |> Task.await
     Task.ok (initTitleScreen frameCount plants)
@@ -101,13 +101,7 @@ runTitleScreen = \prev ->
     start = gamepad.button1 || gamepad.up || mouse.left
 
     if start then
-        # Seed the randomness with number of frames since the start of the game.
-        # This makes the game feel like it is truely randomly seeded cause players won't always start on the same frame.
-        {} <- saveToDisk state.frameCount |> Task.await
-        {} <- W4.seedRand state.frameCount |> Task.await
-        {} <- W4.tone flapTone |> Task.await
-
-        Task.ok (initGame state)
+        initGame state
     else
         Task.ok (TitleScreen state)
 
@@ -116,6 +110,7 @@ runTitleScreen = \prev ->
 GameState : {
     frameCount : U64,
     score : U8,
+    maxScore : U8,
     player : {
         y : F32,
         yVel : F32,
@@ -129,24 +124,31 @@ GameState : {
     groundX : I32,
 }
 
-initGame : TitleScreenState -> Model
-initGame =
-    \{ frameCount, plants } ->
-        Game {
-            frameCount,
-            score: 0,
-            player: {
-                y: playerStartY,
-                yVel: jumpSpeed,
-            },
-            lastPipeGenerated: frameCount,
-            pipes: [],
-            plants,
-            lastPlantGenerated: Num.subSaturated frameCount 4,
-            lastFlap: Bool.true,
-            rocciFlapAnim: createRocciFlapAnim frameCount,
-            groundX: 0,
-        }
+initGame : TitleScreenState -> Task Model []
+initGame = \{ frameCount, plants } ->
+    # Seed the randomness with number of frames since the start of the game.
+    # This makes the game feel like it is truely randomly seeded cause players won't always start on the same frame.
+    {} <- saveRandToDisk frameCount |> Task.await
+    {} <- W4.seedRand frameCount |> Task.await
+    {} <- W4.tone flapTone |> Task.await
+
+    Game {
+        frameCount,
+        score: 0,
+        maxScore: 0,
+        player: {
+            y: playerStartY,
+            yVel: jumpSpeed,
+        },
+        lastPipeGenerated: frameCount,
+        pipes: [],
+        plants,
+        lastPlantGenerated: Num.subSaturated frameCount 4,
+        lastFlap: Bool.true,
+        rocciFlapAnim: createRocciFlapAnim frameCount,
+        groundX: 0,
+    }
+    |> Task.ok
 
 # Useful to throw in WolframAlpha to help calculate these:
 # y =  v^2 /(2a); y = -a/2*t^2 + vt; y = 20; t = 18; a > 0
@@ -206,10 +208,12 @@ runGame = \prev ->
 
     gainPoint = Num.toU8 (List.countIf prev.pipes \{ x } -> x == playerX - 2)
     y = prev.player.y + yVel
+    score = Num.addWrap prev.score gainPoint
     state = { prev &
         rocciFlapAnim: nextAnim,
         player: { y, yVel },
-        score: Num.addWrap prev.score gainPoint,
+        score,
+        maxScore: Num.max score prev.maxScore,
         lastFlap: flap,
         lastPipeGenerated,
         pipes,
@@ -236,46 +240,64 @@ runGame = \prev ->
     collided <- playerCollided yPixel state.rocciFlapAnim.index |> Task.await
     {} <- drawAnimation state.rocciFlapAnim { x: playerX, y: yPixel } |> Task.await
 
-    {} <- drawScore state.score |> Task.await
+    {} <- drawScore state.score { x: 68, y: 4 } |> Task.await
 
     if !collided && y < 134 then
         Task.ok (Game state)
     else
         {} <- W4.tone deathTone |> Task.await
 
-        Task.ok (initGameOver state)
+        initGameOver state
 
 # ===== Game Over =========================================
 
 GameOverState : {
     frameCount : U64,
     score : U8,
+    highScore : U8,
+    newHighScore : Bool,
     player : {
         y : F32,
         yVel : F32,
     },
     rocciFallAnim : Animation,
+    highScoreAnim : Animation,
     pipes : List Pipe,
     plants : List Plant,
     groundX : I32,
 }
 
-initGameOver : GameState -> Model
-initGameOver = \{ frameCount, score, player, pipes, plants, groundX } ->
+initGameOver : GameState -> Task Model []
+initGameOver = \{ frameCount, maxScore, score, player, pipes, plants, groundX } ->
+    hs <- loadHighScoreFromDisk |> Task.await
+    newHighScore = maxScore > hs
+    highScore =
+        if newHighScore then
+            maxScore
+        else
+            hs
+
+    {} <- saveHighScoreToDisk highScore |> Task.await
+
     GameOver {
         frameCount,
         score,
+        highScore,
+        newHighScore,
         player,
         pipes,
         plants,
         rocciFallAnim: createRocciFallAnim frameCount,
+        highScoreAnim: createHighScoreAnim frameCount,
         groundX,
     }
+    |> Task.ok
 
 runGameOver : GameOverState -> Task Model []
 runGameOver = \prev ->
     yVel = prev.player.yVel + gravity
-    nextAnim = updateAnimation prev.frameCount prev.rocciFallAnim
+    rocciFallAnim = updateAnimation prev.frameCount prev.rocciFallAnim
+    highScoreAnim = updateAnimation prev.frameCount prev.highScoreAnim
 
     y =
         next = prev.player.y + yVel
@@ -285,7 +307,8 @@ runGameOver = \prev ->
             next
 
     state = { prev &
-        rocciFallAnim: nextAnim,
+        rocciFallAnim,
+        highScoreAnim,
         player: { y, yVel },
     }
 
@@ -305,7 +328,21 @@ runGameOver = \prev ->
 
     {} <- W4.setShapeColors { border: Color4, fill: Color1 } |> Task.await
     {} <- W4.rect { x: 66, y: 2, width: 28, height: 12 } |> Task.await
-    {} <- drawScore state.score |> Task.await
+    {} <- drawScore state.score { x: 68, y: 4 } |> Task.await
+
+    highScoreTask =
+        if state.newHighScore then
+            drawAnimation state.highScoreAnim { x: 64, y: 0 }
+        else
+            Task.ok {}
+
+    {} <- highScoreTask |> Task.await
+
+    {} <- W4.setShapeColors { border: Color4, fill: Color1 } |> Task.await
+    {} <- W4.rect { x: 54, y: 18, width: 52, height: 12 } |> Task.await
+    {} <- setTextColors |> Task.await
+    {} <- W4.text "HS:" { x: 57, y: 20 } |> Task.await
+    {} <- drawScore state.highScore { x: 80, y: 20 } |> Task.await
 
     gamepad <- W4.getGamepad Player1 |> Task.await
     mouse <- W4.getMouse |> Task.await
@@ -501,17 +538,17 @@ deathTone = {
 
 # ===== Drawing and Color =================================
 
-drawScore : U8 -> Task {} []
-drawScore = \score ->
+drawScore : U8, { x : I32, y : I32 } -> Task {} []
+drawScore = \score, { x: baseX, y } ->
     {} <- setTextColors |> Task.await
     x =
         if score < 10 then
-            76
+            baseX + 8
         else if score < 100 then
-            72
+            baseX + 4
         else
-            68
-    W4.text "$(Num.toStr score)" { x, y: 4 }
+            baseX
+    W4.text "$(Num.toStr score)" { x, y }
 
 drawGround : Sprite, I32 -> Task {} []
 drawGround = \sprite, x ->
@@ -535,18 +572,20 @@ setGroundColors =
 
 # Due to limitations in randomness of wasm4 we would always get the same title screen.
 # This save just a single byte of randomness from the frameCount in order to give us a bit more randomness.
-saveToDisk : U64 -> Task {} []
-saveToDisk = \frameCount ->
+saveRandToDisk : U64 -> Task {} []
+saveRandToDisk = \frameCount ->
     data =
         frameCount
         |> Num.bitwiseAnd 0xFF
         |> Num.toU8
 
-    W4.saveToDisk [data]
+    highScore <- loadHighScoreFromDisk |> Task.await
+
+    W4.saveToDisk [data, highScore]
     |> Task.onErr \_ -> Task.ok {}
 
-loadFromDisk : Task U64 []
-loadFromDisk =
+loadRandFromDisk : Task U64 []
+loadRandFromDisk =
     data <- W4.loadFromDisk
         |> Task.onErr \_ -> Task.ok []
         |> Task.await
@@ -555,6 +594,27 @@ loadFromDisk =
         [byte, ..] ->
             byte
             |> Num.toU64
+            |> Task.ok
+
+        _ ->
+            Task.ok 0
+
+saveHighScoreToDisk : U8 -> Task {} []
+saveHighScoreToDisk = \highScore ->
+    rand <- loadRandFromDisk |> Task.await
+
+    W4.saveToDisk [Num.toU8 rand, highScore]
+    |> Task.onErr \_ -> Task.ok {}
+
+loadHighScoreFromDisk : Task U8 []
+loadHighScoreFromDisk =
+    data <- W4.loadFromDisk
+        |> Task.onErr \_ -> Task.ok []
+        |> Task.await
+
+    when data is
+        [_, hs, ..] ->
+            hs
             |> Task.ok
 
         _ ->
@@ -667,6 +727,19 @@ createRocciFallAnim = \frameCount -> {
     ],
 }
 
+createHighScoreAnim : U64 -> Animation
+createHighScoreAnim = \frameCount -> {
+    lastUpdated: frameCount,
+    index: 0,
+    state: Loop,
+    cells: [
+        { frames: 5, sprite: Sprite.subOrCrash highScoreSpriteSheet { srcX: 0, srcY: 0, width: 32, height: 16 } },
+        { frames: 5, sprite: Sprite.subOrCrash highScoreSpriteSheet { srcX: 32, srcY: 0, width: 32, height: 16 } },
+        { frames: 5, sprite: Sprite.subOrCrash highScoreSpriteSheet { srcX: 64, srcY: 0, width: 32, height: 16 } },
+        { frames: 5, sprite: Sprite.subOrCrash highScoreSpriteSheet { srcX: 96, srcY: 0, width: 32, height: 16 } },
+    ],
+}
+
 # ===== Sprites ===========================================
 
 # Due to a compiler bug, all of these will regenerate every frame.
@@ -707,3 +780,11 @@ plantSpriteSheet =
         width: 360,
         height: 12,
     }
+
+highScoreSpriteSheet : Sprite
+highScoreSpriteSheet = Sprite.new {
+    data: [0x28, 0x00, 0xa0, 0x02, 0x80, 0x0a, 0x00, 0x28, 0x02, 0x80, 0x0a, 0x00, 0x28, 0x00, 0xa0, 0x00, 0x00, 0x28, 0x00, 0xa0, 0x02, 0x80, 0x0a, 0x00, 0x00, 0x28, 0x00, 0xa0, 0x02, 0x80, 0x0a, 0x00, 0x96, 0x02, 0x58, 0x09, 0x60, 0x25, 0x80, 0x96, 0x09, 0x60, 0x25, 0x80, 0x96, 0x02, 0x58, 0x00, 0x00, 0x96, 0x02, 0x58, 0x09, 0x60, 0x25, 0x80, 0x00, 0x96, 0x02, 0x58, 0x09, 0x60, 0x25, 0x80, 0x9f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf6, 0x0f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf8, 0x2f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf0, 0x2f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf0, 0x2c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x38, 0x0c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x9c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x9c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x0c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x2c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x9c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x38, 0x9c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x38, 0x0c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x9c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x38, 0x2c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x2c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x2c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x38, 0x9c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x0c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x0c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x9c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x2c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x0c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x38, 0x0c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x38, 0x9c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x0c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x38, 0x2c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x2c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x2c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x38, 0x0c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x9c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x9c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x0c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x2c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x9c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x38, 0x9c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x38, 0x0c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x9c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x38, 0x2c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x2c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x2c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x38, 0x9c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x0c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x0c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x9f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf6, 0x2f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf0, 0x0f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf8, 0x0f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xf8, 0x96, 0x02, 0x58, 0x09, 0x60, 0x25, 0x80, 0x96, 0x00, 0x25, 0x80, 0x96, 0x02, 0x58, 0x09, 0x60, 0x02, 0x58, 0x09, 0x60, 0x25, 0x80, 0x96, 0x00, 0x02, 0x58, 0x09, 0x60, 0x25, 0x80, 0x96, 0x00, 0x28, 0x00, 0xa0, 0x02, 0x80, 0x0a, 0x00, 0x28, 0x00, 0x0a, 0x00, 0x28, 0x00, 0xa0, 0x02, 0x80, 0x00, 0xa0, 0x02, 0x80, 0x0a, 0x00, 0x28, 0x00, 0x00, 0xa0, 0x02, 0x80, 0x0a, 0x00, 0x28, 0x00],
+    bpp: BPP2,
+    width: 128,
+    height: 16,
+}
