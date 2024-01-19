@@ -13,26 +13,31 @@ pub fn build(b: *std.Build) !void {
     // It will cost performance.
     const zero_on_alloc = b.option(bool, "zero-on-alloc", "zeros all newly allocated memory") orelse false;
 
-    const roc_lib = b.addSystemCommand(&[_][]const u8{
-        // Allow warnings by accepting exit code 2 as well.
-        "sh", "-c", "roc build --target=wasm32 --no-link --output zig-cache/app.o $0 $1; test $? -eq 0 -o $? -eq 2",
+    const build_roc = b.addExecutable(.{
+        .name = "build_roc",
+        .root_source_file = .{ .path = "build_roc.zig" },
+        // Empty means native.
+        .target = .{},
+        .optimize = .Debug,
     });
+    const run_build_roc = b.addRunArtifact(build_roc);
     // By setting this to true, we ensure zig always rebuilds the roc app since it can't tell if any transitive dependencies have changed.
-    roc_lib.has_side_effects = true;
+    run_build_roc.stdio = .inherit;
+    run_build_roc.has_side_effects = true;
 
     if (roc_src) |val| {
-        roc_lib.addFileArg(.{ .path = val });
+        run_build_roc.addFileArg(.{ .path = val });
     } else {
         const default_path = "examples/snake.roc";
-        roc_lib.addFileArg(.{ .path = default_path });
+        run_build_roc.addFileArg(.{ .path = default_path });
     }
 
     switch (optimize) {
         .ReleaseFast, .ReleaseSafe => {
-            roc_lib.addArg("--optimize");
+            run_build_roc.addArg("--optimize");
         },
         .ReleaseSmall => {
-            roc_lib.addArg("--opt-size");
+            run_build_roc.addArg("--opt-size");
         },
         else => {},
     }
@@ -57,7 +62,7 @@ pub fn build(b: *std.Build) !void {
     // Export WASM-4 symbols
     lib.export_symbol_names = &[_][]const u8{ "start", "update" };
 
-    lib.step.dependOn(&roc_lib.step);
+    lib.step.dependOn(&run_build_roc.step);
     lib.addObjectFile(.{ .path = "zig-cache/app.o" });
 
     b.installArtifact(lib);
