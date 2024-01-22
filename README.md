@@ -43,6 +43,14 @@ Thank you Brendan Hansknecht and Luke DeVault (art) for this demo.
 
 ![sound demo](/examples/sound.gif)
 
+### Drum Roll
+
+Thank you Isaac Van Doren for this demo.
+
+[Link to source code](https://github.com/isaacvando/roc-drum-machine), and [play online](https://isaacvando.github.io/roc-drum-machine/)
+
+![drum roll](/examples/drum-roll.gif)
+
 ### Documentation
 
 📖 Platform docs hosted at [lukewilliamboswell.github.io/roc-wasm4/](https://lukewilliamboswell.github.io/roc-wasm4/)
