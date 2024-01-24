@@ -23,7 +23,7 @@ comptime {
     }
 }
 
-const TRACE_ALLOC = false;
+const TRACE_ALLOCS = config.trace_allocs;
 
 const MEM_SIZE = config.mem_size;
 const MEM: [MEM_SIZE]u8 align(ALIGN) = undefined;
@@ -40,7 +40,7 @@ export fn roc_alloc(requested_size: usize, alignment: u32) callconv(.C) *anyopaq
     _ = alignment;
     // Leave extra space to store allocation size.
     const size = requested_size + MEM_CHUNK_SIZE;
-    if (TRACE_ALLOC) {
+    if (TRACE_ALLOCS) {
         w4.tracef("alloc -> requested size %d, full size %d, chunks %d", requested_size, size, size / MEM_CHUNK_SIZE);
     }
 
@@ -62,7 +62,7 @@ export fn roc_alloc(requested_size: usize, alignment: u32) callconv(.C) *anyopaq
 
     const exclusive_end_index = current_index;
     const range = .{ .start = start_index, .end = exclusive_end_index };
-    if (TRACE_ALLOC) {
+    if (TRACE_ALLOCS) {
         w4.tracef("alloc -> start %d, end %d", start_index, exclusive_end_index);
     }
     free_set.setRangeValue(range, false);
@@ -111,7 +111,7 @@ export fn roc_dealloc(c_ptr: *anyopaque, alignment: u32) callconv(.C) void {
     const range_ptr: *Range = @ptrFromInt(base_addr);
     const range = range_ptr.*;
 
-    if (TRACE_ALLOC) {
+    if (TRACE_ALLOCS) {
         w4.tracef("free -> start %d, end %d", range.start, range.end);
     }
     free_set.setRangeValue(range, true);

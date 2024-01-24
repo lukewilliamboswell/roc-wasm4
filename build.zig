@@ -12,6 +12,7 @@ pub fn build(b: *std.Build) !void {
     // Enable this if you hit any sort of memory corruption.
     // It will cost performance.
     const zero_on_alloc = b.option(bool, "zero-on-alloc", "zeros all newly allocated memory") orelse false;
+    const trace_allocs = b.option(bool, "trace-allocs", "debug print on every allocation and deallocation") orelse false;
 
     const build_roc = b.addExecutable(.{
         .name = "build_roc",
@@ -52,6 +53,7 @@ pub fn build(b: *std.Build) !void {
     const options = b.addOptions();
     options.addOption(usize, "mem_size", mem_size);
     options.addOption(bool, "zero_on_alloc", zero_on_alloc);
+    options.addOption(bool, "trace_allocs", trace_allocs);
     lib.addOptions("config", options);
 
     lib.import_memory = true;
