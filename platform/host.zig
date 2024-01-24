@@ -23,7 +23,7 @@ comptime {
     }
 }
 
-const TRACE_ALLOC = false;
+const TRACE_ALLOC = config.trace_alloc;
 
 const MEM_SIZE = config.mem_size;
 const MEM: [MEM_SIZE]u8 align(ALIGN) = undefined;
