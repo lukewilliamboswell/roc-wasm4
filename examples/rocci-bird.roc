@@ -633,7 +633,7 @@ Animation : {
 updateAnimation : U64, Animation -> Animation
 updateAnimation = \frameCount, anim ->
     framesPerUpdate =
-        when List.get anim.cells (Num.toNat anim.index) is
+        when List.get anim.cells (Num.toU64 anim.index) is
             Ok { frames } ->
                 frames
 
@@ -659,7 +659,7 @@ updateAnimation = \frameCount, anim ->
 
 drawAnimation : Animation, { x : I32, y : I32, flags ? List [FlipX, FlipY, Rotate] } -> Task {} []
 drawAnimation = \anim, { x, y, flags ? [] } ->
-    when List.get anim.cells (Num.toNat anim.index) is
+    when List.get anim.cells (Num.toU64 anim.index) is
         Ok { sprite } ->
             {} <- setSpriteColors |> Task.await
             Sprite.blit sprite { x, y, flags }
