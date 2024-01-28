@@ -689,8 +689,8 @@ tone = \{ startFreq ? 0, endFreq ? 0, channel ? Pulse1 Eighth, pan ? Center, sus
     duration =
         Num.toU32 attackTime
         |> Num.shiftLeftBy 24
-        |> Num.bitwiseOr (Num.toU32 releaseTime |> Num.shiftLeftBy 16)
-        |> Num.bitwiseOr (Num.toU32 decayTime |> Num.shiftLeftBy 8)
+        |> Num.bitwiseOr (Num.toU32 decayTime |> Num.shiftLeftBy 16)
+        |> Num.bitwiseOr (Num.toU32 releaseTime |> Num.shiftLeftBy 8)
         |> Num.bitwiseOr (Num.toU32 sustainTime)
 
     volumeBits =
