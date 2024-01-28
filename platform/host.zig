@@ -5,13 +5,13 @@ const config = @import("config");
 
 const w4 = @import("vendored/wasm4.zig");
 
-const str = @import("vendored/str.zig");
+const str = @import("glue/str.zig");
 const RocStr = str.RocStr;
 
-const list = @import("vendored/list.zig");
+const list = @import("glue/list.zig");
 const RocList = list.RocList;
 
-const utils = @import("vendored/utils.zig");
+const utils = @import("glue/utils.zig");
 
 const ALIGN = @alignOf(u128);
 const Range = std.bit_set.Range;
