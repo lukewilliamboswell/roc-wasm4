@@ -512,8 +512,8 @@ flapTone = {
     channel: Pulse1 Quarter,
     attackTime: 10,
     sustainTime: 0,
-    decayTime: 3,
-    releaseTime: 5,
+    decayTime: 5,
+    releaseTime: 3,
     volume: 10,
     peakVolume: 20,
 }
@@ -533,7 +533,7 @@ deathTone = {
     endFreq: 40,
     channel: Noise,
     sustainTime: 20,
-    releaseTime: 40,
+    decayTime: 40,
 }
 
 # ===== Drawing and Color =================================

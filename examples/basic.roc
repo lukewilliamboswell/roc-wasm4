@@ -40,7 +40,7 @@ init =
     colors <- W4.getDrawColors |> Task.await
     {} <- Inspect.toStr colors |> W4.trace |> Task.await
 
-    {} <- W4.tone { startFreq: 262, endFreq: 523, channel: Pulse1 Quarter, sustainTime: 60, releaseTime: 30 } |> Task.await
+    {} <- W4.tone { startFreq: 262, endFreq: 523, channel: Pulse1 Quarter, sustainTime: 60, decayTime: 30 } |> Task.await
 
     Task.ok {}
 
