@@ -16,7 +16,7 @@ Program : {
 
 Model : {
     arrowSprite : Sprite,
-    arrowIdx : Nat,
+    arrowIdx : U64,
     lastGamepadState : Gamepad,
     values : List (Str, U32, U32),
 }
