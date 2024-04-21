@@ -27,7 +27,7 @@ main = { init, update }
 
 init : Task Model []
 init =
-    {} <- setColorPalette |> Task.await
+    setColorPalette!
 
     fruitSprite = Sprite.new {
         data: [0x00, 0xa0, 0x02, 0x00, 0x0e, 0xf0, 0x36, 0x5c, 0xd6, 0x57, 0xd5, 0x57, 0x35, 0x5c, 0x0f, 0xf0],
@@ -58,17 +58,17 @@ update = \prev ->
 
 runTitleScreen : Model -> Task Model []
 runTitleScreen = \model ->
-    {} <- W4.text "Press X to start!" { x: 15, y: 72 } |> Task.await
+    W4.text! "Press X to start!" { x: 15, y: 72 }
 
-    gamepad <- W4.getGamepad Player1 |> Task.await
+    gamepad = W4.getGamepad! Player1
 
     if gamepad.button1 then
         # Seed the randomness with number of frames since the start of the game.
         # This makes the game feel like it is truely randomly seeded cause players won't always start on the same frame.
-        {} <- W4.seedRand model.frameCount |> Task.await
+        W4.seedRand! model.frameCount
 
         # Generate the starting fruit.
-        fruit <- getRandomFruit startingSnake |> Task.await
+        fruit = getRandomFruit! startingSnake
 
         Task.ok { model & gameStarted: Bool.true, fruit }
     else
@@ -76,17 +76,17 @@ runTitleScreen = \model ->
 
 runEndScreen : Model -> Task Model []
 runEndScreen = \model ->
-    {} <- drawGame model |> Task.await
-    {} <- W4.setTextColors { fg: blue, bg: white } |> Task.await
+    drawGame! model
+    W4.setTextColors! { fg: blue, bg: white }
 
-    {} <- W4.text "Game Over!" { x: 40, y: 72 } |> Task.await
+    W4.text! "Game Over!" { x: 40, y: 72 }
     Task.ok model
 
 runGame : Model -> Task Model []
 runGame = \model ->
 
     # Get gamepad
-    gamepad <- W4.getGamepad Player1 |> Task.await
+    gamepad = W4.getGamepad! Player1
 
     # Update snake
     (snake, ate) =
@@ -99,11 +99,12 @@ runGame = \model ->
 
             DidNotEat ->
                 Task.ok model.fruit
-    fruit <- fruitTask |> Task.await
+
+    fruit = fruitTask!
 
     next = { model & snake, fruit }
 
-    {} <- drawGame next |> Task.await
+    drawGame! next
 
     # Return model for next frame
     Task.ok next
@@ -111,21 +112,21 @@ runGame = \model ->
 drawGame : Model -> Task {} []
 drawGame = \model ->
     # Draw fruit
-    {} <- W4.setDrawColors {
-            primary: None,
-            secondary: orange,
-            tertiary: green,
-            quaternary: blue,
-        }
-        |> Task.await
-    {} <- Sprite.blit model.fruitSprite { x: model.fruit.x * 8, y: model.fruit.y * 8 } |> Task.await
+    W4.setDrawColors! {
+        primary: None,
+        secondary: orange,
+        tertiary: green,
+        quaternary: blue,
+    }
+        
+    Sprite.blit! model.fruitSprite { x: model.fruit.x * 8, y: model.fruit.y * 8 }
 
     # Draw snake body
-    {} <- W4.setShapeColors { border: blue, fill: green } |> Task.await
-    {} <- drawSnakeBody model.snake |> Task.await
+    W4.setShapeColors! { border: blue, fill: green }
+    drawSnakeBody! model.snake
 
     # Draw snake head
-    {} <- W4.setShapeColors { border: blue, fill: blue } |> Task.await
+    W4.setShapeColors! { border: blue, fill: blue }
     drawSnakeHead model.snake
 
 # Set the color pallet
@@ -164,7 +165,7 @@ startingSnake = {
 drawSnakeBody : Snake -> Task {} []
 drawSnakeBody = \snake ->
     List.walk snake.body (Task.ok {}) \task, part ->
-        {} <- task |> Task.await
+        task!
 
         W4.rect { x: (part.x * 8), y: (part.y * 8), width: 8, height: 8 }
 
@@ -234,8 +235,8 @@ getRandomFruit = \{ head, body } ->
     # Will the perf of this be bad with a large snake?
     # The better alternative may be to have a free square list and randomly select one.
     Task.loop {} \{} ->
-        x <- W4.randBetween { start: 0, before: 20 } |> Task.await
-        y <- W4.randBetween { start: 0, before: 20 } |> Task.await
+        x = W4.randBetween! { start: 0, before: 20 }
+        y = W4.randBetween! { start: 0, before: 20 }
 
         fruit = { x, y }
         if fruit == head || List.contains body fruit then
