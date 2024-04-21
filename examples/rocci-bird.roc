@@ -392,18 +392,19 @@ onScreenCollided = \playerY, animIndex ->
         else
             basePoints
 
-    List.walk collisionPoints (Task.ok Bool.false) \collidedTask, { x, y } ->
-        # TODO remove backpassing here
-        collided <- collidedTask |> Task.await
-        if collided then
-            Task.ok Bool.true
-        else
-            point = {
-                x: Num.toU8 (playerX + x),
-                y: Num.toU8 (playerY + y),
-            }
-            color = W4.getPixel! point
-            Task.ok (color != Color1)
+    List.walk collisionPoints (Task.ok Bool.false) (walkCollisionPointsHelp playerX playerY)
+
+walkCollisionPointsHelp = \pX, pY -> \collidedTask, { x, y } ->
+    if collidedTask! then
+        Task.ok Bool.true
+    else
+        point = {
+            x: Num.toU8 (pX + x),
+            y: Num.toU8 (pY + y),
+        }
+        color = W4.getPixel! point
+        
+        Task.ok (color != Color1)
 
 offScreenCollided =
     point = {
