@@ -12,6 +12,7 @@ interface Task
         loop,
         fromResult,
         batch,
+        result,
     ]
     imports [Effect, InternalTask]
 
@@ -44,7 +45,7 @@ loop = \state, step ->
             \res ->
                 when res is
                     Ok (Step newState) -> Step newState
-                    Ok (Done result) -> Done (Ok result)
+                    Ok (Done newResult) -> Done (Ok newResult)
                     Err e -> Done (Err e)
 
     Effect.loop state looper
@@ -99,8 +100,8 @@ attempt : Task a b, (Result a b -> Task c d) -> Task c d
 attempt = \task, transform ->
     effect = Effect.after
         (InternalTask.toEffect task)
-        \result ->
-            when result is
+        \res ->
+            when res is
                 Ok a -> transform (Ok a) |> InternalTask.toEffect
                 Err b -> transform (Err b) |> InternalTask.toEffect
 
@@ -121,8 +122,8 @@ await : Task a b, (a -> Task c b) -> Task c b
 await = \task, transform ->
     effect = Effect.after
         (InternalTask.toEffect task)
-        \result ->
-            when result is
+        \res ->
+            when res is
                 Ok a -> transform a |> InternalTask.toEffect
                 Err b -> err b |> InternalTask.toEffect
 
@@ -139,8 +140,8 @@ onErr : Task a b, (b -> Task a c) -> Task a c
 onErr = \task, transform ->
     effect = Effect.after
         (InternalTask.toEffect task)
-        \result ->
-            when result is
+        \res ->
+            when res is
                 Ok a -> ok a |> InternalTask.toEffect
                 Err b -> transform b |> InternalTask.toEffect
 
@@ -157,8 +158,8 @@ map : Task a c, (a -> b) -> Task b c
 map = \task, transform ->
     effect = Effect.after
         (InternalTask.toEffect task)
-        \result ->
-            when result is
+        \res ->
+            when res is
                 Ok a -> ok (transform a) |> InternalTask.toEffect
                 Err b -> err b |> InternalTask.toEffect
 
@@ -175,8 +176,8 @@ mapErr : Task c a, (a -> b) -> Task c b
 mapErr = \task, transform ->
     effect = Effect.after
         (InternalTask.toEffect task)
-        \result ->
-            when result is
+        \res ->
+            when res is
                 Ok c -> ok c |> InternalTask.toEffect
                 Err a -> err (transform a) |> InternalTask.toEffect
 
@@ -184,8 +185,8 @@ mapErr = \task, transform ->
 
 ## Use a Result among other Tasks by converting it into a [Task].
 fromResult : Result a b -> Task a b
-fromResult = \result ->
-    when result is
+fromResult = \res ->
+    when res is
         Ok a -> ok a
         Err b -> err b
 
@@ -208,3 +209,28 @@ batch = \current -> \next ->
         f <- next |> await
 
         map current f
+
+## Transform a task that can either succeed with `ok`, or fail with `err`, into
+## a task that succeeds with `Result ok err`.
+##
+## This is useful when chaining tasks using the `!` suffix. For example
+##
+## ```
+## # Path.roc
+## checkFile : Str -> Task [Good, Bad] [IOError]
+##
+## # main.roc
+## when checkFile "/usr/local/bin/roc" |> Task.result! is
+##     Ok Good -> "..."
+##     Ok Bad -> "..."
+##     Err IOError -> "..."
+## ```
+##
+result : Task ok err -> Task (Result ok err) *
+result = \task ->
+    effect =
+        Effect.after
+            (InternalTask.toEffect task)
+            \res -> res |> ok |> InternalTask.toEffect
+
+    InternalTask.fromEffect effect
