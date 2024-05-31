@@ -4,6 +4,7 @@ platform "wasm-4"
         Task,
         W4,
         Sprite,
+
     ]
     packages {}
     imports [Task.{ Task }]
