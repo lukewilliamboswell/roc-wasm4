@@ -59,6 +59,7 @@ pub fn build(b: *std.Build) !void {
     options.addOption(bool, "trace_allocs", trace_allocs);
     lib.root_module.addOptions("config", options);
 
+    lib.entry = .disabled;
     lib.import_memory = true;
     lib.initial_memory = 65536;
     lib.max_memory = 65536;
