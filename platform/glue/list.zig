@@ -88,7 +88,7 @@ pub const RocList = extern struct {
             return RocList.empty();
         }
 
-        var list = allocate(@alignOf(T), slice.len, @sizeOf(T));
+        const list = allocate(@alignOf(T), slice.len, @sizeOf(T));
 
         if (slice.len > 0) {
             const dest = list.bytes orelse unreachable;
@@ -162,7 +162,7 @@ pub const RocList = extern struct {
         }
 
         // unfortunately, we have to clone
-        var new_list = RocList.allocate(alignment, self.length, element_width);
+        const new_list = RocList.allocate(alignment, self.length, element_width);
 
         var old_bytes: [*]u8 = @as([*]u8, @ptrCast(self.bytes));
         var new_bytes: [*]u8 = @as([*]u8, @ptrCast(new_list.bytes));
@@ -516,7 +516,7 @@ pub fn listReleaseExcessCapacity(
         list.decref(alignment);
         return RocList.empty();
     } else {
-        var output = RocList.allocateExact(alignment, old_length, element_width);
+        const output = RocList.allocateExact(alignment, old_length, element_width);
         if (list.bytes) |source_ptr| {
             const dest_ptr = output.bytes orelse unreachable;
 
@@ -844,7 +844,7 @@ fn swap(width_initial: usize, p1: [*]u8, p2: [*]u8) void {
     var ptr2 = p2;
 
     var buffer_actual: [threshold]u8 = undefined;
-    var buffer: [*]u8 = buffer_actual[0..];
+    const buffer: [*]u8 = buffer_actual[0..];
 
     while (true) {
         if (width < threshold) {
@@ -862,8 +862,8 @@ fn swap(width_initial: usize, p1: [*]u8, p2: [*]u8) void {
 }
 
 fn swapElements(source_ptr: [*]u8, element_width: usize, index_1: usize, index_2: usize) void {
-    var element_at_i = source_ptr + (index_1 * element_width);
-    var element_at_j = source_ptr + (index_2 * element_width);
+    const element_at_i = source_ptr + (index_1 * element_width);
+    const element_at_j = source_ptr + (index_2 * element_width);
 
     return swap(element_width, element_at_i, element_at_j);
 }
@@ -1018,7 +1018,7 @@ pub fn listAllocationPtr(
 
 test "listConcat: non-unique with unique overlapping" {
     var nonUnique = RocList.fromSlice(u8, ([_]u8{1})[0..]);
-    var bytes: [*]u8 = @as([*]u8, @ptrCast(nonUnique.bytes));
+    const bytes: [*]u8 = @as([*]u8, @ptrCast(nonUnique.bytes));
     const ptr_width = @sizeOf(usize);
     const refcount_ptr = @as([*]isize, @ptrCast(@as([*]align(ptr_width) u8, @alignCast(bytes)) - ptr_width));
     utils.increfRcPtrC(&refcount_ptr[0], 1);
