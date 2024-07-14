@@ -219,31 +219,34 @@ pub fn increfRcPtrC(ptr_to_refcount: *isize, amount: isize) callconv(.C) void {
 pub fn decrefRcPtrC(
     bytes_or_null: ?[*]isize,
     alignment: u32,
+    elements_refcounted: bool,
 ) callconv(.C) void {
     // IMPORTANT: bytes_or_null is this case is expected to be a pointer to the refcount
     // (NOT the start of the data, or the start of the allocation)
 
     // this is of course unsafe, but we trust what we get from the llvm side
-    const bytes = @as([*]isize, @ptrCast(bytes_or_null));
+    var bytes = @as([*]isize, @ptrCast(bytes_or_null));
 
-    return @call(.always_inline, decref_ptr_to_refcount, .{ bytes, alignment });
+    return @call(.always_inline, decref_ptr_to_refcount, .{ bytes, alignment, elements_refcounted });
 }
 
 pub fn decrefCheckNullC(
     bytes_or_null: ?[*]u8,
     alignment: u32,
+    elements_refcounted: bool,
 ) callconv(.C) void {
     if (bytes_or_null) |bytes| {
         const isizes: [*]isize = @as([*]isize, @ptrCast(@alignCast(bytes)));
-        return @call(.always_inline, decref_ptr_to_refcount, .{ isizes - 1, alignment });
+        return @call(.always_inline, decref_ptr_to_refcount, .{ isizes - 1, alignment, elements_refcounted });
     }
 }
 
 pub fn decrefDataPtrC(
     bytes_or_null: ?[*]u8,
     alignment: u32,
+    elements_refcounted: bool,
 ) callconv(.C) void {
-    const bytes = bytes_or_null orelse return;
+    var bytes = bytes_or_null orelse return;
 
     const data_ptr = @intFromPtr(bytes);
     const tag_mask: usize = if (@sizeOf(usize) == 8) 0b111 else 0b11;
@@ -252,14 +255,14 @@ pub fn decrefDataPtrC(
     const isizes: [*]isize = @as([*]isize, @ptrFromInt(unmasked_ptr));
     const rc_ptr = isizes - 1;
 
-    return decrefRcPtrC(rc_ptr, alignment);
+    return decrefRcPtrC(rc_ptr, alignment, elements_refcounted);
 }
 
 pub fn increfDataPtrC(
     bytes_or_null: ?[*]u8,
     inc_amount: isize,
 ) callconv(.C) void {
-    const bytes = bytes_or_null orelse return;
+    var bytes = bytes_or_null orelse return;
 
     const ptr = @intFromPtr(bytes);
     const tag_mask: usize = if (@sizeOf(usize) == 8) 0b111 else 0b11;
@@ -273,8 +276,9 @@ pub fn increfDataPtrC(
 pub fn freeDataPtrC(
     bytes_or_null: ?[*]u8,
     alignment: u32,
+    elements_refcounted: bool,
 ) callconv(.C) void {
-    const bytes = bytes_or_null orelse return;
+    var bytes = bytes_or_null orelse return;
 
     const ptr = @intFromPtr(bytes);
     const tag_mask: usize = if (@sizeOf(usize) == 8) 0b111 else 0b11;
@@ -283,39 +287,44 @@ pub fn freeDataPtrC(
     const isizes: [*]isize = @as([*]isize, @ptrFromInt(masked_ptr));
 
     // we always store the refcount right before the data
-    return freeRcPtrC(isizes - 1, alignment);
+    return freeRcPtrC(isizes - 1, alignment, elements_refcounted);
 }
 
 pub fn freeRcPtrC(
     bytes_or_null: ?[*]isize,
     alignment: u32,
+    elements_refcounted: bool,
 ) callconv(.C) void {
-    const bytes = bytes_or_null orelse return;
-    return free_ptr_to_refcount(bytes, alignment);
+    var bytes = bytes_or_null orelse return;
+    return free_ptr_to_refcount(bytes, alignment, elements_refcounted);
 }
 
 pub fn decref(
     bytes_or_null: ?[*]u8,
     data_bytes: usize,
     alignment: u32,
+    elements_refcounted: bool,
 ) void {
     if (data_bytes == 0) {
         return;
     }
 
-    const bytes = bytes_or_null orelse return;
+    var bytes = bytes_or_null orelse return;
 
     const isizes: [*]isize = @as([*]isize, @ptrCast(@alignCast(bytes)));
 
-    decref_ptr_to_refcount(isizes - 1, alignment);
+    decref_ptr_to_refcount(isizes - 1, alignment, elements_refcounted);
 }
 
 inline fn free_ptr_to_refcount(
     refcount_ptr: [*]isize,
     alignment: u32,
+    elements_refcounted: bool,
 ) void {
     if (RC_TYPE == Refcount.none) return;
-    const extra_bytes = @max(alignment, @sizeOf(usize));
+    const ptr_width = @sizeOf(usize);
+    const required_space: usize = if (elements_refcounted) (2 * ptr_width) else ptr_width;
+    const extra_bytes = @max(required_space, alignment);
     const allocation_ptr = @as([*]u8, @ptrCast(refcount_ptr)) - (extra_bytes - @sizeOf(usize));
 
     // NOTE: we don't even check whether the refcount is "infinity" here!
@@ -328,13 +337,18 @@ inline fn free_ptr_to_refcount(
 
 inline fn decref_ptr_to_refcount(
     refcount_ptr: [*]isize,
-    alignment: u32,
+    element_alignment: u32,
+    elements_refcounted: bool,
 ) void {
     if (RC_TYPE == Refcount.none) return;
 
     if (DEBUG_INCDEC and builtin.target.cpu.arch != .wasm32) {
         std.debug.print("| decrement {*}: ", .{refcount_ptr});
     }
+
+    // Due to RC alignmen tmust take into acount pointer size.
+    const ptr_width = @sizeOf(usize);
+    const alignment = @max(ptr_width, element_alignment);
 
     // Ensure that the refcount is not whole program lifetime.
     const refcount: isize = refcount_ptr[0];
@@ -353,13 +367,13 @@ inline fn decref_ptr_to_refcount(
                 }
 
                 if (refcount == REFCOUNT_ONE_ISIZE) {
-                    free_ptr_to_refcount(refcount_ptr, alignment);
+                    free_ptr_to_refcount(refcount_ptr, alignment, elements_refcounted);
                 }
             },
             Refcount.atomic => {
-                const last = @atomicRmw(isize, &refcount_ptr[0], std.builtin.AtomicRmwOp.Sub, 1, Monotonic);
+                var last = @atomicRmw(isize, &refcount_ptr[0], std.builtin.AtomicRmwOp.Sub, 1, Monotonic);
                 if (last == REFCOUNT_ONE_ISIZE) {
-                    free_ptr_to_refcount(refcount_ptr, alignment);
+                    free_ptr_to_refcount(refcount_ptr, alignment, elements_refcounted);
                 }
             },
             Refcount.none => unreachable,
@@ -370,7 +384,7 @@ inline fn decref_ptr_to_refcount(
 pub fn isUnique(
     bytes_or_null: ?[*]u8,
 ) callconv(.C) bool {
-    const bytes = bytes_or_null orelse return true;
+    var bytes = bytes_or_null orelse return true;
 
     const ptr = @intFromPtr(bytes);
     const tag_mask: usize = if (@sizeOf(usize) == 8) 0b111 else 0b11;
@@ -438,25 +452,31 @@ pub inline fn calculateCapacity(
 pub fn allocateWithRefcountC(
     data_bytes: usize,
     element_alignment: u32,
+    elements_refcounted: bool,
 ) callconv(.C) [*]u8 {
-    return allocateWithRefcount(data_bytes, element_alignment);
+    return allocateWithRefcount(data_bytes, element_alignment, elements_refcounted);
 }
 
 pub fn allocateWithRefcount(
     data_bytes: usize,
     element_alignment: u32,
+    elements_refcounted: bool,
 ) [*]u8 {
+    // If the element type is refcounted, we need to also allocate space to store the element count on the heap.
+    // This is used so that a seamless slice can de-allocate the underlying list type.
     const ptr_width = @sizeOf(usize);
     const alignment = @max(ptr_width, element_alignment);
-    const length = alignment + data_bytes;
+    const required_space: usize = if (elements_refcounted) (2 * ptr_width) else ptr_width;
+    const extra_bytes = @max(required_space, element_alignment);
+    const length = extra_bytes + data_bytes;
 
-    const new_bytes: [*]u8 = alloc(length, alignment) orelse unreachable;
+    var new_bytes: [*]u8 = alloc(length, alignment) orelse unreachable;
 
     if (DEBUG_ALLOC and builtin.target.cpu.arch != .wasm32) {
         std.debug.print("+ allocated {*} ({} bytes with alignment {})\n", .{ new_bytes, data_bytes, alignment });
     }
 
-    const data_ptr = new_bytes + alignment;
+    const data_ptr = new_bytes + extra_bytes;
     const refcount_ptr = @as([*]usize, @ptrCast(@as([*]align(ptr_width) u8, @alignCast(data_ptr)) - ptr_width));
     refcount_ptr[0] = if (RC_TYPE == Refcount.none) REFCOUNT_MAX_ISIZE else REFCOUNT_ONE;
 
@@ -474,11 +494,14 @@ pub fn unsafeReallocate(
     old_length: usize,
     new_length: usize,
     element_width: usize,
+    elements_refcounted: bool,
 ) [*]u8 {
-    const align_width: usize = @max(alignment, @sizeOf(usize));
+    const ptr_width: usize = @sizeOf(usize);
+    const required_space: usize = if (elements_refcounted) (2 * ptr_width) else ptr_width;
+    const extra_bytes = @max(required_space, alignment);
 
-    const old_width = align_width + old_length * element_width;
-    const new_width = align_width + new_length * element_width;
+    const old_width = extra_bytes + old_length * element_width;
+    const new_width = extra_bytes + new_length * element_width;
 
     if (old_width >= new_width) {
         return source_ptr;
@@ -486,10 +509,10 @@ pub fn unsafeReallocate(
 
     // TODO handle out of memory
     // NOTE realloc will dealloc the original allocation
-    const old_allocation = source_ptr - align_width;
+    const old_allocation = source_ptr - extra_bytes;
     const new_allocation = realloc(old_allocation, new_width, old_width, alignment);
 
-    const new_source = @as([*]u8, @ptrCast(new_allocation)) + align_width;
+    const new_source = @as([*]u8, @ptrCast(new_allocation)) + extra_bytes;
     return new_source;
 }
 
@@ -506,14 +529,14 @@ pub const UpdateMode = enum(u8) {
 
 test "increfC, refcounted data" {
     var mock_rc: isize = REFCOUNT_ONE_ISIZE + 17;
-    const ptr_to_refcount: *isize = &mock_rc;
+    var ptr_to_refcount: *isize = &mock_rc;
     increfRcPtrC(ptr_to_refcount, 2);
     try std.testing.expectEqual(mock_rc, REFCOUNT_ONE_ISIZE + 19);
 }
 
 test "increfC, static data" {
     var mock_rc: isize = REFCOUNT_MAX_ISIZE;
-    const ptr_to_refcount: *isize = &mock_rc;
+    var ptr_to_refcount: *isize = &mock_rc;
     increfRcPtrC(ptr_to_refcount, 2);
     try std.testing.expectEqual(mock_rc, REFCOUNT_MAX_ISIZE);
 }

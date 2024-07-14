@@ -28,7 +28,7 @@ pub fn main() !void {
 
     // Run `roc check`
     const roc_check_args = [_][]const u8{ "roc", "check", app_name };
-    const roc_check = try std.process.Child.run(.{
+    const roc_check = try std.ChildProcess.exec(.{
         .allocator = allocator,
         .argv = &roc_check_args,
     });
@@ -53,7 +53,7 @@ pub fn main() !void {
         try roc_build_args.append(optimize_flag);
     }
     try roc_build_args.append(app_name);
-    const roc_build = try std.process.Child.run(.{
+    const roc_build = try std.ChildProcess.exec(.{
         .allocator = allocator,
         .argv = roc_build_args.items,
     });

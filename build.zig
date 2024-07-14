@@ -16,9 +16,9 @@ pub fn build(b: *std.Build) !void {
 
     const build_roc = b.addExecutable(.{
         .name = "build_roc",
-        .root_source_file = b.path("build_roc.zig"),
+        .root_source_file = .{ .path = "build_roc.zig" },
         // Empty means native.
-        .target = b.graph.host,
+        .target = .{},
         .optimize = .Debug,
     });
     const run_build_roc = b.addRunArtifact(build_roc);
@@ -27,10 +27,10 @@ pub fn build(b: *std.Build) !void {
     run_build_roc.has_side_effects = true;
 
     if (roc_src) |val| {
-        run_build_roc.addFileArg(b.path(val));
+        run_build_roc.addFileArg(.{ .path = val });
     } else {
         const default_path = "examples/snake.roc";
-        run_build_roc.addFileArg(b.path(default_path));
+        run_build_roc.addFileArg(.{ .path = default_path });
     }
 
     switch (optimize) {
@@ -44,32 +44,28 @@ pub fn build(b: *std.Build) !void {
     }
 
     // TODO: change to addExecutable with entry disabled when we update to zig 0.12.0.
-    const lib = b.addExecutable(.{
+    const lib = b.addSharedLibrary(.{
         .name = "cart",
-        .root_source_file = b.path("platform/host.zig"),
-        .target = b.resolveTargetQuery(.{
-            .cpu_arch = .wasm32,
-            .os_tag = .freestanding,
-        }),
+        .root_source_file = .{ .path = "platform/host.zig" },
+        .target = .{ .cpu_arch = .wasm32, .os_tag = .freestanding },
         .optimize = optimize,
     });
     const options = b.addOptions();
     options.addOption(usize, "mem_size", mem_size);
     options.addOption(bool, "zero_on_alloc", zero_on_alloc);
     options.addOption(bool, "trace_allocs", trace_allocs);
-    lib.root_module.addOptions("config", options);
+    lib.addOptions("config", options);
 
-    lib.entry = .disabled;
     lib.import_memory = true;
     lib.initial_memory = 65536;
     lib.max_memory = 65536;
     lib.stack_size = 14752;
 
     // Export WASM-4 symbols
-    lib.root_module.export_symbol_names = &[_][]const u8{ "start", "update" };
+    lib.export_symbol_names = &[_][]const u8{ "start", "update" };
 
     lib.step.dependOn(&run_build_roc.step);
-    lib.addObjectFile(b.path("zig-cache/app.o"));
+    lib.addObjectFile(.{ .path = "zig-cache/app.o" });
 
     b.installArtifact(lib);
 
