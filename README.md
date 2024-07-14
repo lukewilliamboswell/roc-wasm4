@@ -6,9 +6,12 @@ The intent for this platform is to have some fun, learn more about Roc and platf
 
 ### Setup
 
-Clone this repository.
+1. Clone this repository.
 
-Make sure you have [roc](https://www.roc-lang.org/install) newer than 2023-1-8, [zig](https://ziglang.org/download/) version 0.11.0, and [w4](https://wasm4.org) in your `PATH` environment variable.
+2. Make sure you have the following in your `PATH` environment variable
+- [roc](https://www.roc-lang.org/install),
+- [zig](https://ziglang.org/download/) version **0.11.0**
+- [w4](https://wasm4.org)
 
 ### Run
 

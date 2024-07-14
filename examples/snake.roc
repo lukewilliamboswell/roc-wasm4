@@ -118,7 +118,7 @@ drawGame = \model ->
         tertiary: green,
         quaternary: blue,
     }
-        
+
     Sprite.blit! model.fruitSprite { x: model.fruit.x * 8, y: model.fruit.y * 8 }
 
     # Draw snake body
@@ -214,7 +214,7 @@ moveSnake = \prev ->
     walkBody = \last, remaining, newBody ->
         when remaining is
             [] -> newBody
-            [curr, .. as rest] ->
+            [curr, ..] ->
                 walkBody curr (List.dropFirst remaining 1) (List.append newBody last)
 
     body = walkBody prev.head prev.body []
@@ -243,4 +243,3 @@ getRandomFruit = \{ head, body } ->
             Step {} |> Task.ok
         else
             Done fruit |> Task.ok
-
