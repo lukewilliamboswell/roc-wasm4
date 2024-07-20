@@ -1,6 +1,8 @@
-interface Sprite
-    exposes [Sprite, SubRegion, new, blit, sub, subOrCrash]
-    imports [InternalTask, Task.{ Task }, Effect.{ Effect }]
+module [Sprite, SubRegion, new, blit, sub, subOrCrash]
+
+import InternalTask
+import Task exposing [Task]
+import Effect
 
 ## Represents a [sprite](https://en.wikipedia.org/wiki/Sprite_(computer_graphics)) for drawing to the screen.
 ##

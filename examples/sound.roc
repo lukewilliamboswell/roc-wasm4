@@ -1,13 +1,10 @@
-app "sound"
-    packages {
-        w4: "../platform/main.roc",
-    }
-    imports [
-        w4.Task.{ Task },
-        w4.W4.{ Gamepad },
-        w4.Sprite.{ Sprite },
-    ]
-    provides [main, Model] to w4
+app [main, Model] {
+    w4: platform "../platform/main.roc",
+}
+
+import w4.Task exposing [Task]
+import w4.W4 exposing [Gamepad]
+import w4.Sprite exposing [Sprite]
 
 Program : {
     init : Task Model [],
@@ -84,12 +81,9 @@ update = \model ->
         List.walkWithIndex model.values (Task.ok {}) \task, (name, value, max), index ->
             task!
             drawControl name x (y + (Num.toI32 index) * spacing) value max
-
     drawControls!
-
     W4.setPrimaryColor! Color2
     W4.text! "Arrows: Adjust\nX: Play tone" { x, y: 8 }
-
     W4.setDrawColors! { primary: None, secondary: Color4, tertiary: None, quaternary: None }
     Sprite.blit! model.arrowSprite { x: x - 8 - 4, y: y + (Num.toI32 model.arrowIdx) * spacing }
 
@@ -139,7 +133,6 @@ update = \model ->
             playSound values
         else
             Task.ok {}
-
     soundTask!
 
     Task.ok { model & arrowIdx, values, lastGamepadState: gamepad }
@@ -148,18 +141,14 @@ drawControl : Str, I32, I32, U32, U32 -> Task {} []
 drawControl = \name, x, y, value, max ->
     meterWidth : U32
     meterWidth = 50
-
     W4.setPrimaryColor! Color2
     W4.rect! { x: (5 * 8 + x + 4), y, width: (meterWidth + 2), height: 8 }
-
     W4.setPrimaryColor! Color3
     W4.rect! { x: (5 * 8 + x + 4 + 1), y: (y + 1), width: ((value * meterWidth) // max), height: 6 }
-
     W4.setPrimaryColor! Color4
     W4.text! name { x, y }
-
     W4.text! (Num.toStr value) { x: 5 * 8 + x + 4 + (Num.toI32 meterWidth) + 2 + 4, y }
-    
+
     Task.ok {}
 
 playSound : List (Str, U32, U32) -> Task {} []

@@ -23,6 +23,7 @@ examples/*.wasm
 *.png
 
 .envrc
+.direnv
 
 generated-docs/
 
