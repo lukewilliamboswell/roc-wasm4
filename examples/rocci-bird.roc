@@ -1,13 +1,10 @@
-app "rocci-bird"
-    packages {
-        w4: "../platform/main.roc",
-    }
-    imports [
-        w4.Task.{ Task },
-        w4.W4,
-        w4.Sprite.{ Sprite },
-    ]
-    provides [main, Model] to w4
+app [main, Model] {
+    w4: platform "../platform/main.roc",
+}
+
+import w4.Task exposing [Task]
+import w4.W4
+import w4.Sprite exposing [Sprite]
 
 Program : {
     init : Task Model [],
@@ -32,7 +29,6 @@ init =
         color3: 0x42436e,
         color4: 0x26013f,
     }
-
     W4.setPalette! palette
 
     frameCount = loadRandFromDisk!
@@ -85,16 +81,13 @@ runTitleScreen = \prev ->
     state = { prev &
         rocciIdleAnim: updateAnimation prev.frameCount prev.rocciIdleAnim,
     }
-
     setTextColors!
     W4.text! "Rocci Bird!!!" { x: 32, y: 12 }
     W4.text! "Click to start!" { x: 24, y: 72 }
-
     drawGround! groundSprite 0
     drawPlants! plantSpriteSheet state.plants
 
     shift = idleShift state.frameCount state.rocciIdleAnim
-
     drawAnimation! state.rocciIdleAnim { x: playerX, y: playerStartY + shift }
     gamepad = W4.getGamepad! Player1
     mouse = W4.getMouse!
@@ -179,7 +172,6 @@ runGame = \prev ->
                 nextAnim: updateAnimation prev.frameCount prev.rocciFlapAnim,
                 flapSoundTask: Task.ok {},
             }
-
     flapSoundTask!
     pipe = maybeGeneratePipe prev.lastPipeGenerated prev.frameCount |> Task.result!
 
@@ -228,7 +220,6 @@ runGame = \prev ->
             W4.tone pointTone
         else
             Task.ok {}
-
     pointSoundTask!
     drawPipes! pipeSprite state.pipes
     drawGround! groundSprite state.groundX
@@ -240,7 +231,6 @@ runGame = \prev ->
 
     collided = playerCollided! yPixel state.rocciFlapAnim.index
     drawAnimation! state.rocciFlapAnim { x: playerX, y: yPixel }
-
     drawScore! state.score { x: 68, y: 4 }
 
     if !collided && y < 134 then
@@ -277,7 +267,6 @@ initGameOver = \{ frameCount, maxScore, score, player, pipes, plants, groundX } 
             maxScore
         else
             hs
-
     saveHighScoreToDisk! highScore
 
     GameOver {
@@ -312,21 +301,18 @@ runGameOver = \prev ->
         highScoreAnim,
         player: { y, yVel },
     }
-
     drawPipes! pipeSprite state.pipes
     drawGround! groundSprite state.groundX
     drawPlants! plantSpriteSheet state.plants
 
     yPixel = Num.floor state.player.y
     drawAnimation! state.rocciFallAnim { x: playerX, y: yPixel }
-
     W4.setShapeColors! { border: Color4, fill: Color1 }
     W4.rect! { x: 16, y: 52, width: 136, height: 32 }
     setTextColors!
     W4.text! "Game Over!" { x: 44, y: 56 }
     W4.text! "Right to restart" { x: 20, y: 72 }
     W4.text! "Art by Luke DeVault" { x: 4, y: 151 }
-
     W4.setShapeColors! { border: Color4, fill: Color1 }
     W4.rect! { x: 66, y: 2, width: 28, height: 12 }
     drawScore! state.score { x: 68, y: 4 }
@@ -336,9 +322,7 @@ runGameOver = \prev ->
             drawAnimation state.highScoreAnim { x: 64, y: 0 }
         else
             Task.ok {}
-
     highScoreTask!
-
     W4.setShapeColors! { border: Color4, fill: Color1 }
     W4.rect! { x: 54, y: 18, width: 52, height: 12 }
     setTextColors!
@@ -395,16 +379,16 @@ onScreenCollided = \playerY, animIndex ->
     List.walk collisionPoints (Task.ok Bool.false) (walkCollisionPointsHelp playerX playerY)
 
 walkCollisionPointsHelp = \pX, pY -> \collidedTask, { x, y } ->
-    if collidedTask! then
-        Task.ok Bool.true
-    else
-        point = {
-            x: Num.toU8 (pX + x),
-            y: Num.toU8 (pY + y),
-        }
-        color = W4.getPixel! point
-        
-        Task.ok (color != Color1)
+        if collidedTask! then
+            Task.ok Bool.true
+        else
+            point = {
+                x: Num.toU8 (pX + x),
+                y: Num.toU8 (pY + y),
+            }
+            color = W4.getPixel! point
+
+            Task.ok (color != Color1)
 
 offScreenCollided =
     point = {
@@ -463,21 +447,21 @@ randomPlant = \x ->
         # W4.randBetween { start: 0, before: plantTypes }
         # Biased but a least working solution:
         W4.rand
-        |> Task.map Num.toU32
-        |> Task.map! \t -> t % plantTypes
+            |> Task.map Num.toU32
+            |> Task.map! \t -> t % plantTypes
 
     Task.ok { x, type }
 
 startingPlants : Task (List Plant) []
 startingPlants =
     List.range { start: At 0, end: At 14 }
-    |> List.walk (Task.ok (List.withCapacity 20)) \task, i ->
-        plant = randomPlant! (i * 12)
-        current = task!
+        |> List.walk (Task.ok (List.withCapacity 20)) \task, i ->
+            plant = randomPlant! (i * 12)
+            current = task!
 
-        current
-        |> List.append plant
-        |> Task.ok
+            current
+            |> List.append plant
+            |> Task.ok
 
 updatePlants : List Plant -> List Plant
 updatePlants = \plants ->
@@ -502,7 +486,6 @@ drawPlants = \spriteSheet, plants ->
 drawPlant : Sprite, Plant -> Task {} []
 drawPlant = \spriteSheet, { x, type } ->
     sprite = Sprite.subOrCrash spriteSheet { srcX: type * 12, srcY: 0, width: 12, height: 12 }
-
     setSpriteColors!
     Sprite.blit sprite { x, y: plantY }
 
@@ -608,8 +591,9 @@ saveHighScoreToDisk = \highScore ->
 
 loadHighScoreFromDisk : Task U8 []
 loadHighScoreFromDisk =
-    data = W4.loadFromDisk
-        |> Task.onErr! \_ -> Task.ok []
+    data =
+        W4.loadFromDisk
+            |> Task.onErr! \_ -> Task.ok []
 
     when data is
         [_, hs, ..] ->
@@ -637,7 +621,7 @@ updateAnimation = \frameCount, anim ->
                 frames
 
             Err _ ->
-                crash "animation cell out of bounds at index: \(anim.index |> Num.toStr)"
+                crash "animation cell out of bounds at index: $(anim.index |> Num.toStr)"
 
     if frameCount - anim.lastUpdated < framesPerUpdate then
         anim
@@ -664,7 +648,7 @@ drawAnimation = \anim, { x, y, flags ? [] } ->
             Sprite.blit sprite { x, y, flags }
 
         Err _ ->
-            crash "animation cell out of bounds at index: \(anim.index |> Num.toStr)"
+            crash "animation cell out of bounds at index: $(anim.index |> Num.toStr)"
 
 wrappedInc = \val, count ->
     next = val + 1

@@ -1,13 +1,10 @@
-app "snake"
-    packages {
-        w4: "../platform/main.roc",
-    }
-    imports [
-        w4.Task.{ Task },
-        w4.W4.{ Gamepad },
-        w4.Sprite.{ Sprite },
-    ]
-    provides [main, Model] to w4
+app [main, Model] {
+    w4: platform "../platform/main.roc",
+}
+
+import w4.Task exposing [Task]
+import w4.W4 exposing [Gamepad]
+import w4.Sprite exposing [Sprite]
 
 Program : {
     init : Task Model [],
@@ -78,7 +75,6 @@ runEndScreen : Model -> Task Model []
 runEndScreen = \model ->
     drawGame! model
     W4.setTextColors! { fg: blue, bg: white }
-
     W4.text! "Game Over!" { x: 40, y: 72 }
     Task.ok model
 
@@ -103,7 +99,6 @@ runGame = \model ->
     fruit = fruitTask!
 
     next = { model & snake, fruit }
-
     drawGame! next
 
     # Return model for next frame
@@ -120,11 +115,9 @@ drawGame = \model ->
     }
 
     Sprite.blit! model.fruitSprite { x: model.fruit.x * 8, y: model.fruit.y * 8 }
-
     # Draw snake body
     W4.setShapeColors! { border: blue, fill: green }
     drawSnakeBody! model.snake
-
     # Draw snake head
     W4.setShapeColors! { border: blue, fill: blue }
     drawSnakeHead model.snake
