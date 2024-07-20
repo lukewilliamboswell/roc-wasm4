@@ -61,6 +61,18 @@ pub fn build(b: *std.Build) !void {
     lib.max_memory = 65536;
     lib.stack_size = 14752;
 
+    // Tests
+    const allocator_tests = b.addTest(.{
+        .name = "allocator_test",
+        .root_source_file = .{ .path = "platform/allocator.zig" },
+        .optimize = optimize,
+    });
+    allocator_tests.addOptions("config", options);
+
+    const run_allocator_tests = b.addRunArtifact(allocator_tests);
+    const run_test = b.step("test", "run zig tests");
+    run_test.dependOn(&run_allocator_tests.step);
+
     // Export WASM-4 symbols
     lib.export_symbol_names = &[_][]const u8{ "start", "update" };
 

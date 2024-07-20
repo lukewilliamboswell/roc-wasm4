@@ -3,6 +3,7 @@ const assert = std.debug.assert;
 
 const config = @import("config");
 
+const allocator = @import("allocator.zig");
 const w4 = @import("vendored/wasm4.zig");
 
 const str = @import("roc/str.zig");
@@ -13,108 +14,48 @@ const RocList = list.RocList;
 
 const utils = @import("roc/utils.zig");
 
-const ALIGN = @alignOf(u128);
-const Range = std.bit_set.Range;
-comptime {
-    assert(ALIGN >= @sizeOf(Range));
-    if (config.mem_size % ALIGN != 0) {
-        @compileLog("The expected alignment is ", ALIGN);
-        @compileError("-Dmem-size must multiple of the alignment");
-    }
-}
-
-const TRACE_ALLOCS = config.trace_allocs;
-
-const MEM_SIZE = config.mem_size;
-const MEM: [MEM_SIZE]u8 align(ALIGN) = undefined;
-var mem_base: usize = undefined;
-// We allocate memory to max alignment for simplicity.
-const MEM_CHUNK_SIZE = ALIGN;
-var free_set = std.bit_set.ArrayBitSet(u64, MEM_SIZE / MEM_CHUNK_SIZE).initFull();
-
 // Random numbers
 var prng = std.rand.DefaultPrng.init(0);
 var rnd = prng.random();
 
 export fn roc_alloc(requested_size: usize, alignment: u32) callconv(.C) *anyopaque {
     _ = alignment;
-    // Leave extra space to store allocation size.
-    const size = requested_size + MEM_CHUNK_SIZE;
-    if (TRACE_ALLOCS) {
-        w4.tracef("alloc -> requested size %d, full size %d, chunks %d", requested_size, size, size / MEM_CHUNK_SIZE);
+    if (allocator.malloc(requested_size)) |ptr| {
+        return @ptrCast(ptr);
+    } else |err| switch (err) {
+        error.OutOfMemory => {
+            w4.tracef("Ran out of memory: try increasing memory size with `-Dmem-size`. Current mem size is %d", config.mem_size);
+            @panic("ran out of memory");
+        },
     }
-
-    var chunk_size: usize = 0;
-    var start_index: usize = 0;
-    var current_index: usize = 0;
-    while (chunk_size < size and current_index < free_set.capacity()) : (current_index += 1) {
-        if (free_set.isSet(current_index)) {
-            chunk_size += MEM_CHUNK_SIZE;
-        } else {
-            chunk_size = 0;
-            start_index = current_index + 1;
-        }
-    }
-    if (chunk_size < size) {
-        w4.tracef("Ran out of memory: try increasing memory size with `-Dmem-size`. Current mem size is %d", MEM_SIZE);
-        @panic("ran out of memory");
-    }
-
-    const exclusive_end_index = current_index;
-    const range = .{ .start = start_index, .end = exclusive_end_index };
-    if (TRACE_ALLOCS) {
-        w4.tracef("alloc -> start %d, end %d", start_index, exclusive_end_index);
-    }
-    free_set.setRangeValue(range, false);
-
-    const base_addr = mem_base + start_index * MEM_CHUNK_SIZE;
-    const data_addr = base_addr + MEM_CHUNK_SIZE;
-
-    const data_ptr: [*]usize = @ptrFromInt(data_addr);
-
-    if (config.zero_on_alloc) {
-        // Zero all memory before passing to Roc.
-        var i: usize = 0;
-        while (i < (chunk_size - MEM_CHUNK_SIZE) / MEM_CHUNK_SIZE) : (i += 1) {
-            const usizes = MEM_CHUNK_SIZE / @sizeOf(usize);
-            comptime var j = 0;
-            inline while (j < usizes) : (j += 1) {
-                data_ptr[i * usizes + j] = 0;
-            }
-        }
-    }
-
-    const range_ptr: *Range = @ptrFromInt(base_addr);
-    range_ptr.* = range;
-
-    return @ptrCast(data_ptr);
 }
 
 export fn roc_realloc(old_ptr: *anyopaque, new_size: usize, old_size: usize, alignment: u32) callconv(.C) ?*anyopaque {
-    // TODO: a nice implementation that has the chance to just extend an allocation.
-    const new_ptr = roc_alloc(new_size, alignment);
-
-    var i: usize = 0;
-    const new_byte_ptr: [*]u8 = @ptrCast(new_ptr);
-    const old_byte_ptr: [*]u8 = @ptrCast(old_ptr);
-    while (i < old_size) : (i += 1) {
-        new_byte_ptr[i] = old_byte_ptr[i];
+    _ = alignment;
+    _ = old_size;
+    if (allocator.realloc(old_ptr, new_size)) |ptr| {
+        return @ptrCast(ptr);
+    } else |err| switch (err) {
+        error.OutOfMemory => {
+            w4.tracef("Ran out of memory: try increasing memory size with `-Dmem-size`. Current mem size is %d", config.mem_size);
+            @panic("ran out of memory");
+        },
+        error.OutOfRange => {
+            w4.tracef("Roc attempted to realloc a pointer that wasn't allocated. Something is definitely wrong.");
+            return null;
+        },
     }
-    roc_dealloc(old_ptr, alignment);
-    return new_ptr;
 }
 
 export fn roc_dealloc(c_ptr: *anyopaque, alignment: u32) callconv(.C) void {
     _ = alignment;
-    const data_addr = @intFromPtr(c_ptr);
-    const base_addr = data_addr - MEM_CHUNK_SIZE;
-    const range_ptr: *Range = @ptrFromInt(base_addr);
-    const range = range_ptr.*;
-
-    if (TRACE_ALLOCS) {
-        w4.tracef("free -> start %d, end %d", range.start, range.end);
+    if (allocator.free(c_ptr)) {
+        return;
+    } else |err| switch (err) {
+        error.OutOfRange => {
+            w4.tracef("Roc attempted to dealloc a pointer that wasn't allocated. Something is definitely wrong.");
+        },
     }
-    free_set.setRangeValue(range, true);
 }
 
 export fn roc_panic(msg: *RocStr, _: u32) callconv(.C) void {
@@ -166,7 +107,7 @@ extern fn roc__mainForHost_2_caller(*anyopaque, *anyopaque, **anyopaque) callcon
 extern fn roc__mainForHost_2_size() callconv(.C) i64;
 
 export fn start() void {
-    mem_base = @intFromPtr(&MEM);
+    allocator.init();
     // w4.tracef("size: %d", free_set.capacity());
     const update_size = @as(usize, @intCast(roc__mainForHost_1_size()));
     if (update_size != 0) {
