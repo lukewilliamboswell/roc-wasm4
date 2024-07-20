@@ -113,6 +113,7 @@ drawGame = \model ->
         tertiary: green,
         quaternary: blue,
     }
+
     Sprite.blit! model.fruitSprite { x: model.fruit.x * 8, y: model.fruit.y * 8 }
     # Draw snake body
     W4.setShapeColors! { border: blue, fill: green }
@@ -235,4 +236,3 @@ getRandomFruit = \{ head, body } ->
             Step {} |> Task.ok
         else
             Done fruit |> Task.ok
-

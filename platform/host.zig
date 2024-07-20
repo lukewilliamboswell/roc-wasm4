@@ -5,13 +5,13 @@ const config = @import("config");
 
 const w4 = @import("vendored/wasm4.zig");
 
-const str = @import("glue/str.zig");
+const str = @import("roc/str.zig");
 const RocStr = str.RocStr;
 
-const list = @import("glue/list.zig");
+const list = @import("roc/list.zig");
 const RocList = list.RocList;
 
-const utils = @import("glue/utils.zig");
+const utils = @import("roc/utils.zig");
 
 const ALIGN = @alignOf(u128);
 const Range = std.bit_set.Range;
@@ -303,7 +303,7 @@ export fn roc_fx_diskw(bytes: *RocList) callconv(.C) bool {
 
 export fn roc_fx_diskr() callconv(.C) RocList {
     // This is just gonna always get as many bytes as possible.
-    var out = RocList.allocateExact(@alignOf(u8), MAX_DISK_SIZE, @sizeOf(u8));
+    var out = RocList.allocateExact(@alignOf(u8), MAX_DISK_SIZE, @sizeOf(u8), false);
 
     const data: [*]u8 = out.elements(u8).?;
     const get = w4.diskr(data, MAX_DISK_SIZE);

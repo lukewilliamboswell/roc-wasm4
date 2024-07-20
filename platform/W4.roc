@@ -812,4 +812,3 @@ expect
     res = fromColorFlags 0x0042
     res == { primary: Color2, secondary: Color4, tertiary: None, quaternary: None }
 expect fromColorFlags 0x4321 == { primary: Color1, secondary: Color2, tertiary: Color3, quaternary: Color4 }
-
