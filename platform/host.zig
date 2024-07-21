@@ -18,6 +18,27 @@ const utils = @import("roc/utils.zig");
 var prng = std.rand.DefaultPrng.init(0);
 var rnd = prng.random();
 
+// The canary is right after the frame buffer.
+// The stack grows down and will run into the frame buffer if it overflows.
+const CANARY_PTR: [*]usize = @ptrFromInt(@intFromPtr(w4.FRAMEBUFFER) + w4.FRAMEBUFFER.len);
+const CANARY_SIZE = 8;
+fn reset_stack_canary() void {
+    var i: usize = 0;
+    while (i < CANARY_SIZE) : (i += 1) {
+        CANARY_PTR[i] = 0xDEAD_BEAF;
+    }
+}
+
+fn check_stack_canary() void {
+    var i: usize = 0;
+    while (i < CANARY_SIZE) : (i += 1) {
+        if (CANARY_PTR[i] != 0xDEAD_BEAF) {
+            w4.trace("Warning: Stack canary damaged! There was likely a stack overflow during roc execution. Overflows write into the screen buffer and other hardware registers.");
+            return;
+        }
+    }
+}
+
 export fn roc_alloc(requested_size: usize, alignment: u32) callconv(.C) *anyopaque {
     _ = alignment;
     if (allocator.malloc(requested_size)) |ptr| {
@@ -128,8 +149,10 @@ export fn start() void {
 
 var update_captures: *anyopaque = undefined;
 export fn update() void {
+    reset_stack_canary();
     roc__mainForHost_1_caller(&model, undefined, update_captures);
     roc__mainForHost_2_caller(undefined, update_captures, &model);
+    check_stack_canary();
 }
 
 export fn roc_fx_text(text: *RocStr, x: i32, y: i32) callconv(.C) void {
