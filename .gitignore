@@ -1,5 +1,6 @@
 zig-out/
 zig-cache
+.zig-cache
 platform/src/builtins
 
 examples/*.ll
