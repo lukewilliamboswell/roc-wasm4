@@ -114,44 +114,21 @@ fn trace_model() void {
     w4.tracef("%x", @as(u32, @intFromPtr(model)));
 }
 
-extern fn roc__mainForHost_1_exposed_generic(*anyopaque) callconv(.C) void;
-extern fn roc__mainForHost_1_exposed_size() callconv(.C) i64;
-// Init Task
-extern fn roc__mainForHost_0_caller(*anyopaque, *anyopaque, **anyopaque) callconv(.C) void;
-extern fn roc__mainForHost_0_size() callconv(.C) i64;
+// Init Fn
+extern fn roc__init_1_exposed() callconv(.C) *anyopaque;
 
 // Update Fn
-extern fn roc__mainForHost_1_caller(**anyopaque, *anyopaque, *anyopaque) callconv(.C) void;
-extern fn roc__mainForHost_1_size() callconv(.C) i64;
-// Update Task
-extern fn roc__mainForHost_2_caller(*anyopaque, *anyopaque, **anyopaque) callconv(.C) void;
-extern fn roc__mainForHost_2_size() callconv(.C) i64;
+extern fn roc__update_1_exposed(*anyopaque) callconv(.C) *anyopaque;
 
 export fn start() void {
     allocator.init();
-    // w4.tracef("size: %d", free_set.capacity());
-    const update_size = @as(usize, @intCast(roc__mainForHost_1_size()));
-    if (update_size != 0) {
-        w4.trace("This platform does not allow for the update function to have captures");
-        @panic("Invalid roc app: captures not allowed");
-    }
 
-    const size = @as(usize, @intCast(roc__mainForHost_1_exposed_size()));
-    const captures = roc_alloc(size, @alignOf(u128));
-    defer roc_dealloc(captures, @alignOf(u128));
-
-    roc__mainForHost_1_exposed_generic(captures);
-    roc__mainForHost_0_caller(undefined, captures, &model);
-
-    const update_task_size = @as(usize, @intCast(roc__mainForHost_2_size()));
-    update_captures = roc_alloc(update_task_size, @alignOf(u128));
+    model = roc__init_1_exposed();
 }
 
-var update_captures: *anyopaque = undefined;
 export fn update() void {
     reset_stack_canary();
-    roc__mainForHost_1_caller(&model, undefined, update_captures);
-    roc__mainForHost_2_caller(undefined, update_captures, &model);
+    model = roc__update_1_exposed(model);
     check_stack_canary();
 }
 

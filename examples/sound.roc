@@ -2,14 +2,8 @@ app [main, Model] {
     w4: platform "../platform/main.roc",
 }
 
-import w4.Task exposing [Task]
 import w4.W4 exposing [Gamepad]
 import w4.Sprite exposing [Sprite]
-
-Program : {
-    init : Task Model [],
-    update : Model -> Task Model [],
-}
 
 Model : {
     arrowSprite : Sprite,
@@ -32,11 +26,11 @@ startingValues = [
     ("  PAN", 0, 2),
 ]
 
-main : Program
-main = { init, update }
+main : W4.Program Model []
+main = { init!, update! }
 
-init : Task Model []
-init =
+init! : {} => Result Model []
+init! = \{} ->
     arrowSprite = Sprite.new {
         data: [
             0b00001000,
@@ -53,7 +47,7 @@ init =
         height: 8,
     }
 
-    Task.ok {
+    Ok {
         arrowSprite,
         arrowIdx: 0,
         lastGamepadState: {
@@ -67,8 +61,8 @@ init =
         values: startingValues,
     }
 
-update : Model -> Task Model []
-update = \model ->
+update! : Model => Result Model []
+update! = \model ->
     # These type annotations are required. Otherwise roc fails to compile.
     x : I32
     x = 20
@@ -77,11 +71,7 @@ update = \model ->
     spacing : I32
     spacing = 10
 
-    drawControls =
-        List.walkWithIndex model.values (Task.ok {}) \task, (name, value, max), index ->
-            task!
-            drawControl name x (y + (Num.toI32 index) * spacing) value max
-    drawControls!
+    drawControls! model.values x y spacing 0
     W4.setPrimaryColor! Color2
     W4.text! "Arrows: Adjust\nX: Play tone" { x, y: 8 }
     W4.setDrawColors! { primary: None, secondary: Color4, tertiary: None, quaternary: None }
@@ -128,17 +118,24 @@ update = \model ->
         else
             model.values
 
-    soundTask =
-        if pressedThisFrame.button1 then
-            playSound values
-        else
-            Task.ok {}
-    soundTask!
+    if pressedThisFrame.button1 then
+        playSound! values
+    else
+        {}
 
-    Task.ok { model & arrowIdx, values, lastGamepadState: gamepad }
+    Ok { model & arrowIdx, values, lastGamepadState: gamepad }
 
-drawControl : Str, I32, I32, U32, U32 -> Task {} []
-drawControl = \name, x, y, value, max ->
+drawControls! = \values, x, y, spacing, i ->
+    when values is
+        [(name, value, max), .. as rest] ->
+            drawControl! name x (y + i * spacing) value max
+            drawControls! rest x y spacing (i + 1)
+
+        _ ->
+            {}
+
+drawControl! : Str, I32, I32, U32, U32 => {}
+drawControl! = \name, x, y, value, max ->
     meterWidth : U32
     meterWidth = 50
     W4.setPrimaryColor! Color2
@@ -149,10 +146,8 @@ drawControl = \name, x, y, value, max ->
     W4.text! name { x, y }
     W4.text! (Num.toStr value) { x: 5 * 8 + x + 4 + (Num.toI32 meterWidth) + 2 + 4, y }
 
-    Task.ok {}
-
-playSound : List (Str, U32, U32) -> Task {} []
-playSound = \values ->
+playSound! : List (Str, U32, U32) => {}
+playSound! = \values ->
     when values is
         [(_, startFreq, _), (_, endFreq, _), (_, attackTime, _), (_, decayTime, _), (_, sustainTime, _), (_, releaseTime, _), (_, peakVolume, _), (_, volume, _), (_, channelVal, _), (_, modeVal, _), (_, panVal, _)] ->
             mode =
@@ -178,7 +173,7 @@ playSound = \values ->
                     2 -> Right
                     _ -> crash "impossible pan"
 
-            W4.tone {
+            W4.tone! {
                 startFreq: Num.toU16 startFreq,
                 endFreq: Num.toU16 endFreq,
                 attackTime: Num.toU8 attackTime,

@@ -2,14 +2,8 @@ app [main, Model] {
     w4: platform "../platform/main.roc",
 }
 
-import w4.Task exposing [Task]
 import w4.W4 exposing [Gamepad]
 import w4.Sprite exposing [Sprite]
-
-Program : {
-    init : Task Model [],
-    update : Model -> Task Model [],
-}
 
 Model : {
     frameCount : U64,
@@ -19,12 +13,12 @@ Model : {
     gameStarted : Bool,
 }
 
-main : Program
-main = { init, update }
+main : W4.Program Model []
+main = { init!, update! }
 
-init : Task Model []
-init =
-    setColorPalette!
+init! : {} => Result Model []
+init! = \{} ->
+    setColorPalette! {}
 
     fruitSprite = Sprite.new {
         data: [0x00, 0xa0, 0x02, 0x00, 0x0e, 0xf0, 0x36, 0x5c, 0xd6, 0x57, 0xd5, 0x57, 0x35, 0x5c, 0x0f, 0xf0],
@@ -33,7 +27,7 @@ init =
         height: 8,
     }
 
-    Task.ok {
+    Ok {
         frameCount: 0,
         snake: startingSnake,
         fruit: { x: 0, y: 0 },
@@ -41,20 +35,20 @@ init =
         gameStarted: Bool.false,
     }
 
-update : Model -> Task Model []
-update = \prev ->
+update! : Model => Result Model []
+update! = \prev ->
     # Update frame count
     model = { prev & frameCount: prev.frameCount + 1 }
 
     if !model.gameStarted then
-        runTitleScreen model
+        runTitleScreen! model
     else if snakeIsDead model.snake then
-        runEndScreen model
+        runEndScreen! model
     else
-        runGame model
+        runGame! model
 
-runTitleScreen : Model -> Task Model []
-runTitleScreen = \model ->
+runTitleScreen! : Model => Result Model []
+runTitleScreen! = \model ->
     W4.text! "Press X to start!" { x: 15, y: 72 }
 
     gamepad = W4.getGamepad! Player1
@@ -67,19 +61,19 @@ runTitleScreen = \model ->
         # Generate the starting fruit.
         fruit = getRandomFruit! startingSnake
 
-        Task.ok { model & gameStarted: Bool.true, fruit }
+        Ok { model & gameStarted: Bool.true, fruit }
     else
-        Task.ok model
+        Ok model
 
-runEndScreen : Model -> Task Model []
-runEndScreen = \model ->
+runEndScreen! : Model => Result Model []
+runEndScreen! = \model ->
     drawGame! model
     W4.setTextColors! { fg: blue, bg: white }
     W4.text! "Game Over!" { x: 40, y: 72 }
-    Task.ok model
+    Ok model
 
-runGame : Model -> Task Model []
-runGame = \model ->
+runGame! : Model => Result Model []
+runGame! = \model ->
 
     # Get gamepad
     gamepad = W4.getGamepad! Player1
@@ -88,24 +82,22 @@ runGame = \model ->
     (snake, ate) =
         updateSnake model.snake gamepad model.frameCount model.fruit
 
-    fruitTask =
+    fruit =
         when ate is
             AteFruit ->
-                getRandomFruit snake
+                getRandomFruit! snake
 
             DidNotEat ->
-                Task.ok model.fruit
-
-    fruit = fruitTask!
+                model.fruit
 
     next = { model & snake, fruit }
     drawGame! next
 
     # Return model for next frame
-    Task.ok next
+    Ok next
 
-drawGame : Model -> Task {} []
-drawGame = \model ->
+drawGame! : Model => {}
+drawGame! = \model ->
     # Draw fruit
     W4.setDrawColors! {
         primary: None,
@@ -120,7 +112,7 @@ drawGame = \model ->
     drawSnakeBody! model.snake
     # Draw snake head
     W4.setShapeColors! { border: blue, fill: blue }
-    drawSnakeHead model.snake
+    drawSnakeHead! model.snake
 
 # Set the color pallet
 white = Color1
@@ -128,9 +120,9 @@ orange = Color2
 green = Color3
 blue = Color4
 
-setColorPalette : Task {} []
-setColorPalette =
-    W4.setPalette {
+setColorPalette! : {} => {}
+setColorPalette! = \{} ->
+    W4.setPalette! {
         color1: 0xfbf7f3,
         color2: 0xe5b083,
         color3: 0x426e5d,
@@ -155,16 +147,22 @@ startingSnake = {
     direction: Right,
 }
 
-drawSnakeBody : Snake -> Task {} []
-drawSnakeBody = \snake ->
-    List.walk snake.body (Task.ok {}) \task, part ->
-        task!
+drawSnakeBody! : Snake => {}
+drawSnakeBody! = \snake ->
+    helper! = \list ->
+        when list is
+            [part, .. as rest] ->
+                W4.rect! { x: (part.x * 8), y: (part.y * 8), width: 8, height: 8 }
+                helper! rest
 
-        W4.rect { x: (part.x * 8), y: (part.y * 8), width: 8, height: 8 }
+            _ ->
+                {}
 
-drawSnakeHead : Snake -> Task {} []
-drawSnakeHead = \snake ->
-    W4.rect { x: (snake.head.x * 8), y: (snake.head.y * 8), width: 8, height: 8 }
+    helper! snake.body
+
+drawSnakeHead! : Snake => {}
+drawSnakeHead! = \snake ->
+    W4.rect! { x: (snake.head.x * 8), y: (snake.head.y * 8), width: 8, height: 8 }
 
 updateSnake : Snake, Gamepad, U64, Fruit -> (Snake, [AteFruit, DidNotEat])
 updateSnake = \s0, { left, right, up, down }, frameCount, fruit ->
@@ -223,16 +221,18 @@ snakeIsDead : Snake -> Bool
 snakeIsDead = \{ head, body } ->
     List.contains body head
 
-getRandomFruit : Snake -> Task Fruit []
-getRandomFruit = \{ head, body } ->
+getRandomFruit! : Snake => Fruit
+getRandomFruit! = \{ head, body } ->
     # Will the perf of this be bad with a large snake?
     # The better alternative may be to have a free square list and randomly select one.
-    Task.loop {} \{} ->
+    helper! = \{} ->
         x = W4.randBetween! { start: 0, before: 20 }
         y = W4.randBetween! { start: 0, before: 20 }
 
         fruit = { x, y }
         if fruit == head || List.contains body fruit then
-            Step {} |> Task.ok
+            helper! {}
         else
-            Done fruit |> Task.ok
+            fruit
+
+    helper! {}

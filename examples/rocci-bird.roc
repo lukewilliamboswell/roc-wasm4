@@ -2,14 +2,8 @@ app [main, Model] {
     w4: platform "../platform/main.roc",
 }
 
-import w4.Task exposing [Task]
 import w4.W4
 import w4.Sprite exposing [Sprite]
-
-Program : {
-    init : Task Model [],
-    update : Model -> Task Model [],
-}
 
 Model : [
     TitleScreen TitleScreenState,
@@ -17,11 +11,11 @@ Model : [
     GameOver GameOverState,
 ]
 
-main : Program
-main = { init, update }
+main : W4.Program Model []
+main = { init!, update! }
 
-init : Task Model []
-init =
+init! : {} => Result Model []
+init! = \{} ->
     # Lospec palette: Candy Cloud [2-BIT] Palette
     palette = {
         color1: 0xe6e6c0,
@@ -31,29 +25,29 @@ init =
     }
     W4.setPalette! palette
 
-    frameCount = loadRandFromDisk!
+    frameCount = loadRandFromDisk! {}
     W4.seedRand! frameCount
-    plants = startingPlants!
+    plants = startingPlants! {}
 
-    Task.ok (initTitleScreen frameCount plants)
+    Ok (initTitleScreen frameCount plants)
 
-update : Model -> Task Model []
-update = \model ->
+update! : Model => Result Model []
+update! = \model ->
     when model is
         TitleScreen prev ->
             prev
             |> updateFrameCount
-            |> runTitleScreen
+            |> runTitleScreen!
 
         Game prev ->
             prev
             |> updateFrameCount
-            |> runGame
+            |> runGame!
 
         GameOver prev ->
             prev
             |> updateFrameCount
-            |> runGameOver
+            |> runGameOver!
 
 updateFrameCount : { frameCount : U64 }a -> { frameCount : U64 }a
 updateFrameCount = \prev ->
@@ -76,12 +70,12 @@ initTitleScreen = \frameCount, plants ->
         rocciIdleAnim: createRocciIdleAnim frameCount,
     }
 
-runTitleScreen : TitleScreenState -> Task Model []
-runTitleScreen = \prev ->
+runTitleScreen! : TitleScreenState => Result Model []
+runTitleScreen! = \prev ->
     state = { prev &
         rocciIdleAnim: updateAnimation prev.frameCount prev.rocciIdleAnim,
     }
-    setTextColors!
+    setTextColors! {}
     W4.text! "Rocci Bird!!!" { x: 32, y: 12 }
     W4.text! "Click to start!" { x: 24, y: 72 }
     drawGround! groundSprite 0
@@ -90,14 +84,14 @@ runTitleScreen = \prev ->
     shift = idleShift state.frameCount state.rocciIdleAnim
     drawAnimation! state.rocciIdleAnim { x: playerX, y: playerStartY + shift }
     gamepad = W4.getGamepad! Player1
-    mouse = W4.getMouse!
+    mouse = W4.getMouse! {}
 
     start = gamepad.button1 || gamepad.up || mouse.left
 
     if start then
-        initGame state
+        initGame! state
     else
-        Task.ok (TitleScreen state)
+        Ok (TitleScreen state)
 
 # ===== Main Game =========================================
 
@@ -118,8 +112,8 @@ GameState : {
     groundX : I32,
 }
 
-initGame : TitleScreenState -> Task Model []
-initGame = \{ frameCount, plants } ->
+initGame! : TitleScreenState => Result Model []
+initGame! = \{ frameCount, plants } ->
     # Seed the randomness with number of frames since the start of the game.
     # This makes the game feel like it is truely randomly seeded cause players won't always start on the same frame.
     saveRandToDisk! frameCount
@@ -142,7 +136,7 @@ initGame = \{ frameCount, plants } ->
         rocciFlapAnim: createRocciFlapAnim frameCount,
         groundX: 0,
     }
-    |> Task.ok
+    |> Ok
 
 # Useful to throw in WolframAlpha to help calculate these:
 # y =  v^2 /(2a); y = -a/2*t^2 + vt; y = 20; t = 18; a > 0
@@ -151,29 +145,27 @@ initGame = \{ frameCount, plants } ->
 gravity = 0.12
 jumpSpeed = -2.2
 
-runGame : GameState -> Task Model []
-runGame = \prev ->
+runGame! : GameState => Result Model []
+runGame! = \prev ->
     gamepad = W4.getGamepad! Player1
-    mouse = W4.getMouse!
+    mouse = W4.getMouse! {}
 
     flap = gamepad.button1 || gamepad.up || mouse.left
 
-    { yVel, nextAnim, flapSoundTask } =
+    { yVel, nextAnim } =
         if !prev.lastFlap && flap && flapAllowed prev.frameCount prev.rocciFlapAnim then
             anim = prev.rocciFlapAnim
+            W4.tone! flapTone
             {
                 yVel: jumpSpeed,
                 nextAnim: { anim & index: 0, state: RunOnce },
-                flapSoundTask: W4.tone flapTone,
             }
         else
             {
                 yVel: prev.player.yVel + gravity,
                 nextAnim: updateAnimation prev.frameCount prev.rocciFlapAnim,
-                flapSoundTask: Task.ok {},
             }
-    flapSoundTask!
-    pipe = maybeGeneratePipe prev.lastPipeGenerated prev.frameCount |> Task.result!
+    pipe = maybeGeneratePipe! prev.lastPipeGenerated prev.frameCount
 
     lastPipeGenerated =
         if Result.isOk pipe then
@@ -186,7 +178,7 @@ runGame = \prev ->
         |> updatePipes
         |> List.appendIfOk pipe
 
-    plant = maybeGeneratePlant prev.lastPlantGenerated prev.frameCount |> Task.result!
+    plant = maybeGeneratePlant! prev.lastPlantGenerated prev.frameCount
 
     lastPlantGenerated =
         if Result.isOk plant then
@@ -215,12 +207,11 @@ runGame = \prev ->
         groundX: (prev.groundX - 1) % W4.screenWidth,
     }
 
-    pointSoundTask =
-        if gainPoint > 0 then
-            W4.tone pointTone
-        else
-            Task.ok {}
-    pointSoundTask!
+    if gainPoint > 0 then
+        W4.tone! pointTone
+    else
+        {}
+
     drawPipes! pipeSprite state.pipes
     drawGround! groundSprite state.groundX
     drawPlants! plantSpriteSheet state.plants
@@ -234,11 +225,11 @@ runGame = \prev ->
     drawScore! state.score { x: 68, y: 4 }
 
     if !collided && y < 134 then
-        Task.ok (Game state)
+        Ok (Game state)
     else
         W4.tone! deathTone
 
-        initGameOver state
+        initGameOver! state
 
 # ===== Game Over =========================================
 
@@ -258,9 +249,9 @@ GameOverState : {
     groundX : I32,
 }
 
-initGameOver : GameState -> Task Model []
-initGameOver = \{ frameCount, maxScore, score, player, pipes, plants, groundX } ->
-    hs = loadHighScoreFromDisk!
+initGameOver! : GameState => Result Model []
+initGameOver! = \{ frameCount, maxScore, score, player, pipes, plants, groundX } ->
+    hs = loadHighScoreFromDisk! {}
     newHighScore = maxScore > hs
     highScore =
         if newHighScore then
@@ -281,10 +272,10 @@ initGameOver = \{ frameCount, maxScore, score, player, pipes, plants, groundX } 
         highScoreAnim: createHighScoreAnim frameCount,
         groundX,
     }
-    |> Task.ok
+    |> Ok
 
-runGameOver : GameOverState -> Task Model []
-runGameOver = \prev ->
+runGameOver! : GameOverState => Result Model []
+runGameOver! = \prev ->
     yVel = prev.player.yVel + gravity
     rocciFallAnim = updateAnimation prev.frameCount prev.rocciFallAnim
     highScoreAnim = updateAnimation prev.frameCount prev.highScoreAnim
@@ -309,7 +300,7 @@ runGameOver = \prev ->
     drawAnimation! state.rocciFallAnim { x: playerX, y: yPixel }
     W4.setShapeColors! { border: Color4, fill: Color1 }
     W4.rect! { x: 16, y: 52, width: 136, height: 32 }
-    setTextColors!
+    setTextColors! {}
     W4.text! "Game Over!" { x: 44, y: 56 }
     W4.text! "Right to restart" { x: 20, y: 72 }
     W4.text! "Art by Luke DeVault" { x: 4, y: 151 }
@@ -317,40 +308,39 @@ runGameOver = \prev ->
     W4.rect! { x: 66, y: 2, width: 28, height: 12 }
     drawScore! state.score { x: 68, y: 4 }
 
-    highScoreTask =
-        if state.newHighScore then
-            drawAnimation state.highScoreAnim { x: 64, y: 0 }
-        else
-            Task.ok {}
-    highScoreTask!
+    if state.newHighScore then
+        drawAnimation! state.highScoreAnim { x: 64, y: 0 }
+    else
+        {}
+
     W4.setShapeColors! { border: Color4, fill: Color1 }
     W4.rect! { x: 54, y: 18, width: 52, height: 12 }
-    setTextColors!
+    setTextColors! {}
     W4.text! "HS:" { x: 57, y: 20 }
     drawScore! state.highScore { x: 80, y: 20 }
 
     gamepad = W4.getGamepad! Player1
-    mouse = W4.getMouse!
+    mouse = W4.getMouse! {}
     if mouse.right || gamepad.button2 || gamepad.right then
-        plants = startingPlants!
-        Task.ok (initTitleScreen state.frameCount plants)
+        plants = startingPlants! {}
+        Ok (initTitleScreen state.frameCount plants)
     else
-        Task.ok (GameOver state)
+        Ok (GameOver state)
 
 # ===== Player ============================================
 
 playerStartY = 40
 playerX = 70
 
-playerCollided : I32, U64 -> Task Bool []
-playerCollided = \playerY, animIndex ->
+playerCollided! : I32, U64 => Bool
+playerCollided! = \playerY, animIndex ->
     if playerY >= -1 then
-        onScreenCollided playerY animIndex
+        onScreenCollided! playerY animIndex
     else
-        offScreenCollided
+        offScreenCollided! {}
 
-onScreenCollided : I32, U64 -> Task Bool []
-onScreenCollided = \playerY, animIndex ->
+onScreenCollided! : I32, U64 => Bool
+onScreenCollided! = \playerY, animIndex ->
     # This is written in a kinda silly but simple way.
     # It checks to ensure a few points in the sprite are all background colored.
     # This must be run before drawing the player.
@@ -376,27 +366,31 @@ onScreenCollided = \playerY, animIndex ->
         else
             basePoints
 
-    List.walk collisionPoints (Task.ok Bool.false) (walkCollisionPointsHelp playerX playerY)
+    helper! = \list ->
+        when list is
+            [{ x, y }, .. as rest] ->
+                point = {
+                    x: Num.toU8 (playerX + x),
+                    y: Num.toU8 (playerY + y),
+                }
+                color = W4.getPixel! point
+                if (color != Color1) then
+                    Bool.true
+                else
+                    helper! rest
 
-walkCollisionPointsHelp = \pX, pY -> \collidedTask, { x, y } ->
-        if collidedTask! then
-            Task.ok Bool.true
-        else
-            point = {
-                x: Num.toU8 (pX + x),
-                y: Num.toU8 (pY + y),
-            }
-            color = W4.getPixel! point
+            _ ->
+                Bool.false
 
-            Task.ok (color != Color1)
+    helper! collisionPoints
 
-offScreenCollided =
+offScreenCollided! = \{} ->
     point = {
         x: Num.toU8 (playerX + 13),
         y: Num.toU8 0,
     }
     color = W4.getPixel! point
-    Task.ok (color != Color1)
+    color != Color1
 
 # ===== Pipes =============================================
 
@@ -404,17 +398,24 @@ Pipe : { x : I32, gapStart : I32 }
 
 gapHeight = 40
 
-drawPipes : Sprite, List Pipe -> Task {} []
-drawPipes = \sprite, pipes ->
-    List.walk pipes (Task.ok {}) \task, pipe ->
-        task!
-        drawPipe sprite pipe
+drawPipes! : Sprite, List Pipe => {}
+drawPipes! = \sprite, pipes ->
+    helper! = \list ->
+        when list is
+            [pipe, .. as rest] ->
+                drawPipe! sprite pipe
+                helper! rest
 
-drawPipe : Sprite, Pipe -> Task {} []
-drawPipe = \sprite, { x, gapStart } ->
-    setSpriteColors!
+            _ ->
+                {}
+
+    helper! pipes
+
+drawPipe! : Sprite, Pipe => {}
+drawPipe! = \sprite, { x, gapStart } ->
+    setSpriteColors! {}
     Sprite.blit! sprite { x, y: gapStart - W4.screenHeight, flags: [FlipY] }
-    Sprite.blit sprite { x, y: gapStart + gapHeight }
+    Sprite.blit! sprite { x, y: gapStart + gapHeight }
 
 updatePipes : List Pipe -> List Pipe
 updatePipes = \pipes ->
@@ -422,13 +423,13 @@ updatePipes = \pipes ->
     |> List.map \pipe -> { pipe & x: pipe.x - 1 }
     |> List.dropIf \pipe -> pipe.x < -20
 
-maybeGeneratePipe : U64, U64 -> Task Pipe [NoPipe]
-maybeGeneratePipe = \lastgenerated, framecount ->
+maybeGeneratePipe! : U64, U64 => Result Pipe [NoPipe]
+maybeGeneratePipe! = \lastgenerated, framecount ->
     if framecount - lastgenerated > 90 then
         gapStart = W4.randBetween! { start: 0, before: 16 }
-        Task.ok { x: W4.screenWidth, gapStart: gapStart * 5 + 10 }
+        Ok { x: W4.screenWidth, gapStart: gapStart * 5 + 10 }
     else
-        Task.err NoPipe
+        Err NoPipe
 
 # ===== Plants ============================================
 
@@ -438,30 +439,25 @@ plantTypes = 30
 
 plantY = W4.screenHeight - 22
 
-randomPlant : I32 -> Task Plant []
-randomPlant = \x ->
+randomPlant! : I32 => Plant
+randomPlant! = \x ->
     type =
-        # This breaks alias analysis somehow.
-        # Pretty sure those two types are technically the same...
-        # expected type '()', found type 'union { ((),), ((),) }'
-        # W4.randBetween { start: 0, before: plantTypes }
-        # Biased but a least working solution:
-        W4.rand
-            |> Task.map Num.toU32
-            |> Task.map! \t -> t % plantTypes
+        W4.randBetween! { start: 0, before: plantTypes }
+        |> Num.toU32
 
-    Task.ok { x, type }
+    { x, type }
 
-startingPlants : Task (List Plant) []
-startingPlants =
-    List.range { start: At 0, end: At 14 }
-        |> List.walk (Task.ok (List.withCapacity 20)) \task, i ->
+startingPlants! : {} => List Plant
+startingPlants! = \{} ->
+    helper! = \list, i ->
+        if i >= 14 then
+            list
+        else
             plant = randomPlant! (i * 12)
-            current = task!
+            next = List.append list plant
+            helper! next (i + 1)
 
-            current
-            |> List.append plant
-            |> Task.ok
+    helper! (List.withCapacity 20) 0
 
 updatePlants : List Plant -> List Plant
 updatePlants = \plants ->
@@ -469,25 +465,32 @@ updatePlants = \plants ->
     |> List.map \plant -> { plant & x: plant.x - 1 }
     |> List.dropIf \plant -> plant.x < -12
 
-maybeGeneratePlant : U64, U64 -> Task Plant [NoPlant]
-maybeGeneratePlant = \lastgenerated, framecount ->
+maybeGeneratePlant! : U64, U64 => Result Plant [NoPlant]
+maybeGeneratePlant! = \lastgenerated, framecount ->
     if framecount - lastgenerated > 12 then
-        randomPlant W4.screenWidth
-        |> Task.mapErr \_ -> NoPlant
+        randomPlant! W4.screenWidth
+        |> Ok
     else
-        Task.err NoPlant
+        Err NoPlant
 
-drawPlants : Sprite, List Plant -> Task {} []
-drawPlants = \spriteSheet, plants ->
-    List.walk plants (Task.ok {}) \task, plant ->
-        task!
-        drawPlant spriteSheet plant
+drawPlants! : Sprite, List Plant => {}
+drawPlants! = \spriteSheet, plants ->
+    helper! = \list ->
+        when list is
+            [plant, .. as rest] ->
+                drawPlant! spriteSheet plant
+                helper! rest
 
-drawPlant : Sprite, Plant -> Task {} []
-drawPlant = \spriteSheet, { x, type } ->
+            _ ->
+                {}
+
+    helper! plants
+
+drawPlant! : Sprite, Plant => {}
+drawPlant! = \spriteSheet, { x, type } ->
     sprite = Sprite.subOrCrash spriteSheet { srcX: type * 12, srcY: 0, width: 12, height: 12 }
-    setSpriteColors!
-    Sprite.blit sprite { x, y: plantY }
+    setSpriteColors! {}
+    Sprite.blit! sprite { x, y: plantY }
 
 # ===== Sounds ============================================
 
@@ -523,9 +526,9 @@ deathTone = {
 
 # ===== Drawing and Color =================================
 
-drawScore : U8, { x : I32, y : I32 } -> Task {} []
-drawScore = \score, { x: baseX, y } ->
-    setTextColors!
+drawScore! : U8, { x : I32, y : I32 } => {}
+drawScore! = \score, { x: baseX, y } ->
+    setTextColors! {}
     x =
         if score < 10 then
             baseX + 8
@@ -533,75 +536,70 @@ drawScore = \score, { x: baseX, y } ->
             baseX + 4
         else
             baseX
-    W4.text "$(Num.toStr score)" { x, y }
+    W4.text! "$(Num.toStr score)" { x, y }
 
-drawGround : Sprite, I32 -> Task {} []
-drawGround = \sprite, x ->
-    setGroundColors!
+drawGround! : Sprite, I32 => {}
+drawGround! = \sprite, x ->
+    setGroundColors! {}
     Sprite.blit! sprite { x, y: W4.screenHeight - 13 }
     Sprite.blit! sprite { x: x + W4.screenWidth, y: W4.screenHeight - 13 }
 
-setTextColors : Task {} []
-setTextColors =
-    W4.setTextColors { fg: Color4, bg: None }
+setTextColors! : {} => {}
+setTextColors! = \{} ->
+    W4.setTextColors! { fg: Color4, bg: None }
 
-setSpriteColors : Task {} []
-setSpriteColors =
-    W4.setDrawColors { primary: None, secondary: Color2, tertiary: Color3, quaternary: Color4 }
+setSpriteColors! : {} => {}
+setSpriteColors! = \{} ->
+    W4.setDrawColors! { primary: None, secondary: Color2, tertiary: Color3, quaternary: Color4 }
 
-setGroundColors : Task {} []
-setGroundColors =
-    W4.setDrawColors { primary: Color1, secondary: Color2, tertiary: Color3, quaternary: Color4 }
+setGroundColors! : {} => {}
+setGroundColors! = \{} ->
+    W4.setDrawColors! { primary: Color1, secondary: Color2, tertiary: Color3, quaternary: Color4 }
 
 # ===== Saving and Loading ================================
 
 # Due to limitations in randomness of wasm4 we would always get the same title screen.
 # This save just a single byte of randomness from the frameCount in order to give us a bit more randomness.
-saveRandToDisk : U64 -> Task {} []
-saveRandToDisk = \frameCount ->
+saveRandToDisk! : U64 => {}
+saveRandToDisk! = \frameCount ->
     data =
         frameCount
         |> Num.bitwiseAnd 0xFF
         |> Num.toU8
 
-    highScore = loadHighScoreFromDisk!
+    highScore = loadHighScoreFromDisk! {}
 
-    W4.saveToDisk [data, highScore]
-    |> Task.onErr \_ -> Task.ok {}
+    _ = W4.saveToDisk! [data, highScore]
+    {}
 
-loadRandFromDisk : Task U64 []
-loadRandFromDisk =
-    data = W4.loadFromDisk |> Task.onErr! \_ -> Task.ok []
+loadRandFromDisk! : {} => U64
+loadRandFromDisk! = \{} ->
+    data = W4.loadFromDisk! {}
 
     when data is
         [byte, ..] ->
-            byte
-            |> Num.toU64
-            |> Task.ok
+            Num.toU64 byte
 
         _ ->
-            Task.ok 0
+            0
 
-saveHighScoreToDisk : U8 -> Task {} []
-saveHighScoreToDisk = \highScore ->
-    rand = loadRandFromDisk!
+saveHighScoreToDisk! : U8 => {}
+saveHighScoreToDisk! = \highScore ->
+    rand = loadRandFromDisk! {}
 
-    W4.saveToDisk [Num.toU8 rand, highScore]
-    |> Task.onErr \_ -> Task.ok {}
+    _ = W4.saveToDisk! [Num.toU8 rand, highScore]
+    {}
 
-loadHighScoreFromDisk : Task U8 []
-loadHighScoreFromDisk =
-    data =
-        W4.loadFromDisk
-            |> Task.onErr! \_ -> Task.ok []
+loadHighScoreFromDisk! : {} => U8
+loadHighScoreFromDisk! = \{} ->
+    data = W4.loadFromDisk! {}
 
     when data is
         [_, hs, ..] ->
             hs
-            |> Task.ok
 
         _ ->
-            Task.ok 0
+            0
 
 # ===== Animations ========================================
 
@@ -640,12 +638,12 @@ updateAnimation = \frameCount, anim ->
                 else
                     { anim & index: nextIndex, lastUpdated: frameCount }
 
-drawAnimation : Animation, { x : I32, y : I32, flags ? List [FlipX, FlipY, Rotate] } -> Task {} []
-drawAnimation = \anim, { x, y, flags ? [] } ->
+drawAnimation! : Animation, { x : I32, y : I32, flags ? List [FlipX, FlipY, Rotate] } => {}
+drawAnimation! = \anim, { x, y, flags ? [] } ->
     when List.get anim.cells anim.index is
         Ok { sprite } ->
-            setSpriteColors!
-            Sprite.blit sprite { x, y, flags }
+            setSpriteColors! {}
+            Sprite.blit! sprite { x, y, flags }
 
         Err _ ->
             crash "animation cell out of bounds at index: $(anim.index |> Num.toStr)"

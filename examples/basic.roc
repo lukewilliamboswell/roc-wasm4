@@ -1,22 +1,15 @@
 app [main, Model] { w4: platform "../platform/main.roc" }
 
-import w4.Task exposing [Task]
 import w4.W4
-
-Program : {
-    init : Task Model [],
-    update : Model -> Task Model [],
-}
 
 Model : {}
 
-main : Program
-main = { init, update }
+main : W4.Program Model []
+main = { init!, update! }
 
-init : Task Model []
-init =
-
-    savedData = W4.loadFromDisk!
+init! : {} => Result Model []
+init! = \{} ->
+    savedData = W4.loadFromDisk! {}
 
     saves =
         when List.first savedData is
@@ -25,14 +18,14 @@ init =
     W4.trace! "Game has been loaded $(Inspect.toStr saves) times"
 
     # Ignore save failures
-    _ = W4.saveToDisk [Num.addWrap saves 1] |> Task.result!
-    setColorPalette!
-    setDrawColors!
+    _ = W4.saveToDisk! [Num.addWrap saves 1]
+    setColorPalette! {}
+    setDrawColors! {}
 
-    palette = W4.getPalette!
+    palette = W4.getPalette! {}
     W4.trace! (Inspect.toStr palette)
 
-    colors = W4.getDrawColors!
+    colors = W4.getDrawColors! {}
     W4.trace! (Inspect.toStr colors)
 
     W4.tone! {
@@ -43,12 +36,14 @@ init =
         decayTime: 30,
     }
 
-update : Model -> Task Model []
-update = \model ->
+    Ok {}
+
+update! : Model => Result Model []
+update! = \model ->
 
     # Get inputs
     { button1, button2, left, right, up, down } = W4.getGamepad! Player1
-    mouse = W4.getMouse!
+    mouse = W4.getMouse! {}
     # Draw the gamepad state
     W4.setTextColors! { fg: red, bg: green }
     "X: $(Inspect.toStr button1)" |> W4.text! { x: 0, y: 0 }
@@ -72,26 +67,26 @@ update = \model ->
     W4.oval! { x: 70, y: 120, width: 20, height: 50 }
 
     # Return the model for next frame
-    Task.ok model
+    Ok model
 
-# Set the color pallet
+# Set the color palette
 white = Color1
 red = Color2
 green = Color3
 blue = Color4
 
-setColorPalette : Task {} []
-setColorPalette =
-    W4.setPalette {
+setColorPalette! : {} => {}
+setColorPalette! = \{} ->
+    W4.setPalette! {
         color1: 0xffffff,
         color2: 0xff0000,
         color3: 0x000ff00,
         color4: 0x0000ff,
     }
 
-setDrawColors : Task {} []
-setDrawColors =
-    W4.setDrawColors {
+setDrawColors! : {} => {}
+setDrawColors! = \{} ->
+    W4.setDrawColors! {
         primary: white,
         secondary: red,
         tertiary: green,
