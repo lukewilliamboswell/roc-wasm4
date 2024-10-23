@@ -1,7 +1,5 @@
-module [Sprite, SubRegion, new, blit, sub, subOrCrash]
+module [Sprite, SubRegion, new, blit!, sub, subOrCrash]
 
-import InternalTask
-import Task exposing [Task]
 import Effect
 
 ## Represents a [sprite](https://en.wikipedia.org/wiki/Sprite_(computer_graphics)) for drawing to the screen.
@@ -53,12 +51,12 @@ new = \{ data, bpp, width, height } ->
 ## Draw a [Sprite] to the framebuffer.
 ##
 ## ```
-## {} <- Sprite.blit fruitSprite { x: 0, y: 0, flags: [FlipX, Rotate] } |> Task.await
+## Sprite.blit! fruitSprite { x: 0, y: 0, flags: [FlipX, Rotate] }
 ## ```
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#blit-spriteptr-x-y-width-height-flags)
-blit : Sprite, { x : I32, y : I32, flags ? List [FlipX, FlipY, Rotate] } -> Task {} *
-blit = \@Sprite { data, bpp, stride, region }, { x, y, flags ? [] } ->
+blit! : Sprite, { x : I32, y : I32, flags ? List [FlipX, FlipY, Rotate] } => {}
+blit! = \@Sprite { data, bpp, stride, region }, { x, y, flags ? [] } ->
     { srcX, srcY, width, height } = region
 
     format =
@@ -73,9 +71,7 @@ blit = \@Sprite { data, bpp, stride, region }, { x, y, flags ? [] } ->
                 FlipY -> Num.bitwiseOr state 4
                 Rotate -> Num.bitwiseOr state 8
 
-    Effect.blitSub data x y width height srcX srcY stride combined
-    |> Effect.map Ok
-    |> InternalTask.fromEffect
+    Effect.blitSub! data x y width height srcX srcY stride combined
 
 ## Creates a [Sprite] referencing a subregion of the current [Sprite].
 ## This will return an error if the subregion does not fit in the current [Sprite].

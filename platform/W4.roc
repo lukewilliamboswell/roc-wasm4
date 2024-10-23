@@ -3,6 +3,7 @@
 ## Build [wasm4](https://wasm4.org) games using Roc
 ##
 module [
+    Program,
     Palette,
     Mouse,
     Gamepad,
@@ -11,42 +12,45 @@ module [
     Shader,
     screenWidth,
     screenHeight,
-    text,
-    setPalette,
-    getPalette,
-    setDrawColors,
-    getDrawColors,
-    setPrimaryColor,
-    setTextColors,
-    setShapeColors,
-    getGamepad,
-    getMouse,
-    getNetplay,
-    rect,
-    oval,
-    line,
-    hline,
-    vline,
-    seedRand,
-    rand,
-    randBetween,
-    trace,
-    debug,
-    saveToDisk,
-    loadFromDisk,
-    preserveFrameBuffer,
-    clearFrameBufferEachUpdate,
-    hideGamepadOverlay,
-    showGamepadOverlay,
-    tone,
-    getPixel,
-    setPixel,
-    runShader,
+    text!,
+    setPalette!,
+    getPalette!,
+    setDrawColors!,
+    getDrawColors!,
+    setPrimaryColor!,
+    setTextColors!,
+    setShapeColors!,
+    getGamepad!,
+    getMouse!,
+    getNetplay!,
+    rect!,
+    oval!,
+    line!,
+    hline!,
+    vline!,
+    seedRand!,
+    rand!,
+    randBetween!,
+    trace!,
+    debug!,
+    saveToDisk!,
+    loadFromDisk!,
+    preserveFrameBuffer!,
+    clearFrameBufferEachUpdate!,
+    hideGamepadOverlay!,
+    showGamepadOverlay!,
+    tone!,
+    getPixel!,
+    setPixel!,
+    runShader!,
 ]
 
-import InternalTask
-import Task exposing [Task]
 import Effect
+
+Program state err : {
+    init! : {} => Result state []err,
+    update! : state => Result state []err,
+} where err implements Inspect
 
 ## The [Palette] consists of four colors. There is also `None` which is used to
 ## represent a transparent or no change color. Each pixel on the screen will be
@@ -149,7 +153,7 @@ screenHeight = 160
 ## Set the color [Palette] for your game.
 ##
 ## ```
-## W4.setPalette {
+## W4.setPalette! {
 ##     color1: 0xffffff,
 ##     color2: 0xff0000,
 ##     color3: 0x000ff00,
@@ -159,30 +163,25 @@ screenHeight = 160
 ##
 ## Warning: this will overwrite the existing [Palette], changing all colors on the screen.
 ##
-setPalette : { color1 : U32, color2 : U32, color3 : U32, color4 : U32 } -> Task {} *
-setPalette = \{ color1, color2, color3, color4 } ->
-    Effect.setPalette color1 color2 color3 color4
-    |> Effect.map Ok
-    |> InternalTask.fromEffect
+setPalette! : { color1 : U32, color2 : U32, color3 : U32, color4 : U32 } => {}
+setPalette! = \{ color1, color2, color3, color4 } ->
+    Effect.setPalette! color1 color2 color3 color4
 
 ## Get the color [Palette] for your game.
 ##
 ## ```
-## {color1, color2, color3, color4} <- W4.getPalette |> Task.await
+## {color1, color2, color3, color4} = W4.getPalette!
 ## ```
 ##
-getPalette : Task { color1 : U32, color2 : U32, color3 : U32, color4 : U32 } *
-getPalette =
-    Effect.getPalette
-    |> Effect.map Ok
-    |> InternalTask.fromEffect
+getPalette! : {} => { color1 : U32, color2 : U32, color3 : U32, color4 : U32 }
+getPalette! = Effect.getPalette!
 
 ## Set the draw colors for the next draw command.
 ##
 ## ```
 ## blue = Color1
 ## white = Color4
-## W4.setDrawColors {
+## W4.setDrawColors! {
 ##     primary : blue,
 ##     secondary : white,
 ##     tertiary : None,
@@ -192,40 +191,36 @@ getPalette =
 ##
 ## Warning: this will overwrite any existing draw colors that are set.
 ##
-setDrawColors : DrawColors -> Task {} *
-setDrawColors = \colors ->
+setDrawColors! : DrawColors => {}
+setDrawColors! = \colors ->
     colors
     |> toColorFlags
-    |> Effect.setDrawColors
-    |> Effect.map Ok
-    |> InternalTask.fromEffect
+    |> Effect.setDrawColors!
 
 ## Get the currently set draw colors.
 ##
 ## ```
-## {primary, secondary} <- W4.getDrawColors |> Task.await
+## {primary, secondary} = W4.getDrawColors! {}
 ## ```
 ##
-getDrawColors : Task DrawColors *
-getDrawColors =
-    Effect.getDrawColors
-    |> Effect.map fromColorFlags
-    |> Effect.map Ok
-    |> InternalTask.fromEffect
+getDrawColors! : {} => DrawColors
+getDrawColors! = \{} ->
+    Effect.getDrawColors! {}
+    |> fromColorFlags
 
 ## Helper for primary drawing color.
 ##
 ## ```
 ## blue = Color1
-## W4.setPrimaryColor blue
+## W4.setPrimaryColor! blue
 ## ```
 ##
 ## Warning: this will overwrite any existing draw colors, and sets the
 ## secondary, tertiary and quaternary values to `None`.
 ##
-setPrimaryColor : W4.Palette -> Task {} *
-setPrimaryColor = \primary ->
-    setDrawColors {
+setPrimaryColor! : W4.Palette => {}
+setPrimaryColor! = \primary ->
+    setDrawColors! {
         primary,
         secondary: None,
         tertiary: None,
@@ -237,15 +232,15 @@ setPrimaryColor = \primary ->
 ## ```
 ## blue = Color1
 ## white = Color4
-## W4.setTextColors { fg : blue, bg : white }
+## W4.setTextColors! { fg : blue, bg : white }
 ## ```
 ##
 ## Warning: this will overwrite any existing draw colors, and sets the
 ## tertiary and quaternary values to `None`.
 ##
-setTextColors : { fg : Palette, bg : Palette } -> Task {} *
-setTextColors = \{ fg, bg } ->
-    setDrawColors {
+setTextColors! : { fg : Palette, bg : Palette } => {}
+setTextColors! = \{ fg, bg } ->
+    setDrawColors! {
         primary: fg,
         secondary: bg,
         tertiary: None,
@@ -257,15 +252,15 @@ setTextColors = \{ fg, bg } ->
 ## ```
 ## blue = Color1
 ## white = Color4
-## W4.setShapeColors { border : blue, fill : white }
+## W4.setShapeColors! { border : blue, fill : white }
 ## ```
 ##
 ## Warning: this will overwrite any existing draw colors, and sets the
 ## tertiary and quaternary values to `None`.
 ##
-setShapeColors : { border : W4.Palette, fill : W4.Palette } -> Task {} *
-setShapeColors = \{ border, fill } ->
-    setDrawColors {
+setShapeColors! : { border : W4.Palette, fill : W4.Palette } => {}
+setShapeColors! = \{ border, fill } ->
+    setDrawColors! {
         primary: fill,
         secondary: border,
         tertiary: None,
@@ -275,7 +270,7 @@ setShapeColors = \{ border, fill } ->
 ## Draw text to the screen.
 ##
 ## ```
-## W4.text "Hello, World" {x: 0, y: 0}
+## W4.text! "Hello, World" {x: 0, y: 0}
 ## ```
 ##
 ## Text color is the Primary draw color.
@@ -284,16 +279,14 @@ setShapeColors = \{ border, fill } ->
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/guides/text)
 ##
-text : Str, { x : I32, y : I32 } -> Task {} *
-text = \str, { x, y } ->
-    Effect.text str x y
-    |> Effect.map Ok
-    |> InternalTask.fromEffect
+text! : Str, { x : I32, y : I32 } => {}
+text! = \str, { x, y } ->
+    Effect.text! str x y
 
 ## Draw a rectangle to the screen.
 ##
 ## ```
-## W4.rect {x: 0, y: 10, width: 40, height: 60}
+## W4.rect! {x: 0, y: 10, width: 40, height: 60}
 ## ```
 ##
 ## Fill color is the Primary draw color.
@@ -302,16 +295,14 @@ text = \str, { x, y } ->
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#rect-x-y-width-height)
 ##
-rect : { x : I32, y : I32, width : U32, height : U32 } -> Task {} *
-rect = \{ x, y, width, height } ->
-    Effect.rect x y width height
-    |> Effect.map Ok
-    |> InternalTask.fromEffect
+rect! : { x : I32, y : I32, width : U32, height : U32 } => {}
+rect! = \{ x, y, width, height } ->
+    Effect.rect! x y width height
 
 ## Draw an oval to the screen.
 ##
 ## ```
-## W4.oval {x, y, width: 20, height: 30}
+## W4.oval! {x, y, width: 20, height: 30}
 ## ```
 ##
 ## Fill color is the Primary draw color.
@@ -320,68 +311,60 @@ rect = \{ x, y, width, height } ->
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#oval-x-y-width-height)
 ##
-oval : { x : I32, y : I32, width : U32, height : U32 } -> Task {} *
-oval = \{ x, y, width, height } ->
-    Effect.oval x y width height
-    |> Effect.map Ok
-    |> InternalTask.fromEffect
+oval! : { x : I32, y : I32, width : U32, height : U32 } => {}
+oval! = \{ x, y, width, height } ->
+    Effect.oval! x y width height
 
 ## Draw a line between two points to the screen.
 ##
 ## ```
-## W4.line {x: 0, y: 0}, {x: 10, y: 10}
+## W4.line! {x: 0, y: 0}, {x: 10, y: 10}
 ## ```
 ##
 ## Line color is the Primary draw color.
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#line-x1-y1-x2-y2)
 ##
-line : { x : I32, y : I32 }, { x : I32, y : I32 } -> Task {} *
-line = \{ x: x1, y: y1 }, { x: x2, y: y2 } ->
-    Effect.line x1 y1 x2 y2
-    |> Effect.map Ok
-    |> InternalTask.fromEffect
+line! : { x : I32, y : I32 }, { x : I32, y : I32 } => {}
+line! = \{ x: x1, y: y1 }, { x: x2, y: y2 } ->
+    Effect.line! x1 y1 x2 y2
 
 ## Draw a horizontal line starting at (x, y) with len to the screen.
 ##
 ## ```
-## W4.hline {x: 10, y: 20, len: 30}
+## W4.hline! {x: 10, y: 20, len: 30}
 ## ```
 ##
 ## Line color is the Primary draw color.
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#line-x1-y1-x2-y2)
 ##
-hline : { x : I32, y : I32, len : U32 } -> Task {} *
-hline = \{ x, y, len } ->
-    Effect.hline x y len
-    |> Effect.map Ok
-    |> InternalTask.fromEffect
+hline! : { x : I32, y : I32, len : U32 } => {}
+hline! = \{ x, y, len } ->
+    Effect.hline! x y len
 
 ## Draw a vertical line starting at (x, y) with len to the screen.
 ##
 ## ```
-## W4.vline {x: 10, y: 20, len: 30}
+## W4.vline! {x: 10, y: 20, len: 30}
 ## ```
 ##
 ## Line color is the Primary draw color.
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#line-x1-y1-x2-y2)
 ##
-vline : { x : I32, y : I32, len : U32 } -> Task {} *
-vline = \{ x, y, len } ->
-    Effect.vline x y len
-    |> Effect.map Ok
-    |> InternalTask.fromEffect
+vline! : { x : I32, y : I32, len : U32 } => {}
+vline! = \{ x, y, len } ->
+    Effect.vline! x y len
 
 ## Get the controls for a [Gamepad].
 ##
 ## ```
-## {button1,button2,left,right,up,down} <- W4.getGamepad Player1 |> Task.await
+## {button1,button2,left,right,up,down} = W4.getGamepad! Player1
 ## ```
 ##
-getGamepad : Player -> Task Gamepad *
-getGamepad = \player ->
+getGamepad! : Player => Gamepad
+getGamepad! = \player ->
 
     gamepadNumber =
         when player is
@@ -390,50 +373,46 @@ getGamepad = \player ->
             Player3 -> 3
             Player4 -> 4
 
-    Effect.getGamepad gamepadNumber
-    |> Effect.map \flags ->
-        Ok {
-            # 1 BUTTON_1
-            button1: Num.bitwiseAnd 0b0000_0001 flags > 0,
-            # 2 BUTTON_2
-            button2: Num.bitwiseAnd 0b0000_0010 flags > 0,
-            # 16 BUTTON_LEFT
-            left: Num.bitwiseAnd 0b0001_0000 flags > 0,
-            # 32 BUTTON_RIGHT
-            right: Num.bitwiseAnd 0b0010_0000 flags > 0,
-            # 64 BUTTON_UP
-            up: Num.bitwiseAnd 0b0100_0000 flags > 0,
-            # 128 BUTTON_DOWN
-            down: Num.bitwiseAnd 0b1000_0000 flags > 0,
-        }
-    |> InternalTask.fromEffect
+    flags = Effect.getGamepad! gamepadNumber
+    {
+        # 1 BUTTON_1
+        button1: Num.bitwiseAnd 0b0000_0001 flags > 0,
+        # 2 BUTTON_2
+        button2: Num.bitwiseAnd 0b0000_0010 flags > 0,
+        # 16 BUTTON_LEFT
+        left: Num.bitwiseAnd 0b0001_0000 flags > 0,
+        # 32 BUTTON_RIGHT
+        right: Num.bitwiseAnd 0b0010_0000 flags > 0,
+        # 64 BUTTON_UP
+        up: Num.bitwiseAnd 0b0100_0000 flags > 0,
+        # 128 BUTTON_DOWN
+        down: Num.bitwiseAnd 0b1000_0000 flags > 0,
+    }
 
 ## Get the current [Mouse] position.
 ##
 ## ```
-## {x,y,left,right,middle} <- W4.getMouse |> Task.await
+## {x,y,left,right,middle} = W4.getMouse! {}
 ## ```
 ##
-getMouse : Task Mouse *
-getMouse =
-    Effect.getMouse
-    |> Effect.map \{ x, y, buttons } ->
-        Ok {
-            x: x,
-            y: y,
-            # 1 MOUSE_LEFT
-            left: Num.bitwiseAnd 0b0000_0001 buttons > 0,
-            # 2 MOUSE_RIGHT
-            right: Num.bitwiseAnd 0b0000_0010 buttons > 0,
-            # 4 MOUSE_MIDDLE
-            middle: Num.bitwiseAnd 0b0000_0100 buttons > 0,
-        }
-    |> InternalTask.fromEffect
+getMouse! : {} => Mouse
+getMouse! = \{} ->
+    { x, y, buttons } = Effect.getMouse! {}
+    {
+        x: x,
+        y: y,
+        # 1 MOUSE_LEFT
+        left: Num.bitwiseAnd 0b0000_0001 buttons > 0,
+        # 2 MOUSE_RIGHT
+        right: Num.bitwiseAnd 0b0000_0010 buttons > 0,
+        # 4 MOUSE_MIDDLE
+        middle: Num.bitwiseAnd 0b0000_0100 buttons > 0,
+    }
 
 ## Get the [Netplay] status.
 ##
 ## ```
-## netplay <- W4.getNetplay |> Task.await
+## netplay = W4.getNetplay! {}
 ## when netplay is
 ##     Enabled Player1 -> # ..
 ##     Enabled Player2 -> # ..
@@ -448,28 +427,26 @@ getMouse =
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/guides/multiplayer)
 ##
-getNetplay : Task Netplay *
-getNetplay =
-    Effect.getNetplay
-    |> Effect.map \flags ->
-        enabled = Num.bitwiseAnd 0b0000_0100 flags > 0
-        if enabled then
-            player =
-                when Num.bitwiseAnd 0b0000_0011 flags is
-                    0 -> Player1
-                    1 -> Player2
-                    2 -> Player3
-                    3 -> Player4
-                    _ -> crash "It is impossible for this value to be greater than 3"
-            Ok (Enabled player)
-        else
-            Ok Disabled
-    |> InternalTask.fromEffect
+getNetplay! : {} => Netplay
+getNetplay! = \{} ->
+    flags = Effect.getNetplay! {}
+    enabled = Num.bitwiseAnd 0b0000_0100 flags > 0
+    if enabled then
+        player =
+            when Num.bitwiseAnd 0b0000_0011 flags is
+                0 -> Player1
+                1 -> Player2
+                2 -> Player3
+                3 -> Player4
+                _ -> crash "It is impossible for this value to be greater than 3"
+        Enabled player
+    else
+        Disabled
 
 ## Seeds the global pseudo-random number generator.
 ##
 ## ```
-## {} <- W4.seedRand framesSinceStart |> Task.await
+## W4.seedRand! framesSinceStart
 ## ```
 ##
 ## Wasm4 exposes no way to seed a random number generator.
@@ -477,17 +454,14 @@ getNetplay =
 ## To work around this, it is suggested to count the number of frames the user is on
 ## the title screen before starting the game and use that to seed the prng.
 ##
-seedRand : U64 -> Task {} *
-seedRand = \s ->
-    Effect.seedRand s
-    |> Effect.map Ok
-    |> InternalTask.fromEffect
+seedRand! : U64 => {}
+seedRand! = Effect.seedRand!
 
 ## Generate a pseudo-random number.
 ##
 ## ```
 ## # pseudo-random number between Num.minI32 and Num.maxI32 (inclusive of both)
-## i <- W4.rand |> Task.await
+## i = W4.rand {}
 ## ```
 ##
 ## Warning: Wasm4 exposes no way to seed a random number generator.
@@ -495,11 +469,8 @@ seedRand = \s ->
 ## To work around this, it is suggested to count the number of frames the user is on
 ## the title screen before starting the game and use that to seed the prng.
 ##
-rand : Task I32 *
-rand =
-    Effect.rand
-    |> Effect.map Ok
-    |> InternalTask.fromEffect
+rand! : {} => I32
+rand! = Effect.rand!
 
 ## Generate a pseudo-random number in the range.
 ##
@@ -507,7 +478,7 @@ rand =
 ##
 ## ```
 ## # random number in the range 0-99
-## i <- W4.randBetween {start: 0, before: 100} |> Task.await
+## i = W4.randBetween! {start: 0, before: 100}
 ## ```
 ##
 ## Warning: Wasm4 exposes no way to seed a random number generator.
@@ -515,42 +486,37 @@ rand =
 ## To work around this, it is suggested to count the number of frames the user is on
 ## the title screen before starting the game and use that to seed the prng.
 ##
-randBetween : { start : I32, before : I32 } -> Task I32 *
-randBetween = \{ start, before } ->
-    Effect.randRangeLessThan start before
-    |> Effect.map Ok
-    |> InternalTask.fromEffect
+randBetween! : { start : I32, before : I32 } => I32
+randBetween! = \{ start, before } ->
+    Effect.randRangeLessThan! start before
 
 ## Prints a message to the debug console.
 ##
 ## ```
-## W4.trace "Hello, World"
+## W4.trace! "Hello, World"
 ## ```
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/guides/trace)
 ##
-trace : Str -> Task {} *
-trace = \str ->
-    Effect.trace str
-    |> Effect.map Ok
-    |> InternalTask.fromEffect
+trace! : Str => {}
+trace! = Effect.trace!
 
 ## Prints a message with a debug formatting of the value to the console.
 ##
 ## ```
-## W4.debug "my int" 7
+## W4.debug! "my int" 7
 ## ```
 ##
-debug : Str, val -> Task {} * where val implements Inspect.Inspect
-debug = \msg, val ->
-    trace "$(msg): $(Inspect.toStr val)"
+debug! : Str, val => {} where val implements Inspect.Inspect
+debug! = \msg, val ->
+    trace! "$(msg): $(Inspect.toStr val)"
 
 ## Saves data to persistent storage. Any previously saved data on the disk is replaced.
 ##
 ## Returns `Err SaveFailed` on failure.
 ##
 ## ```
-## result <- W4.saveToDisk [0x10] |> Task.attempt
+## result = W4.saveToDisk! [0x10]
 ## when result is
 ##    Ok {} -> # success
 ##    Err SaveFailed -> # handle failure
@@ -560,74 +526,59 @@ debug = \msg, val ->
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/guides/diskw)
 ##
-saveToDisk : List U8 -> Task {} [SaveFailed]
-saveToDisk = \data ->
-    Effect.diskw data
-    |> Effect.map \succeeded ->
-        if succeeded then
-            Ok {}
-        else
-            Err SaveFailed
-    |> InternalTask.fromEffect
+saveToDisk! : List U8 => Result {} [SaveFailed]
+saveToDisk! = \data ->
+    succeeded = Effect.diskw! data
+    if succeeded then
+        Ok {}
+    else
+        Err SaveFailed
 
 ## Gets all saved data from persistent storage.
 ##
 ## ```
-## data <- W4.loadFromDisk |> Task.await
+## data = W4.loadFromDisk! {}
 ## ```
 ##
 ## Games can persist up to 1024 bytes of data.
 ##
 ## [Refer w4 docs for more information](https://wasm4.org/docs/guides/diskw)
 ##
-loadFromDisk : Task (List U8) *
-loadFromDisk =
-    Effect.diskr
-    |> Effect.map Ok
-    |> InternalTask.fromEffect
+loadFromDisk! : {} => List U8
+loadFromDisk! = Effect.diskr!
 
 ## Set a flag to keep the framebuffer between frames.
 ##
 ## This can be helpful if you only want to update part of the screen.
 ##
-preserveFrameBuffer : Task {} *
-preserveFrameBuffer =
-    Effect.setPreserveFrameBuffer Bool.true
-    |> Effect.map Ok
-    |> InternalTask.fromEffect
+preserveFrameBuffer! : {} => {}
+preserveFrameBuffer! = \{} ->
+    Effect.setPreserveFrameBuffer! Bool.true
 
 ## Set a flag to clear the framebuffer between frames.
-clearFrameBufferEachUpdate : Task {} *
-clearFrameBufferEachUpdate =
-    Effect.setPreserveFrameBuffer Bool.false
-    |> Effect.map Ok
-    |> InternalTask.fromEffect
+clearFrameBufferEachUpdate! : {} => {}
+clearFrameBufferEachUpdate! = \{} ->
+    Effect.setPreserveFrameBuffer! Bool.false
 
 ## Set a flag to hide the game overlay.
-hideGamepadOverlay : Task {} *
-hideGamepadOverlay =
-    Effect.setHideGamepadOverlay Bool.true
-    |> Effect.map Ok
-    |> InternalTask.fromEffect
+hideGamepadOverlay! : {} => {}
+hideGamepadOverlay! = \{} ->
+    Effect.setHideGamepadOverlay! Bool.true
 
 ## Set a flag to show the game overlay.
-showGamepadOverlay : Task {} *
-showGamepadOverlay =
-    Effect.setHideGamepadOverlay Bool.false
-    |> Effect.map Ok
-    |> InternalTask.fromEffect
+showGamepadOverlay! : {} => {}
+showGamepadOverlay! = \{} ->
+    Effect.setHideGamepadOverlay! Bool.false
 
 ## Get the color for an individual pixel in the framebuffer.
-getPixel : { x : U8, y : U8 } -> Task Palette *
-getPixel = \{ x, y } ->
-    Effect.getPixel x y
-    |> Effect.map extractColor
-    |> Effect.map Ok
-    |> InternalTask.fromEffect
+getPixel! : { x : U8, y : U8 } => Palette
+getPixel! = \{ x, y } ->
+    Effect.getPixel! x y
+    |> extractColor
 
 ## Set the color for an individual pixel in the framebuffer.
-setPixel : { x : U8, y : U8 }, Palette -> Task {} *
-setPixel = \{ x, y }, color ->
+setPixel! : { x : U8, y : U8 }, Palette => {}
+setPixel! = \{ x, y }, color ->
     bits =
         when color is
             None -> 0x0
@@ -636,34 +587,30 @@ setPixel = \{ x, y }, color ->
             Color3 -> 0x3
             Color4 -> 0x4
 
-    Effect.setPixel x y bits
-    |> Effect.map Ok
-    |> InternalTask.fromEffect
+    Effect.setPixel! x y bits
 
 # Run a fragment [Shader] on the raw framebuffer.
-runShader : Shader -> Task {} *
-runShader = \shader ->
-    Task.loop (0, 0) \(x, y) ->
+runShader! : Shader => {}
+runShader! = \shader ->
+    helper! = \(x, y) ->
         if x == screenWidth && y == screenHeight then
-            Task.ok (Done {})
+            {}
         else if x == screenWidth then
-            (0, (y + 1))
-            |> Step
-            |> Task.ok
+            helper! (0, (y + 1))
         else
-            color <- getPixel { x, y } |> Task.await
+            color = getPixel! { x, y }
             newColor = shader x y color
-            {} <- setPixel { x, y } newColor |> Task.await
-            ((x + 1), y)
-            |> Step
-            |> Task.ok
+            setPixel! { x, y } newColor
+            helper! ((x + 1), y)
+
+    helper! (0, 0)
 
 ## Plays a tone sound.
 ##
 ## Please refer to the [wasm4 audio docs](https://wasm4.org/docs/guides/audio/).
 ##
 ## The sound.roc example app along with the [wasm4 sound tools](https://wasm4.org/docs/guides/audio/#sound-tool) can be quite helpful to play with.
-tone :
+tone! :
     {
         startFreq ? U16,
         endFreq ? U16,
@@ -681,8 +628,8 @@ tone :
         volume ? U8,
         peakVolume ? U8,
     }
-    -> Task {} *
-tone = \{ startFreq ? 0, endFreq ? 0, channel ? Pulse1 Eighth, pan ? Center, sustainTime ? 0, releaseTime ? 0, decayTime ? 0, attackTime ? 0, volume ? 100, peakVolume ? 0 } ->
+    => {}
+tone! = \{ startFreq ? 0, endFreq ? 0, channel ? Pulse1 Eighth, pan ? Center, sustainTime ? 0, releaseTime ? 0, decayTime ? 0, attackTime ? 0, volume ? 100, peakVolume ? 0 } ->
     freq =
         Num.toU32 endFreq
         |> Num.shiftLeftBy 16
@@ -735,9 +682,7 @@ tone = \{ startFreq ? 0, endFreq ? 0, channel ? Pulse1 Eighth, pan ? Center, sus
         |> Num.bitwiseOr modeBits
         |> Num.bitwiseOr channelBits
 
-    Effect.tone freq duration volumeBits flags
-    |> Effect.map Ok
-    |> InternalTask.fromEffect
+    Effect.tone! freq duration volumeBits flags
 
 # HELPERS ------
 

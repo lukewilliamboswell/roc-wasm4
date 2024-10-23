@@ -1,35 +1,32 @@
 platform "wasm-4"
-    requires { Model } { main : _ }
+    requires { Model } { main : Program Model _ }
     exposes [
         Task,
         W4,
         Sprite,
     ]
     packages {}
-    imports [Task.{ Task }]
-    provides [mainForHost]
+    imports []
+    provides [init!, update!]
 
-# TODO add to annotation for main from app when no longer UNUSED DEFINITION
-# Program : {
-#     init : Model,
-#     update : Model -> Task Model [],
-# }
+import W4 exposing [Program]
 
-ProgramForHost : {
-    init : Task (Box Model) [],
-    update : Box Model -> Task (Box Model) [],
-}
+init! : {} => Box Model
+init! = \{} ->
+    main.init! {}
+    |> \result ->
+        when result is
+            Ok m -> Box.box m
+            Err err ->
+                crash (Inspect.toStr err)
 
-mainForHost : ProgramForHost
-mainForHost = { init, update }
-
-init : Task (Box Model) []
-init = main.init |> Task.map Box.box
-
-update : Box Model -> Task (Box Model) []
-update = \boxedModel ->
-    model <- main.update (Box.unbox boxedModel) |> Task.await
-
-    model
-    |> Box.box
-    |> Task.ok
+update! : Box Model => Box Model
+update! = \boxedModel ->
+    boxedModel
+    |> Box.unbox
+    |> main.update!
+    |> \result ->
+        when result is
+            Ok m -> Box.box m
+            Err err ->
+                crash (Inspect.toStr err)
