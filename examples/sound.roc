@@ -1,4 +1,4 @@
-app [main, Model] {
+app [init!, update!, Model] {
     w4: platform "../platform/main.roc",
 }
 
@@ -25,9 +25,6 @@ startingValues = [
     (" MODE", 0, 3),
     ("  PAN", 0, 2),
 ]
-
-main : W4.Program Model
-main = { init!, update! }
 
 init! : {} => Model
 init! = \{} ->

@@ -1,11 +1,8 @@
-app [main, Model] { w4: platform "../platform/main.roc" }
+app [init!, update!, Model] { w4: platform "../platform/main.roc" }
 
 import w4.W4
 
 Model : {}
-
-main : W4.Program Model
-main = { init!, update! }
 
 init! : {} => Model
 init! = \{} ->

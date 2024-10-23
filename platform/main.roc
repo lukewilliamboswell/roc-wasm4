@@ -1,5 +1,5 @@
 platform "wasm-4"
-    requires { Model } { main : Program Model }
+    requires { Model } { init! : {} => Model, update! : Model => Model }
     exposes [
         Task,
         W4,
@@ -7,18 +7,16 @@ platform "wasm-4"
     ]
     packages {}
     imports []
-    provides [init!, update!]
+    provides [initBoxed!, updateBoxed!]
 
-import W4 exposing [Program]
-
-init! : {} => Box Model
-init! = \{} ->
-    main.init! {}
+initBoxed! : {} => Box Model
+initBoxed! = \{} ->
+    init! {}
     |> Box.box
 
-update! : Box Model => Box Model
-update! = \boxedModel ->
+updateBoxed! : Box Model => Box Model
+updateBoxed! = \boxedModel ->
     boxedModel
     |> Box.unbox
-    |> main.update!
+    |> update!
     |> Box.box

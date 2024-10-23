@@ -3,7 +3,6 @@
 ## Build [wasm4](https://wasm4.org) games using Roc
 ##
 module [
-    Program,
     Palette,
     Mouse,
     Gamepad,
@@ -46,11 +45,6 @@ module [
 ]
 
 import Effect
-
-Program state : {
-    init! : {} => state,
-    update! : state => state,
-}
 
 ## The [Palette] consists of four colors. There is also `None` which is used to
 ## represent a transparent or no change color. Each pixel on the screen will be

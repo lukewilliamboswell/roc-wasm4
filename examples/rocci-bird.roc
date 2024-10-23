@@ -1,4 +1,4 @@
-app [main, Model] {
+app [init!, update!, Model] {
     w4: platform "../platform/main.roc",
 }
 
@@ -10,9 +10,6 @@ Model : [
     Game GameState,
     GameOver GameOverState,
 ]
-
-main : W4.Program Model
-main = { init!, update! }
 
 init! : {} => Model
 init! = \{} ->

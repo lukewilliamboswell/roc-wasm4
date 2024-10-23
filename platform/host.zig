@@ -115,20 +115,20 @@ fn trace_model() void {
 }
 
 // Init Fn
-extern fn roc__init_1_exposed() callconv(.C) *anyopaque;
+extern fn roc__initBoxed_1_exposed() callconv(.C) *anyopaque;
 
 // Update Fn
-extern fn roc__update_1_exposed(*anyopaque) callconv(.C) *anyopaque;
+extern fn roc__updateBoxed_1_exposed(*anyopaque) callconv(.C) *anyopaque;
 
 export fn start() void {
     allocator.init();
 
-    model = roc__init_1_exposed();
+    model = roc__initBoxed_1_exposed();
 }
 
 export fn update() void {
     reset_stack_canary();
-    model = roc__update_1_exposed(model);
+    model = roc__updateBoxed_1_exposed(model);
     check_stack_canary();
 }
 
