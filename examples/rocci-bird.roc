@@ -11,10 +11,10 @@ Model : [
     GameOver GameOverState,
 ]
 
-main : W4.Program Model []
+main : W4.Program Model
 main = { init!, update! }
 
-init! : {} => Result Model []
+init! : {} => Model
 init! = \{} ->
     # Lospec palette: Candy Cloud [2-BIT] Palette
     palette = {
@@ -29,9 +29,9 @@ init! = \{} ->
     W4.seedRand! frameCount
     plants = startingPlants! {}
 
-    Ok (initTitleScreen frameCount plants)
+    initTitleScreen frameCount plants
 
-update! : Model => Result Model []
+update! : Model => Model
 update! = \model ->
     when model is
         TitleScreen prev ->
@@ -70,7 +70,7 @@ initTitleScreen = \frameCount, plants ->
         rocciIdleAnim: createRocciIdleAnim frameCount,
     }
 
-runTitleScreen! : TitleScreenState => Result Model []
+runTitleScreen! : TitleScreenState => Model
 runTitleScreen! = \prev ->
     state = { prev &
         rocciIdleAnim: updateAnimation prev.frameCount prev.rocciIdleAnim,
@@ -91,7 +91,7 @@ runTitleScreen! = \prev ->
     if start then
         initGame! state
     else
-        Ok (TitleScreen state)
+        TitleScreen state
 
 # ===== Main Game =========================================
 
@@ -112,7 +112,7 @@ GameState : {
     groundX : I32,
 }
 
-initGame! : TitleScreenState => Result Model []
+initGame! : TitleScreenState => Model
 initGame! = \{ frameCount, plants } ->
     # Seed the randomness with number of frames since the start of the game.
     # This makes the game feel like it is truely randomly seeded cause players won't always start on the same frame.
@@ -136,7 +136,6 @@ initGame! = \{ frameCount, plants } ->
         rocciFlapAnim: createRocciFlapAnim frameCount,
         groundX: 0,
     }
-    |> Ok
 
 # Useful to throw in WolframAlpha to help calculate these:
 # y =  v^2 /(2a); y = -a/2*t^2 + vt; y = 20; t = 18; a > 0
@@ -145,7 +144,7 @@ initGame! = \{ frameCount, plants } ->
 gravity = 0.12
 jumpSpeed = -2.2
 
-runGame! : GameState => Result Model []
+runGame! : GameState => Model
 runGame! = \prev ->
     gamepad = W4.getGamepad! Player1
     mouse = W4.getMouse! {}
@@ -225,7 +224,7 @@ runGame! = \prev ->
     drawScore! state.score { x: 68, y: 4 }
 
     if !collided && y < 134 then
-        Ok (Game state)
+        Game state
     else
         W4.tone! deathTone
 
@@ -249,7 +248,7 @@ GameOverState : {
     groundX : I32,
 }
 
-initGameOver! : GameState => Result Model []
+initGameOver! : GameState => Model
 initGameOver! = \{ frameCount, maxScore, score, player, pipes, plants, groundX } ->
     hs = loadHighScoreFromDisk! {}
     newHighScore = maxScore > hs
@@ -272,9 +271,8 @@ initGameOver! = \{ frameCount, maxScore, score, player, pipes, plants, groundX }
         highScoreAnim: createHighScoreAnim frameCount,
         groundX,
     }
-    |> Ok
 
-runGameOver! : GameOverState => Result Model []
+runGameOver! : GameOverState => Model
 runGameOver! = \prev ->
     yVel = prev.player.yVel + gravity
     rocciFallAnim = updateAnimation prev.frameCount prev.rocciFallAnim
@@ -323,9 +321,9 @@ runGameOver! = \prev ->
     mouse = W4.getMouse! {}
     if mouse.right || gamepad.button2 || gamepad.right then
         plants = startingPlants! {}
-        Ok (initTitleScreen state.frameCount plants)
+        initTitleScreen state.frameCount plants
     else
-        Ok (GameOver state)
+        GameOver state
 
 # ===== Player ============================================
 

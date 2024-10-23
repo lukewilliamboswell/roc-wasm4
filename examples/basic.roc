@@ -4,10 +4,10 @@ import w4.W4
 
 Model : {}
 
-main : W4.Program Model []
+main : W4.Program Model
 main = { init!, update! }
 
-init! : {} => Result Model []
+init! : {} => Model
 init! = \{} ->
     savedData = W4.loadFromDisk! {}
 
@@ -36,9 +36,7 @@ init! = \{} ->
         decayTime: 30,
     }
 
-    Ok {}
-
-update! : Model => Result Model []
+update! : Model => Model
 update! = \model ->
 
     # Get inputs
@@ -67,7 +65,7 @@ update! = \model ->
     W4.oval! { x: 70, y: 120, width: 20, height: 50 }
 
     # Return the model for next frame
-    Ok model
+    model
 
 # Set the color palette
 white = Color1

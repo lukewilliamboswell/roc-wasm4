@@ -13,10 +13,10 @@ Model : {
     gameStarted : Bool,
 }
 
-main : W4.Program Model []
+main : W4.Program Model
 main = { init!, update! }
 
-init! : {} => Result Model []
+init! : {} => Model
 init! = \{} ->
     setColorPalette! {}
 
@@ -27,7 +27,7 @@ init! = \{} ->
         height: 8,
     }
 
-    Ok {
+    {
         frameCount: 0,
         snake: startingSnake,
         fruit: { x: 0, y: 0 },
@@ -35,7 +35,7 @@ init! = \{} ->
         gameStarted: Bool.false,
     }
 
-update! : Model => Result Model []
+update! : Model => Model
 update! = \prev ->
     # Update frame count
     model = { prev & frameCount: prev.frameCount + 1 }
@@ -47,7 +47,7 @@ update! = \prev ->
     else
         runGame! model
 
-runTitleScreen! : Model => Result Model []
+runTitleScreen! : Model => Model
 runTitleScreen! = \model ->
     W4.text! "Press X to start!" { x: 15, y: 72 }
 
@@ -61,18 +61,18 @@ runTitleScreen! = \model ->
         # Generate the starting fruit.
         fruit = getRandomFruit! startingSnake
 
-        Ok { model & gameStarted: Bool.true, fruit }
+        { model & gameStarted: Bool.true, fruit }
     else
-        Ok model
+        model
 
-runEndScreen! : Model => Result Model []
+runEndScreen! : Model => Model
 runEndScreen! = \model ->
     drawGame! model
     W4.setTextColors! { fg: blue, bg: white }
     W4.text! "Game Over!" { x: 40, y: 72 }
-    Ok model
+    model
 
-runGame! : Model => Result Model []
+runGame! : Model => Model
 runGame! = \model ->
 
     # Get gamepad
@@ -94,7 +94,7 @@ runGame! = \model ->
     drawGame! next
 
     # Return model for next frame
-    Ok next
+    next
 
 drawGame! : Model => {}
 drawGame! = \model ->

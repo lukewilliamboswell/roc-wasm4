@@ -1,5 +1,5 @@
 platform "wasm-4"
-    requires { Model } { main : Program Model _ }
+    requires { Model } { main : Program Model }
     exposes [
         Task,
         W4,
@@ -14,19 +14,11 @@ import W4 exposing [Program]
 init! : {} => Box Model
 init! = \{} ->
     main.init! {}
-    |> \result ->
-        when result is
-            Ok m -> Box.box m
-            Err err ->
-                crash (Inspect.toStr err)
+    |> Box.box
 
 update! : Box Model => Box Model
 update! = \boxedModel ->
     boxedModel
     |> Box.unbox
     |> main.update!
-    |> \result ->
-        when result is
-            Ok m -> Box.box m
-            Err err ->
-                crash (Inspect.toStr err)
+    |> Box.box

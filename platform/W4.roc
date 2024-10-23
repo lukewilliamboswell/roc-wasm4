@@ -47,10 +47,10 @@ module [
 
 import Effect
 
-Program state err : {
-    init! : {} => Result state []err,
-    update! : state => Result state []err,
-} where err implements Inspect
+Program state : {
+    init! : {} => state,
+    update! : state => state,
+}
 
 ## The [Palette] consists of four colors. There is also `None` which is used to
 ## represent a transparent or no change color. Each pixel on the screen will be

@@ -26,10 +26,10 @@ startingValues = [
     ("  PAN", 0, 2),
 ]
 
-main : W4.Program Model []
+main : W4.Program Model
 main = { init!, update! }
 
-init! : {} => Result Model []
+init! : {} => Model
 init! = \{} ->
     arrowSprite = Sprite.new {
         data: [
@@ -47,7 +47,7 @@ init! = \{} ->
         height: 8,
     }
 
-    Ok {
+    {
         arrowSprite,
         arrowIdx: 0,
         lastGamepadState: {
@@ -61,7 +61,7 @@ init! = \{} ->
         values: startingValues,
     }
 
-update! : Model => Result Model []
+update! : Model => Model
 update! = \model ->
     # These type annotations are required. Otherwise roc fails to compile.
     x : I32
@@ -123,7 +123,7 @@ update! = \model ->
     else
         {}
 
-    Ok { model & arrowIdx, values, lastGamepadState: gamepad }
+    { model & arrowIdx, values, lastGamepadState: gamepad }
 
 drawControls! = \values, x, y, spacing, i ->
     when values is
