@@ -1,11 +1,13 @@
 zig-out/
 zig-cache
+.zig-cache/
 platform/src/builtins
 
 examples/*.ll
 platform/*.bc
 
 *.o
+*.wasm
 *.dylib
 .png
 *.a
@@ -19,6 +21,7 @@ examples/*.wasm
 .vscode/
 
 *.tar.br
+*.tar.zst
 
 *.png
 
@@ -26,5 +29,6 @@ examples/*.wasm
 .direnv
 
 generated-docs/
+_old_platform/
 
 format.sh

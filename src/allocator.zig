@@ -8,7 +8,7 @@ const builtin = @import("builtin");
 
 const config = @import("config");
 
-const w4 = @import("vendored/wasm4.zig");
+const w4 = @import("wasm4.zig");
 
 const ALIGN = @alignOf(u128);
 comptime {
@@ -45,6 +45,10 @@ const BlockBody = packed union {
         prev: u15,
     },
 };
+
+fn blockDataPtr(c: u15) *anyopaque {
+    return @ptrFromInt(@intFromPtr(&BLOCKS[c]) + @offsetOf(Block, "body"));
+}
 
 pub fn init() void {
     @memset(MEM[0..], 0);
@@ -157,7 +161,7 @@ pub fn malloc(size: usize) !?*anyopaque {
     }
 
     std.debug.assert(BLOCKS[current_free].tag == Tag.alloc);
-    return @ptrCast(&BLOCKS[current_free].body.data);
+    return blockDataPtr(current_free);
 }
 
 test "max small mallocs" {
@@ -367,7 +371,7 @@ pub fn realloc(ptr: ?*anyopaque, size: usize) !?*anyopaque {
 
     var block_size = BLOCKS[c].next_block - c;
 
-    var current_size = (@as(usize, @intCast(block_size)) * @sizeOf(Block)) - (@sizeOf(Block) - @sizeOf(BlockBody));
+    const current_size = (@as(usize, @intCast(block_size)) * @sizeOf(Block)) - (@sizeOf(Block) - @sizeOf(BlockBody));
 
     const next_block_size = if (BLOCKS[BLOCKS[c].next_block].tag == Tag.freed)
         BLOCKS[BLOCKS[c].next_block].next_block - BLOCKS[c].next_block
@@ -433,8 +437,8 @@ pub fn realloc(ptr: ?*anyopaque, size: usize) !?*anyopaque {
         disconnect_from_free_list(BLOCKS[c].prev_block);
         c = assimilate_down(c, Tag.alloc);
 
-        out_ptr = @ptrCast(&BLOCKS[c].body.data);
-        std.mem.copyForwards(u8, @as([*]u8, @alignCast(@ptrCast(out_ptr)))[0..current_size], @as([*]u8, @alignCast(@ptrCast(ptr)))[0..current_size]);
+        out_ptr = blockDataPtr(c);
+        std.mem.copyForwards(u8, @as([*]u8, @ptrCast(@alignCast(out_ptr)))[0..current_size], @as([*]u8, @ptrCast(@alignCast(ptr)))[0..current_size]);
 
         block_size += prev_block_size;
     } else if (prev_block_size + block_size + next_block_size >= blocks) {
@@ -446,8 +450,8 @@ pub fn realloc(ptr: ?*anyopaque, size: usize) !?*anyopaque {
         disconnect_from_free_list(BLOCKS[c].prev_block);
         c = assimilate_down(c, Tag.alloc);
 
-        out_ptr = @ptrCast(&BLOCKS[c].body.data);
-        std.mem.copyForwards(u8, @as([*]u8, @alignCast(@ptrCast(out_ptr)))[0..current_size], @as([*]u8, @alignCast(@ptrCast(ptr)))[0..current_size]);
+        out_ptr = blockDataPtr(c);
+        std.mem.copyForwards(u8, @as([*]u8, @ptrCast(@alignCast(out_ptr)))[0..current_size], @as([*]u8, @ptrCast(@alignCast(ptr)))[0..current_size]);
 
         block_size += prev_block_size + next_block_size;
     } else {
@@ -456,7 +460,7 @@ pub fn realloc(ptr: ?*anyopaque, size: usize) !?*anyopaque {
             w4.tracef("realloc to totally new block - %d", @as(u32, @intCast(blocks)));
         }
         out_ptr = try malloc(size);
-        @memcpy(@as([*]u8, @alignCast(@ptrCast(out_ptr)))[0..current_size], @as([*]u8, @alignCast(@ptrCast(ptr)))[0..current_size]);
+        @memcpy(@as([*]u8, @ptrCast(@alignCast(out_ptr)))[0..current_size], @as([*]u8, @ptrCast(@alignCast(ptr)))[0..current_size]);
 
         try free(ptr);
         block_size = blocks;
@@ -468,7 +472,7 @@ pub fn realloc(ptr: ?*anyopaque, size: usize) !?*anyopaque {
             w4.tracef("split and free %d blocks from %d", @as(u32, @intCast(blocks)), @as(u32, @intCast(block_size)));
         }
         split_block(c, blocks, Tag.alloc);
-        try free(@ptrCast(&BLOCKS[c + blocks].body.data));
+        try free(blockDataPtr(c + blocks));
     }
 
     return out_ptr;
@@ -548,7 +552,7 @@ test "realloc case 4 - current + prev have enough space" {
 
     var i: u8 = 0;
     while (i < @sizeOf(BlockBody)) : (i += 1) {
-        @as([*]u8, @alignCast(@ptrCast(ptr1)))[i] = i;
+        @as([*]u8, @ptrCast(@alignCast(ptr1)))[i] = i;
     }
 
     try free(ptr);
@@ -558,7 +562,7 @@ test "realloc case 4 - current + prev have enough space" {
     try std.testing.expectEqual(ptr, ptr3);
     i = 0;
     while (i < @sizeOf(BlockBody)) : (i += 1) {
-        try std.testing.expectEqual(@as([*]u8, @alignCast(@ptrCast(ptr3)))[i], i);
+        try std.testing.expectEqual(@as([*]u8, @ptrCast(@alignCast(ptr3)))[i], i);
     }
 }
 
@@ -573,7 +577,7 @@ test "realloc case 5 - current + prev + next have enough space" {
 
     var i: u8 = 0;
     while (i < @sizeOf(BlockBody)) : (i += 1) {
-        @as([*]u8, @alignCast(@ptrCast(ptr1)))[i] = i;
+        @as([*]u8, @ptrCast(@alignCast(ptr1)))[i] = i;
     }
 
     try free(ptr);
@@ -584,7 +588,7 @@ test "realloc case 5 - current + prev + next have enough space" {
     try std.testing.expectEqual(ptr, ptr4);
     i = 0;
     while (i < @sizeOf(BlockBody)) : (i += 1) {
-        try std.testing.expectEqual(@as([*]u8, @alignCast(@ptrCast(ptr4)))[i], i);
+        try std.testing.expectEqual(@as([*]u8, @ptrCast(@alignCast(ptr4)))[i], i);
     }
 }
 
@@ -598,7 +602,7 @@ test "realloc case 5 - total move required" {
 
     var i: u8 = 0;
     while (i < @sizeOf(BlockBody)) : (i += 1) {
-        @as([*]u8, @alignCast(@ptrCast(ptr)))[i] = i;
+        @as([*]u8, @ptrCast(@alignCast(ptr)))[i] = i;
     }
 
     try free(ptr1);
@@ -609,7 +613,7 @@ test "realloc case 5 - total move required" {
 
     i = 0;
     while (i < @sizeOf(BlockBody)) : (i += 1) {
-        try std.testing.expectEqual(@as([*]u8, @alignCast(@ptrCast(ptr3)))[i], i);
+        try std.testing.expectEqual(@as([*]u8, @ptrCast(@alignCast(ptr3)))[i], i);
     }
 
     // There should be no space before ptr2 remaining.

@@ -1,35 +1,27 @@
-platform "wasm-4"
-    requires { Model } { main : _ }
-    exposes [
-        Task,
-        W4,
-        Sprite,
-    ]
+platform ""
+    requires { [Model : model] for main : { init! : () => model, update! : model => model } }
+    exposes [W4, Sprite, Host]
     packages {}
-    imports [Task.{ Task }]
-    provides [mainForHost]
+    provides { init_for_host! : "init_for_host", update_for_host! : "update_for_host" }
+    targets: {
+        files: "targets/",
+        static_lib: {
+            wasm32: ["libhost.a", app],
+        }
+    }
 
-# TODO add to annotation for main from app when no longer UNUSED DEFINITION
-# Program : {
-#     init : Model,
-#     update : Model -> Task Model [],
-# }
+import W4
+import Sprite
+import Host
 
-ProgramForHost : {
-    init : Task (Box Model) [],
-    update : Box Model -> Task (Box Model) [],
+init_for_host! : () => Box(Model)
+init_for_host! = || {
+    init_fn! = main.init!
+    Box.box(init_fn!())
 }
 
-mainForHost : ProgramForHost
-mainForHost = { init, update }
-
-init : Task (Box Model) []
-init = main.init |> Task.map Box.box
-
-update : Box Model -> Task (Box Model) []
-update = \boxedModel ->
-    model <- main.update (Box.unbox boxedModel) |> Task.await
-
-    model
-    |> Box.box
-    |> Task.ok
+update_for_host! : Box(Model) => Box(Model)
+update_for_host! = |boxed| {
+    update_fn! = main.update!
+    Box.box(update_fn!(Box.unbox(boxed)))
+}

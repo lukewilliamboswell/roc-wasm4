@@ -1,238 +1,246 @@
-app [main, Model] {
+app [main] {
     w4: platform "../platform/main.roc",
 }
 
-import w4.Task exposing [Task]
-import w4.W4 exposing [Gamepad]
-import w4.Sprite exposing [Sprite]
-
-Program : {
-    init : Task Model [],
-    update : Model -> Task Model [],
-}
+import w4.W4
+import w4.Sprite
 
 Model : {
-    frameCount : U64,
+    frame_count : U64,
     snake : Snake,
     fruit : Fruit,
-    fruitSprite : Sprite,
-    gameStarted : Bool,
+    fruit_sprite : Sprite,
+    game_started : Bool,
 }
 
-main : Program
-main = { init, update }
+Point : { x : I32, y : I32 }
+Dir : [Up, Down, Left, Right]
+Fruit : Point
+GamepadState : {
+    button1 : Bool,
+    button2 : Bool,
+    left : Bool,
+    right : Bool,
+    up : Bool,
+    down : Bool,
+}
 
-init : Task Model []
-init =
-    setColorPalette!
+Snake : {
+    body : List(Point),
+    head : Point,
+    direction : Dir,
+}
 
-    fruitSprite = Sprite.new {
-        data: [0x00, 0xa0, 0x02, 0x00, 0x0e, 0xf0, 0x36, 0x5c, 0xd6, 0x57, 0xd5, 0x57, 0x35, 0x5c, 0x0f, 0xf0],
-        bpp: BPP2,
-        width: 8,
-        height: 8,
+main = {
+    init!: || {
+        set_color_palette!()
+
+        fruit_sprite = Sprite.new({
+            data: [0x00, 0xa0, 0x02, 0x00, 0x0e, 0xf0, 0x36, 0x5c, 0xd6, 0x57, 0xd5, 0x57, 0x35, 0x5c, 0x0f, 0xf0],
+            bpp: BPP2,
+            width: 8,
+            height: 8,
+        })
+
+        {
+            frame_count: 0,
+            snake: starting_snake,
+            fruit: { x: 0, y: 0 },
+            fruit_sprite,
+            game_started: Bool.False,
+        }
+    },
+    update!: |prev| update!(prev),
+}
+
+update! : Model => Model
+update! = |prev| {
+    model = { ..prev, frame_count: prev.frame_count + 1 }
+
+    if !model.game_started {
+        run_title_screen!(model)
+    } else if snake_is_dead(model.snake) {
+        run_end_screen!(model)
+    } else {
+        run_game!(model)
+    }
+}
+
+run_title_screen! : Model => Model
+run_title_screen! = |model| {
+    W4.text!("Press X to start!", { x: 15, y: 72 })
+
+    gamepad = W4.get_gamepad!(Player1)
+
+    if gamepad.button1 {
+        W4.seed_rand!(model.frame_count)
+        fruit = get_random_fruit!(starting_snake)
+
+        { ..model, game_started: Bool.True, fruit }
+    } else {
+        model
+    }
+}
+
+run_end_screen! : Model => Model
+run_end_screen! = |model| {
+    draw_game!(model)
+    W4.set_text_colors!({ fg: blue, bg: white })
+    W4.text!("Game Over!", { x: 40, y: 72 })
+    model
+}
+
+run_game! : Model => Model
+run_game! = |model| {
+    gamepad = W4.get_gamepad!(Player1)
+    (snake, ate) = update_snake(model.snake, gamepad, model.frame_count, model.fruit)
+
+    fruit = match ate {
+        AteFruit => get_random_fruit!(snake)
+        DidNotEat => model.fruit
     }
 
-    Task.ok {
-        frameCount: 0,
-        snake: startingSnake,
-        fruit: { x: 0, y: 0 },
-        fruitSprite,
-        gameStarted: Bool.false,
-    }
+    next = { ..model, snake, fruit }
+    draw_game!(next)
 
-update : Model -> Task Model []
-update = \prev ->
-    # Update frame count
-    model = { prev & frameCount: prev.frameCount + 1 }
+    next
+}
 
-    if !model.gameStarted then
-        runTitleScreen model
-    else if snakeIsDead model.snake then
-        runEndScreen model
-    else
-        runGame model
-
-runTitleScreen : Model -> Task Model []
-runTitleScreen = \model ->
-    W4.text! "Press X to start!" { x: 15, y: 72 }
-
-    gamepad = W4.getGamepad! Player1
-
-    if gamepad.button1 then
-        # Seed the randomness with number of frames since the start of the game.
-        # This makes the game feel like it is truely randomly seeded cause players won't always start on the same frame.
-        W4.seedRand! model.frameCount
-
-        # Generate the starting fruit.
-        fruit = getRandomFruit! startingSnake
-
-        Task.ok { model & gameStarted: Bool.true, fruit }
-    else
-        Task.ok model
-
-runEndScreen : Model -> Task Model []
-runEndScreen = \model ->
-    drawGame! model
-    W4.setTextColors! { fg: blue, bg: white }
-    W4.text! "Game Over!" { x: 40, y: 72 }
-    Task.ok model
-
-runGame : Model -> Task Model []
-runGame = \model ->
-
-    # Get gamepad
-    gamepad = W4.getGamepad! Player1
-
-    # Update snake
-    (snake, ate) =
-        updateSnake model.snake gamepad model.frameCount model.fruit
-
-    fruitTask =
-        when ate is
-            AteFruit ->
-                getRandomFruit snake
-
-            DidNotEat ->
-                Task.ok model.fruit
-
-    fruit = fruitTask!
-
-    next = { model & snake, fruit }
-    drawGame! next
-
-    # Return model for next frame
-    Task.ok next
-
-drawGame : Model -> Task {} []
-drawGame = \model ->
-    # Draw fruit
-    W4.setDrawColors! {
+draw_game! : Model => {}
+draw_game! = |model| {
+    W4.set_draw_colors!({
         primary: None,
         secondary: orange,
         tertiary: green,
         quaternary: blue,
-    }
+    })
 
-    Sprite.blit! model.fruitSprite { x: model.fruit.x * 8, y: model.fruit.y * 8 }
-    # Draw snake body
-    W4.setShapeColors! { border: blue, fill: green }
-    drawSnakeBody! model.snake
-    # Draw snake head
-    W4.setShapeColors! { border: blue, fill: blue }
-    drawSnakeHead model.snake
+    Sprite.blit!(model.fruit_sprite, {
+        x: model.fruit.x * 8,
+        y: model.fruit.y * 8,
+        flags: [],
+    })
 
-# Set the color pallet
+    W4.set_shape_colors!({ border: blue, fill: green })
+    draw_snake_body!(model.snake)
+
+    W4.set_shape_colors!({ border: blue, fill: blue })
+    draw_snake_head!(model.snake)
+}
+
 white = Color1
 orange = Color2
 green = Color3
 blue = Color4
 
-setColorPalette : Task {} []
-setColorPalette =
-    W4.setPalette {
+set_color_palette! : () => {}
+set_color_palette! = || {
+    W4.set_palette!({
         color1: 0xfbf7f3,
         color2: 0xe5b083,
         color3: 0x426e5d,
         color4: 0x20283d,
-    }
-
-Point : { x : I32, y : I32 }
-Dir : [Up, Down, Left, Right]
-
-Fruit : Point
-
-Snake : {
-    body : List Point,
-    head : Point,
-    direction : Dir,
+    })
 }
 
-startingSnake : Snake
-startingSnake = {
+starting_snake : Snake
+starting_snake = {
     body: [{ x: 1, y: 0 }, { x: 0, y: 0 }],
     head: { x: 2, y: 0 },
     direction: Right,
 }
 
-drawSnakeBody : Snake -> Task {} []
-drawSnakeBody = \snake ->
-    List.walk snake.body (Task.ok {}) \task, part ->
-        task!
+draw_snake_body! : Snake => {}
+draw_snake_body! = |snake| {
+    for part in snake.body {
+        W4.rect!({ x: part.x * 8, y: part.y * 8, width: 8, height: 8 })
+    }
+}
 
-        W4.rect { x: (part.x * 8), y: (part.y * 8), width: 8, height: 8 }
+draw_snake_head! : Snake => {}
+draw_snake_head! = |snake| {
+    W4.rect!({ x: snake.head.x * 8, y: snake.head.y * 8, width: 8, height: 8 })
+}
 
-drawSnakeHead : Snake -> Task {} []
-drawSnakeHead = \snake ->
-    W4.rect { x: (snake.head.x * 8), y: (snake.head.y * 8), width: 8, height: 8 }
-
-updateSnake : Snake, Gamepad, U64, Fruit -> (Snake, [AteFruit, DidNotEat])
-updateSnake = \s0, { left, right, up, down }, frameCount, fruit ->
-    # Always record direction changes
+update_snake : Snake, GamepadState, U64, Fruit -> (Snake, [AteFruit, DidNotEat])
+update_snake = |s0, { left, right, up, down }, frame_count, fruit| {
     s1 =
-        if left && !right then
-            { s0 & direction: Left }
-        else if right && !left then
-            { s0 & direction: Right }
-        else if up && !down then
-            { s0 & direction: Up }
-        else if down && !up then
-            { s0 & direction: Down }
-        else
+        if left and !right {
+            { ..s0, direction: Left }
+        } else if right and !left {
+            { ..s0, direction: Right }
+        } else if up and !down {
+            { ..s0, direction: Up }
+        } else if down and !up {
+            { ..s0, direction: Down }
+        } else {
             s0
+        }
 
-    # Only move every 0.25 seconds (15 of 60 frames)
     s2 =
-        if (frameCount % 15) == 0 then
-            moveSnake s1
-        else
+        if frame_count % 15 == 0 {
+            move_snake(s1)
+        } else {
             s1
+        }
 
-    if s2.head == fruit then
-        (growSnake s2, AteFruit)
-    else
+    if s2.head == fruit {
+        (grow_snake(s2), AteFruit)
+    } else {
         (s2, DidNotEat)
+    }
+}
 
-moveSnake : Snake -> Snake
-moveSnake = \prev ->
+move_snake : Snake -> Snake
+move_snake = |prev| {
+    head = match prev.direction {
+        Up => { x: prev.head.x, y: (prev.head.y + 20 - 1) % 20 }
+        Down => { x: prev.head.x, y: (prev.head.y + 1) % 20 }
+        Left => { x: (prev.head.x + 20 - 1) % 20, y: prev.head.y }
+        Right => { x: (prev.head.x + 1) % 20, y: prev.head.y }
+    }
 
-    head =
-        when prev.direction is
-            Up -> { x: prev.head.x, y: (prev.head.y + 20 - 1) % 20 }
-            Down -> { x: prev.head.x, y: (prev.head.y + 1) % 20 }
-            Left -> { x: (prev.head.x + 20 - 1) % 20, y: prev.head.y }
-            Right -> { x: (prev.head.x + 1) % 20, y: prev.head.y }
+    var $body = []
+    var $last = prev.head
 
-    walkBody : Point, List Point, List Point -> List Point
-    walkBody = \last, remaining, newBody ->
-        when remaining is
-            [] -> newBody
-            [curr, ..] ->
-                walkBody curr (List.dropFirst remaining 1) (List.append newBody last)
+    for curr in prev.body {
+        $body = List.append($body, $last)
+        $last = curr
+    }
 
-    body = walkBody prev.head prev.body []
+    { ..prev, head, body: $body }
+}
 
-    { prev & head, body }
+grow_snake : Snake -> Snake
+grow_snake = |{ head, body, direction }| {
+    tail = match List.last(body) {
+        Ok(point) => point
+        Err(_) => head
+    }
 
-growSnake : Snake -> Snake
-growSnake = \{ head, body, direction } ->
-    tail = List.last body |> Result.withDefault head
-    { head, body: List.append body tail, direction }
+    { head, body: List.append(body, tail), direction }
+}
 
-snakeIsDead : Snake -> Bool
-snakeIsDead = \{ head, body } ->
-    List.contains body head
+snake_is_dead : Snake -> Bool
+snake_is_dead = |{ head, body }| List.contains(body, head)
 
-getRandomFruit : Snake -> Task Fruit []
-getRandomFruit = \{ head, body } ->
-    # Will the perf of this be bad with a large snake?
-    # The better alternative may be to have a free square list and randomly select one.
-    Task.loop {} \{} ->
-        x = W4.randBetween! { start: 0, before: 20 }
-        y = W4.randBetween! { start: 0, before: 20 }
+get_random_fruit! : Snake => Fruit
+get_random_fruit! = |{ head, body }| {
+    var $fruit = head
+    var $done = Bool.False
 
-        fruit = { x, y }
-        if fruit == head || List.contains body fruit then
-            Step {} |> Task.ok
-        else
-            Done fruit |> Task.ok
+    while !$done {
+        x = W4.rand_between!({ start: 0, before: 20 })
+        y = W4.rand_between!({ start: 0, before: 20 })
+        candidate = { x, y }
+
+        if candidate == head or List.contains(body, candidate) {
+            {}
+        } else {
+            $fruit = candidate
+            $done = Bool.True
+        }
+    }
+
+    $fruit
+}
