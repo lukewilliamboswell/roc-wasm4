@@ -34,6 +34,17 @@ The `build.zig` script builds `platform/targets/wasm32/libhost.a`. Roc then link
 
 The complete `roc build` experience for WASM-4 still needs upstream Roc support for platform-configured import memory, exports, and GC linker settings. That work is tracked in [roc-lang/roc#9538](https://github.com/roc-lang/roc/issues/9538).
 
+### Manual Link Workaround
+
+While Roc's own wasm linker support is being finished, use the manual linker script for carts that can be compiled to a Roc wasm32 object:
+
+```shell
+scripts/link_wasm4.sh examples/basic.roc basic.wasm
+w4 run basic.wasm
+```
+
+The script builds `platform/targets/wasm32/libhost.a`, asks Roc for a `--no-link` wasm32 object, then links with `zig wasm-ld` using WASM-4-compatible memory imports, `start`/`update` exports, and a data base above the WASM-4 framebuffer.
+
 ### Snake Demo
 
 - Unix/Macos `zig build && roc build examples/snake.roc --target=wasm32 && w4 run snake.wasm`

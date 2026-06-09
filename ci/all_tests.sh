@@ -39,7 +39,7 @@ done
 #
 # Full roc build support for this WASM-4 platform is tracked upstream in:
 # https://github.com/roc-lang/roc/issues/9538
-"$ROC" build examples/basic.roc --target=wasm32 --output="$BUILD_DIR/basic.wasm"
+ROC="$ROC" ROC_WASM4_SKIP_ZIG_BUILD=1 ./scripts/link_wasm4.sh examples/basic.roc "$BUILD_DIR/basic.wasm"
 
 # test building docs website
 "$ROC" docs platform/main.roc
