@@ -5,6 +5,10 @@ INITIAL_MEMORY=65536
 MAX_MEMORY=65536
 STACK_SIZE=14752
 
+# Largest 16-byte-aligned host heap observed to fit examples/rocci-bird.roc in
+# one fixed WASM-4 page while preserving the old 14752-byte stack setting.
+HOST_MEM_SIZE="${ROC_WASM4_MEM_SIZE:-39872}"
+
 # WASM-4 owns low memory through the framebuffer:
 #   registers:   0x0000..0x009f
 #   framebuffer: 0x00a0..0x199f
@@ -21,8 +25,11 @@ manually linking it with platform/targets/wasm32/libhost.a.
 Environment:
   ROC                    Roc compiler to use (default: roc)
   ZIG                    Zig compiler to use (default: zig)
+  ROC_WASM4_MEM_SIZE     Host allocator heap size in bytes (default: 39872)
   ROC_WASM4_SKIP_ZIG_BUILD=1
                          Reuse the existing libhost.a instead of running zig build
+                         The existing library must have been built with a
+                         memory size that still fits the final cart.
   ROC_WASM4_KEEP_TMP=1   Keep the temporary Roc object directory
 EOF
 }
@@ -85,7 +92,7 @@ vline
 EOF
 
 if [[ "${ROC_WASM4_SKIP_ZIG_BUILD:-0}" != "1" ]]; then
-    (cd "$root_dir" && "$zig_bin" build)
+    (cd "$root_dir" && "$zig_bin" build -Dmem-size="$HOST_MEM_SIZE")
 fi
 [[ -f "$host_lib" ]] || die "host library not found after zig build: $host_lib"
 

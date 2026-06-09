@@ -44,6 +44,7 @@ w4 run basic.wasm
 ```
 
 The script builds `platform/targets/wasm32/libhost.a`, asks Roc for a `--no-link` wasm32 object, then links with `zig wasm-ld` using WASM-4-compatible memory imports, `start`/`update` exports, and a data base above the WASM-4 framebuffer.
+It builds the host with a `39872` byte allocator heap by default, which preserves the old `14752` byte stack while leaving enough static-data space for the larger examples in WASM-4's fixed 64 KiB memory. Override this with `ROC_WASM4_MEM_SIZE=<bytes>` if a cart needs a different heap/static-data tradeoff.
 
 ### Snake Demo
 
