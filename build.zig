@@ -1,8 +1,8 @@
 const std = @import("std");
 
-/// The roc-wasm4 platform only ships a single static-lib target: wasm32-freestanding.
-/// The Roc compiler bundles `libhost.a` with the platform and links it against the
-/// generated app object to produce the final WASM-4 cart (a wasm32 module).
+/// The roc-wasm4 platform ships a single wasm32-freestanding host object.
+/// The Roc compiler links `host.wasm` with the generated app object to produce
+/// the final WASM-4 cart (a wasm32 module).
 ///
 /// The cart-level wasm settings (import_memory, initial_memory, max_memory, stack_size,
 /// rdynamic exports, entry = .disabled, etc.) are properties of the final wasm module
@@ -44,14 +44,18 @@ pub fn build(b: *std.Build) void {
     // ---------------------------------------------------------------------
     // Cleanup step.
     // ---------------------------------------------------------------------
-    const cleanup_step = b.step("clean", "Remove the generated host library file");
+    const cleanup_step = b.step("clean", "Remove generated host object files");
+    cleanup_step.dependOn(&CleanupStep.create(
+        b,
+        b.path("platform/targets/wasm32/host.wasm"),
+    ).step);
     cleanup_step.dependOn(&CleanupStep.create(
         b,
         b.path("platform/targets/wasm32/libhost.a"),
     ).step);
 
     // ---------------------------------------------------------------------
-    // Build the wasm32-freestanding static host library.
+    // Build the wasm32-freestanding relocatable host object.
     // ---------------------------------------------------------------------
     const wasm_target = b.resolveTargetQuery(.{
         .cpu_arch = .wasm32,
@@ -59,31 +63,45 @@ pub fn build(b: *std.Build) void {
         .abi = .none,
     });
 
-    const host_lib = b.addLibrary(.{
+    const host_obj = b.addObject(.{
         .name = "host",
-        .linkage = .static,
         .root_module = b.createModule(.{
             .root_source_file = b.path("src/host.zig"),
             .target = wasm_target,
             .optimize = optimize,
             .strip = optimize != .Debug,
+            .pic = true,
         }),
     });
-    // Resolve runtime symbols (e.g. compiler-rt builtins, memcpy, etc.) inside libhost.a
-    // so the Roc-driven link step doesn't have to find them elsewhere.
-    host_lib.bundle_compiler_rt = true;
-
     // Expose build options as the `config` module to the host source.
-    host_lib.root_module.addOptions("config", config);
+    host_obj.root_module.addOptions("config", config);
 
     // ---------------------------------------------------------------------
-    // Copy the emitted libhost.a to platform/targets/wasm32/libhost.a so that
+    // Tests.
+    // ---------------------------------------------------------------------
+    const native_target = b.standardTargetOptions(.{});
+    const allocator_tests = b.addTest(.{
+        .name = "allocator_test",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/allocator.zig"),
+            .target = native_target,
+            .optimize = optimize,
+        }),
+    });
+    allocator_tests.root_module.addOptions("config", config);
+
+    const run_allocator_tests = b.addRunArtifact(allocator_tests);
+    const test_step = b.step("test", "Run Zig unit tests");
+    test_step.dependOn(&run_allocator_tests.step);
+
+    // ---------------------------------------------------------------------
+    // Copy the emitted host.wasm to platform/targets/wasm32/host.wasm so that
     // `roc bundle` (via bundle.sh) can pick it up.
     // ---------------------------------------------------------------------
     const copy_step = b.addUpdateSourceFiles();
     copy_step.addCopyFileToSource(
-        host_lib.getEmittedBin(),
-        "platform/targets/wasm32/libhost.a",
+        host_obj.getEmittedBin(),
+        "platform/targets/wasm32/host.wasm",
     );
 
     const install_step = b.getInstallStep();

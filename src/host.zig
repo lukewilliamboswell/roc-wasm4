@@ -158,10 +158,15 @@ var boxed_model_initialized: bool = false;
 // PRNG (used by host_rand / host_rand_range_less_than / host_seed_rand)
 // =============================================================================
 
-var prng: std.Random.DefaultPrng = std.Random.DefaultPrng.init(0);
+var prng_state: u32 = 0x6D2B79F5;
 
-fn rng() std.Random {
-    return prng.random();
+fn nextRandomU32() u32 {
+    var x = prng_state;
+    x ^= x << 13;
+    x ^= x >> 17;
+    x ^= x << 5;
+    prng_state = if (x == 0) 0x6D2B79F5 else x;
+    return prng_state;
 }
 
 // =============================================================================
@@ -279,7 +284,7 @@ fn hostOval(_: *abi.RocOps, _: *anyopaque, args: *const abi.HostOvalArgs) callco
 }
 
 fn hostRand(_: *abi.RocOps, ret: *i32, _: *anyopaque) callconv(.c) void {
-    ret.* = rng().int(i32);
+    ret.* = @bitCast(nextRandomU32());
 }
 
 fn hostRandRangeLessThan(_: *abi.RocOps, ret: *i32, args: *const abi.HostRand_range_less_thanArgs) callconv(.c) void {
@@ -288,7 +293,11 @@ fn hostRandRangeLessThan(_: *abi.RocOps, ret: *i32, args: *const abi.HostRand_ra
         ret.* = args.arg0;
         return;
     }
-    ret.* = rng().intRangeLessThan(i32, args.arg0, args.arg1);
+    const min: i64 = args.arg0;
+    const max: i64 = args.arg1;
+    const span: u32 = @intCast(max - min);
+    const offset: i64 = nextRandomU32() % span;
+    ret.* = @intCast(min + offset);
 }
 
 fn hostRect(_: *abi.RocOps, _: *anyopaque, args: *const abi.HostRectArgs) callconv(.c) void {
@@ -296,7 +305,8 @@ fn hostRect(_: *abi.RocOps, _: *anyopaque, args: *const abi.HostRectArgs) callco
 }
 
 fn hostSeedRand(_: *abi.RocOps, _: *anyopaque, args: *const abi.HostSeed_randArgs) callconv(.c) void {
-    prng = std.Random.DefaultPrng.init(args.arg0);
+    const seed: u32 = @truncate(args.arg0);
+    prng_state = if (seed == 0) 0x6D2B79F5 else seed;
 }
 
 fn hostSetDrawColors(_: *abi.RocOps, _: *anyopaque, args: *const abi.HostSet_draw_colorsArgs) callconv(.c) void {

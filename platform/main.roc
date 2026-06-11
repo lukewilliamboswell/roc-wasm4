@@ -4,17 +4,16 @@ platform ""
     packages {}
     provides { init_for_host! : "init_for_host", update_for_host! : "update_for_host" }
     targets: {
-        files: "targets/",
-        static_lib: {
-            wasm32: {
-                files: ["libhost.a", app],
-                import_memory: True,
-                minimum_memory: 65536,
-                maximum_memory: 65536,
-                initial_stack_size: 14752,
-                global_base: 6592,
-            },
-        }
+        inputs: "targets/",
+        wasm32: {
+            inputs: ["host.wasm", app],
+            output: Shared,
+            import_memory: True,
+            minimum_memory: 65536,
+            maximum_memory: 65536,
+            initial_stack_size: 14752,
+            global_base: 6592,
+        },
     }
 
 import W4
