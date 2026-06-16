@@ -148,18 +148,18 @@ jobs:
         run: |
           set -euo pipefail
           for _ in {1..30}; do
-            if curl --fail --silent --head "http://localhost:8000/$BUNDLE_NAME" > /dev/null; then
+            if curl --fail --silent --head "http://127.0.0.1:8000/$BUNDLE_NAME" > /dev/null; then
               exit 0
             fi
             sleep 1
           done
 
-          curl --fail --verbose --head "http://localhost:8000/$BUNDLE_NAME"
+          curl --fail --verbose --head "http://127.0.0.1:8000/$BUNDLE_NAME"
 
       - name: Rewrite examples to use platform bundle
         shell: bash
         env:
-          BUNDLE_URL: http://localhost:8000/${{ needs.build_and_bundle.outputs.bundle_name }}
+          BUNDLE_URL: http://127.0.0.1:8000/${{ needs.build_and_bundle.outputs.bundle_name }}
         run: |
           set -euo pipefail
           python3 - <<'PY'
