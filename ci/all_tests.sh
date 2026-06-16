@@ -32,10 +32,6 @@ mkdir -p "$BUILD_DIR"
 mkdir -p "$ROC_CACHE_DIR"
 export ROC_CACHE_DIR
 
-# Roc's wasm linker path invokes `wasm-ld` directly. Zig ships it as
-# `zig wasm-ld`, so put our small wrapper on PATH for local runs and CI.
-export PATH="$PWD/scripts:$PATH"
-
 echo "Roc: $("$ROC_BIN" version)"
 echo "Zig: $(zig version)"
 

@@ -1,111 +1,121 @@
 # roc-wasm4
 
-Roc platform for the [wasm4](https://wasm4.org) game engine 🎮🕹️👾
+A Roc platform for building [WASM-4](https://wasm4.org) games.
 
-The intent for this platform is to have some fun, learn more about Roc and platform development, and contribute something for others to enjoy.
+roc-wasm4 gives Roc apps a high-level `W4` API for drawing, input, audio, disk persistence, netplay state, and sprites. Most apps should use a released roc-wasm4 platform bundle directly from GitHub Releases.
 
-### Setup
+## Requirements
 
-1. Clone this repository.
+- [Roc](https://www.roc-lang.org/install) new-compiler nightly, available as `roc`
+- [WASM-4 CLI](https://wasm4.org), available as `w4`
+- A roc-wasm4 `.tar.zst` platform bundle URL from the [GitHub Releases page](https://github.com/lukewilliamboswell/roc-wasm4/releases)
 
-2. Make sure you have the following in your `PATH` environment variable
-- [roc](https://www.roc-lang.org/install) new-compiler nightly,
-- [zig](https://ziglang.org/download/) version **0.16.0**
-- [w4](https://wasm4.org)
+## Quick Start
 
-### Run
+Create `app.roc` and point `platform` at a released `.tar.zst` bundle:
 
-Make the `zig wasm-ld` wrapper available and build the WASM-4 host object once:
+```roc
+app [main] {
+    w4: platform "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/<tag>/<bundle>.tar.zst",
+}
 
-```shell
-export PATH="$PWD/scripts:$PATH"
-zig build
+import w4.W4
+
+Model : {}
+
+main = {
+    init!: || {},
+    update!: |model| {
+        W4.text!("Hello from Roc!", { x: 8, y: 8 })
+        model
+    },
+}
 ```
 
-Then build a game cart with Roc and run it with WASM-4:
+Build the cart and run it with WASM-4:
 
 ```shell
-roc build examples/snake.roc --target=wasm32
+roc build app.roc
+w4 run app.wasm
+```
+
+Because roc-wasm4 only declares a `wasm32` target, `roc build app.roc` defaults to writing `app.wasm`.
+
+For the native WASM-4 runtime, use `w4 run-native app.wasm`. Native can be much slower than the web runtime, especially for non-optimized builds.
+
+## Platform API
+
+The platform exposes:
+
+- `w4.W4` for WASM-4 drawing, input, audio, disk, random, and utility APIs
+- `w4.Sprite` for sprite data and blitting helpers
+- `w4.Host` for low-level hosted effects, mostly intended for platform internals
+
+Platform API docs are hosted at [lukewilliamboswell.github.io/roc-wasm4/](https://lukewilliamboswell.github.io/roc-wasm4/).
+
+## Examples
+
+This repository includes several example apps:
+
+- `examples/basic.roc`: drawing, text, input, mouse, trace, and tone basics
+- `examples/snake.roc`: a small playable snake game
+- `examples/rocci-bird.roc`: a Rocci Bird demo by Brendan Hansknecht with art by Luke DeVault
+- `examples/sound.roc`: a tone parameter playground
+
+The checked-in examples use the local platform path so contributors can test source changes. To use one as a starting point outside this repository, replace:
+
+```roc
+w4: platform "../platform/main.roc"
+```
+
+with a released bundle URL:
+
+```roc
+w4: platform "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/<tag>/<bundle>.tar.zst"
+```
+
+Then build and run the app:
+
+```shell
+roc build snake.roc
 w4 run snake.wasm
 ```
 
-For the native WASM-4 runtime, use `w4 run-native snake.wasm`. Native can be much slower than web, especially for non-optimized builds.
-
-The `build.zig` script builds `platform/targets/wasm32/host.wasm`. Roc then links that host object with the app when you run `roc build <app>.roc --target=wasm32`.
-Re-run `zig build` when changing host code or host build options such as `-Dmem-size=<bytes>`.
-
-### Snake Demo
-
-- Unix/Macos `zig build && roc build examples/snake.roc --target=wasm32 && w4 run snake.wasm`
-- Windows `zig build && roc build .\examples\snake.roc --target=wasm32 && w4 run snake.wasm`
-
 ![snake demo](/examples/snake.gif)
 
-### Rocci-Bird Demo
-
-Thank you Brendan Hansknecht and Luke DeVault (art) for this demo.
-
-[Link to play online](https://bren077s.itch.io/rocci-bird)
-
-- Unix/Macos `zig build && roc build examples/rocci-bird.roc --target=wasm32 && w4 run rocci-bird.wasm`
-- Windows `zig build && roc build .\examples\rocci-bird.roc --target=wasm32 && w4 run rocci-bird.wasm`
+[Play Rocci Bird online](https://bren077s.itch.io/rocci-bird).
 
 ![rocci-bird demo](/examples/rocci-bird.gif)
 
-### Sound Demo
-
-- Unix/Macos `zig build && roc build examples/sound.roc --target=wasm32 && w4 run sound.wasm`
-- Windows `zig build && roc build .\examples\sound.roc --target=wasm32 && w4 run sound.wasm`
-
 ![sound demo](/examples/sound.gif)
 
-### Drum Roll
-
-Thank you Isaac Van Doren for this demo.
-
-[Link to source code](https://github.com/isaacvando/roc-drum-machine), and [play online](https://isaacvando.github.io/roc-drum-machine/)
+Drum Roll is a separate demo by Isaac Van Doren. [Source](https://github.com/isaacvando/roc-drum-machine) and [play online](https://isaacvando.github.io/roc-drum-machine/).
 
 ![drum roll](/examples/drum-roll.gif)
 
-### Documentation
+## Game Distribution
 
-📖 Platform docs hosted at [lukewilliamboswell.github.io/roc-wasm4/](https://lukewilliamboswell.github.io/roc-wasm4/)
-
-To generate locally use `roc docs platform/main.roc`, and then use a file server `simple-http-server generated-docs/`.
-
-### Hot Reloading
-
-Well it isn't perfect, hot reloading can be quite nice when developing a game. For this, I suggest using the [entr](https://github.com/eradman/entr) command line tool.
-
-In one terminal run the build command: `find . -name "*.roc" -o -name "*.zig" | entr -ccr sh -c 'zig build && roc build examples/snake.roc --target=wasm32'`.
-
-In another terminal run wasm4: `w4 run snake.wasm --hot`.
-
-If the hot reloading breaks (which it often does when changing the data layout or state), simply press `R` to reload the cart.
-
-### Distribution
-
-To release a game, first build the host with optimizations and then build the Roc app for size:
+For a smaller game cart, build the Roc app with size-oriented optimizations:
 
 ```shell
-zig build -Doptimize=ReleaseSmall
-roc build examples/snake.roc --target=wasm32 --opt=size
+roc build app.roc --opt=size
 ```
 
-Then bundle it [like any other wasm4 game](https://wasm4.org/docs/guides/distribution/) using the generated cartridge, for example `snake.wasm`.
-If your cartridge is too large, you can try lowering the dynamic memory space with `-Dmem-size=<size>`. The default is `40960` bytes.
+Bundle the generated cart with the WASM-4 CLI:
 
-For example, a web release can be built with:
 ```shell
-w4 bundle snake.wasm --title "My Game" --html my-game.html
+w4 bundle app.wasm --title "My Game" --html my-game.html
 ```
 
-For windows/mac/linux, a bundling command could look like:
+For native bundles:
+
 ```shell
-w4 bundle snake.wasm --title "My Game" \
+w4 bundle app.wasm --title "My Game" \
     --windows my-game-windows.exe \
     --mac my-game-mac \
     --linux my-game-linux
 ```
 
-To package this platform as a Roc archive, run `zig build && ./bundle.sh`. It writes a `.tar.zst` file in the repository root.
+## Contributing
+
+Source-build setup, local checks, docs generation, and release maintenance are covered in [CONTRIBUTING.md](CONTRIBUTING.md).
