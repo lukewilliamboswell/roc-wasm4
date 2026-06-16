@@ -21,6 +21,7 @@ Model : {
     values : List((Str, U32, U32)),
 }
 
+starting_values : List((Str, U32, U32))
 starting_values = [
     ("FREQ1", 440, 1000),
     ("FREQ2", 0, 1000),

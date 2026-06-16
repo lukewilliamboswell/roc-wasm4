@@ -2,7 +2,37 @@ platform ""
     requires { [Model : model] for main : { init! : () => model, update! : model => model } }
     exposes [W4, Sprite, Host]
     packages {}
-    provides { init_for_host! : "init_for_host", update_for_host! : "update_for_host" }
+    provides { "init_for_host": init_for_host!, "update_for_host": update_for_host! }
+    hosted {
+        "host_blit": Host.blit!,
+        "host_blit_sub": Host.blit_sub!,
+        "host_disk_read": Host.disk_read!,
+        "host_disk_write": Host.disk_write!,
+        "host_get_draw_colors": Host.get_draw_colors!,
+        "host_get_gamepad": Host.get_gamepad!,
+        "host_get_mouse_buttons": Host.get_mouse_buttons!,
+        "host_get_mouse_x": Host.get_mouse_x!,
+        "host_get_mouse_y": Host.get_mouse_y!,
+        "host_get_netplay": Host.get_netplay!,
+        "host_get_palette_color": Host.get_palette_color!,
+        "host_get_pixel": Host.get_pixel!,
+        "host_hline": Host.hline!,
+        "host_line": Host.line!,
+        "host_oval": Host.oval!,
+        "host_rand": Host.rand!,
+        "host_rand_range_less_than": Host.rand_range_less_than!,
+        "host_rect": Host.rect!,
+        "host_seed_rand": Host.seed_rand!,
+        "host_set_draw_colors": Host.set_draw_colors!,
+        "host_set_hide_gamepad_overlay": Host.set_hide_gamepad_overlay!,
+        "host_set_palette": Host.set_palette!,
+        "host_set_pixel": Host.set_pixel!,
+        "host_set_preserve_frame_buffer": Host.set_preserve_frame_buffer!,
+        "host_text": Host.text!,
+        "host_tone": Host.tone!,
+        "host_trace": Host.trace!,
+        "host_vline": Host.vline!,
+    }
     targets: {
         inputs: "targets/",
         wasm32: {
