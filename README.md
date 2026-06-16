@@ -16,7 +16,7 @@ Create `app.roc` and point `platform` at a released `.tar.zst` bundle:
 
 ```roc
 app [main] {
-    w4: platform "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/<tag>/<bundle>.tar.zst",
+    w4: platform "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/0.5/sZGj6cG7ted2RNohpqvQwqb7pvBd5C5zotA5XXyJZnA.tar.zst",
 }
 
 import w4.W4
