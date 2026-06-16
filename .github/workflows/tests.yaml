@@ -1,4 +1,6 @@
-on: 
+name: Tests
+
+on:
   pull_request:
   workflow_dispatch:
 
@@ -10,25 +12,20 @@ concurrency:
 jobs:
 
   test-examples:
-    runs-on: [ubuntu-20.04]
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-    
-      - name: get latest roc nightly
-        run: |
-          curl -fOL https://github.com/roc-lang/roc/releases/download/nightly/roc_nightly-linux_x86_64-latest.tar.gz
+      - uses: actions/checkout@v4
 
-      - name: rename nightly tar
-        run: mv $(ls | grep "roc_nightly.*tar\.gz") roc_nightly.tar.gz
+      - name: install Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.16.0
 
-      - name: decompress the tar
-        run: tar -xzf roc_nightly.tar.gz
+      - name: Install Roc
+        uses: roc-lang/setup-roc@main
+        with:
+          version: nightly-new-compiler
 
-      - run: rm roc_nightly.tar.gz
+      - run: roc version
 
-      - name: simplify nightly folder name
-        run: mv roc_nightly* roc_nightly
-
-      - run: ./roc_nightly/roc version
-
-      - run: ROC=./roc_nightly/roc ./ci/all_tests.sh
+      - run: ROC=roc ./ci/all_tests.sh

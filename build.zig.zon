@@ -1,6 +1,13 @@
 .{
-    .name = "roc-wasm4",
+    .name = .roc_wasm4,
     .version = "0.1.0",
-    .paths = .{"README.md"},
+    .minimum_zig_version = "0.16.0",
     .dependencies = .{},
+    .fingerprint = 0x19293a5f9f84e257,
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "platform",
+        "src",
+    },
 }

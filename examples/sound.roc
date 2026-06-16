@@ -1,24 +1,28 @@
-app [main, Model] {
+app [main] {
     w4: platform "../platform/main.roc",
 }
 
-import w4.Task exposing [Task]
-import w4.W4 exposing [Gamepad]
-import w4.Sprite exposing [Sprite]
+import w4.W4
+import w4.Sprite
 
-Program : {
-    init : Task Model [],
-    update : Model -> Task Model [],
+GamepadState : {
+    button1 : Bool,
+    button2 : Bool,
+    left : Bool,
+    right : Bool,
+    up : Bool,
+    down : Bool,
 }
 
 Model : {
-    arrowSprite : Sprite,
-    arrowIdx : U64,
-    lastGamepadState : Gamepad,
-    values : List (Str, U32, U32),
+    arrow_sprite : Sprite,
+    arrow_idx : U64,
+    last_gamepad_state : GamepadState,
+    values : List((Str, U32, U32)),
 }
 
-startingValues = [
+starting_values : List((Str, U32, U32))
+starting_values = [
     ("FREQ1", 440, 1000),
     ("FREQ2", 0, 1000),
     ("ATTCK", 0, 255),
@@ -32,44 +36,46 @@ startingValues = [
     ("  PAN", 0, 2),
 ]
 
-main : Program
-main = { init, update }
+main = {
+    init!: || {
+        arrow_sprite = Sprite.new({
+            data: [
+                0b00001000,
+                0b00001100,
+                0b01111110,
+                0b01111111,
+                0b01111110,
+                0b00001100,
+                0b00001000,
+                0b00000000,
+            ],
+            bpp: BPP1,
+            width: 8,
+            height: 8,
+        })
 
-init : Task Model []
-init =
-    arrowSprite = Sprite.new {
-        data: [
-            0b00001000,
-            0b00001100,
-            0b01111110,
-            0b01111111,
-            0b01111110,
-            0b00001100,
-            0b00001000,
-            0b00000000,
-        ],
-        bpp: BPP1,
-        width: 8,
-        height: 8,
-    }
+        {
+            arrow_sprite,
+            arrow_idx: 0,
+            last_gamepad_state: empty_gamepad,
+            values: starting_values,
+        }
+    },
+    update!: |model| update!(model),
+}
 
-    Task.ok {
-        arrowSprite,
-        arrowIdx: 0,
-        lastGamepadState: {
-            button1: Bool.false,
-            button2: Bool.false,
-            left: Bool.false,
-            right: Bool.false,
-            up: Bool.false,
-            down: Bool.false,
-        },
-        values: startingValues,
-    }
+empty_gamepad : GamepadState
+empty_gamepad = {
+    button1: Bool.False,
+    button2: Bool.False,
+    left: Bool.False,
+    right: Bool.False,
+    up: Bool.False,
+    down: Bool.False,
+}
 
-update : Model -> Task Model []
-update = \model ->
-    # These type annotations are required. Otherwise roc fails to compile.
+update! : Model => Model
+update! = |model| {
     x : I32
     x = 20
     y : I32
@@ -77,125 +83,150 @@ update = \model ->
     spacing : I32
     spacing = 10
 
-    drawControls =
-        List.walkWithIndex model.values (Task.ok {}) \task, (name, value, max), index ->
-            task!
-            drawControl name x (y + (Num.toI32 index) * spacing) value max
-    drawControls!
-    W4.setPrimaryColor! Color2
-    W4.text! "Arrows: Adjust\nX: Play tone" { x, y: 8 }
-    W4.setDrawColors! { primary: None, secondary: Color4, tertiary: None, quaternary: None }
-    Sprite.blit! model.arrowSprite { x: x - 8 - 4, y: y + (Num.toI32 model.arrowIdx) * spacing }
-
-    gamepad = W4.getGamepad! Player1
-
-    pressedThisFrame = {
-        left: gamepad.left && !model.lastGamepadState.left,
-        right: gamepad.right && !model.lastGamepadState.right,
-        up: gamepad.up && !model.lastGamepadState.up,
-        down: gamepad.down && !model.lastGamepadState.down,
-        button1: gamepad.button1 && !model.lastGamepadState.button1,
-        button2: gamepad.button2 && !model.lastGamepadState.button2,
+    var $index = 0.U64
+    for (name, value, max_value) in model.values {
+        draw_control!(name, x, y + U64.to_i32_wrap($index) * spacing, value, max_value)
+        $index = $index + 1
     }
 
-    arrowIdx =
-        if pressedThisFrame.down && pressedThisFrame.up then
-            model.arrowIdx
-        else if pressedThisFrame.down then
-            min (model.arrowIdx + 1) (List.len model.values - 1)
-        else if pressedThisFrame.up then
-            Num.subSaturated model.arrowIdx 1
-        else
-            model.arrowIdx
+    W4.set_primary_color!(Color2)
+    W4.text!("Arrows: Adjust\nX: Play tone", { x, y: 8 })
+    W4.set_draw_colors!({ primary: None, secondary: Color4, tertiary: None, quaternary: None })
+    Sprite.blit!(model.arrow_sprite, {
+        x: x - 8 - 4,
+        y: y + U64.to_i32_wrap(model.arrow_idx) * spacing,
+        flags: [],
+    })
 
-    (name, val, max) =
-        when List.get model.values arrowIdx is
-            Ok v -> v
-            Err _ -> crash "Arrow is always within bounds of array"
+    gamepad = W4.get_gamepad!(Player1)
 
-    (step, stepGamepad) =
-        if max // 100 == 0 then
-            (1, pressedThisFrame)
-        else
-            (max // 100, gamepad)
+    pressed_this_frame = {
+        left: gamepad.left and !model.last_gamepad_state.left,
+        right: gamepad.right and !model.last_gamepad_state.right,
+        up: gamepad.up and !model.last_gamepad_state.up,
+        down: gamepad.down and !model.last_gamepad_state.down,
+        button1: gamepad.button1 and !model.last_gamepad_state.button1,
+        button2: gamepad.button2 and !model.last_gamepad_state.button2,
+    }
+
+    arrow_idx =
+        if pressed_this_frame.down and pressed_this_frame.up {
+            model.arrow_idx
+        } else if pressed_this_frame.down {
+            U64.min(model.arrow_idx + 1, List.len(model.values) - 1)
+        } else if pressed_this_frame.up {
+            sub_saturating_u64(model.arrow_idx, 1)
+        } else {
+            model.arrow_idx
+        }
+
+    (name, val, max_value) = match List.get(model.values, arrow_idx) {
+        Ok(v) => v
+        Err(_) => { crash "arrow is always within bounds of the control list" }
+    }
+
+    (step, step_gamepad) =
+        if max_value // 100 == 0 {
+            (1, pressed_this_frame)
+        } else {
+            (max_value // 100, gamepad)
+        }
 
     values =
-        if stepGamepad.right then
-            next = min (val + step) max
-            List.set model.values arrowIdx (name, next, max)
-        else if stepGamepad.left then
-            List.set model.values arrowIdx (name, Num.subSaturated val step, max)
-        else
+        if step_gamepad.right {
+            next = U32.min(val + step, max_value)
+            set_value_or_crash(model.values, arrow_idx, (name, next, max_value))
+        } else if step_gamepad.left {
+            set_value_or_crash(model.values, arrow_idx, (name, sub_saturating_u32(val, step), max_value))
+        } else {
             model.values
+        }
 
-    soundTask =
-        if pressedThisFrame.button1 then
-            playSound values
-        else
-            Task.ok {}
-    soundTask!
+    if pressed_this_frame.button1 {
+        play_sound!(values)
+    } else {
+        {}
+    }
 
-    Task.ok { model & arrowIdx, values, lastGamepadState: gamepad }
+    { ..model, arrow_idx, values, last_gamepad_state: gamepad }
+}
 
-drawControl : Str, I32, I32, U32, U32 -> Task {} []
-drawControl = \name, x, y, value, max ->
-    meterWidth : U32
-    meterWidth = 50
-    W4.setPrimaryColor! Color2
-    W4.rect! { x: (5 * 8 + x + 4), y, width: (meterWidth + 2), height: 8 }
-    W4.setPrimaryColor! Color3
-    W4.rect! { x: (5 * 8 + x + 4 + 1), y: (y + 1), width: ((value * meterWidth) // max), height: 6 }
-    W4.setPrimaryColor! Color4
-    W4.text! name { x, y }
-    W4.text! (Num.toStr value) { x: 5 * 8 + x + 4 + (Num.toI32 meterWidth) + 2 + 4, y }
+draw_control! : Str, I32, I32, U32, U32 => {}
+draw_control! = |name, x, y, value, max_value| {
+    meter_width : U32
+    meter_width = 50
 
-    Task.ok {}
+    W4.set_primary_color!(Color2)
+    W4.rect!({ x: 5 * 8 + x + 4, y, width: meter_width + 2, height: 8 })
 
-playSound : List (Str, U32, U32) -> Task {} []
-playSound = \values ->
-    when values is
-        [(_, startFreq, _), (_, endFreq, _), (_, attackTime, _), (_, decayTime, _), (_, sustainTime, _), (_, releaseTime, _), (_, peakVolume, _), (_, volume, _), (_, channelVal, _), (_, modeVal, _), (_, panVal, _)] ->
-            mode =
-                when modeVal is
-                    0 -> Eighth
-                    1 -> Quarter
-                    2 -> Half
-                    3 -> ThreeQuarters
-                    _ -> crash "impossible mode"
+    W4.set_primary_color!(Color3)
+    W4.rect!({
+        x: 5 * 8 + x + 4 + 1,
+        y: y + 1,
+        width: value * meter_width // max_value,
+        height: 6,
+    })
 
-            channel =
-                when channelVal is
-                    0 -> Pulse1 mode
-                    1 -> Pulse2 mode
-                    2 -> Triangle
-                    3 -> Noise
-                    _ -> crash "impossible channel"
+    W4.set_primary_color!(Color4)
+    W4.text!(name, { x, y })
+    W4.text!(U32.to_str(value), { x: 5 * 8 + x + 4 + U32.to_i32_wrap(meter_width) + 2 + 4, y })
+}
 
-            pan =
-                when panVal is
-                    0 -> Center
-                    1 -> Left
-                    2 -> Right
-                    _ -> crash "impossible pan"
-
-            W4.tone {
-                startFreq: Num.toU16 startFreq,
-                endFreq: Num.toU16 endFreq,
-                attackTime: Num.toU8 attackTime,
-                decayTime: Num.toU8 decayTime,
-                sustainTime: Num.toU8 sustainTime,
-                releaseTime: Num.toU8 releaseTime,
-                peakVolume: Num.toU8 peakVolume,
-                volume: Num.toU8 volume,
-                channel,
-                pan,
+play_sound! : List((Str, U32, U32)) => {}
+play_sound! = |values| {
+    match values {
+        [(_, start_freq, _), (_, end_freq, _), (_, attack_time, _), (_, decay_time, _), (_, sustain_time, _), (_, release_time, _), (_, peak_volume, _), (_, volume, _), (_, channel_val, _), (_, mode_val, _), (_, pan_val, _)] => {
+            mode = match mode_val {
+                0 => Eighth
+                1 => Quarter
+                2 => Half
+                3 => ThreeQuarters
+                _ => { crash "impossible mode" }
             }
 
-        _ ->
-            crash "Invalid number of values for playing sounds"
+            channel = match channel_val {
+                0 => Pulse1(mode)
+                1 => Pulse2(mode)
+                2 => Triangle
+                3 => Noise
+                _ => { crash "impossible channel" }
+            }
 
-min = \x, y ->
-    if x < y then
-        x
-    else
-        y
+            pan = match pan_val {
+                0 => Center
+                1 => Left
+                2 => Right
+                _ => { crash "impossible pan" }
+            }
+
+            W4.tone!({
+                start_freq: U32.to_u16_wrap(start_freq),
+                end_freq: U32.to_u16_wrap(end_freq),
+                attack_time: U32.to_u8_wrap(attack_time),
+                decay_time: U32.to_u8_wrap(decay_time),
+                sustain_time: U32.to_u8_wrap(sustain_time),
+                release_time: U32.to_u8_wrap(release_time),
+                peak_volume: U32.to_u8_wrap(peak_volume),
+                volume: U32.to_u8_wrap(volume),
+                channel,
+                pan,
+            })
+        }
+
+        _ => { crash "invalid number of values for playing sounds" }
+    }
+}
+
+set_value_or_crash : List((Str, U32, U32)), U64, (Str, U32, U32) -> List((Str, U32, U32))
+set_value_or_crash = |values, index, value| {
+    match List.set(values, index, value) {
+        Ok(next_values) => next_values
+        Err(_) => { crash "arrow is always within bounds of the control list" }
+    }
+}
+
+sub_saturating_u64 : U64, U64 -> U64
+sub_saturating_u64 = |x, y| if x < y { 0 } else { x - y }
+
+sub_saturating_u32 : U32, U32 -> U32
+sub_saturating_u32 = |x, y| if x < y { 0 } else { x - y }
