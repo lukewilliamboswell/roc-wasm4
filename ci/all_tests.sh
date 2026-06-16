@@ -26,6 +26,7 @@ EXAMPLES_DIR='./examples/'
 PLATFORM_DIR='./platform/'
 BUILD_DIR="${BUILD_DIR:-.zig-cache/roc-wasm4-ci}"
 ROC_CACHE_DIR="${ROC_CACHE_DIR:-$PWD/$BUILD_DIR/roc-cache}"
+SKIP_ZIG_BUILD="${SKIP_ZIG_BUILD:-0}"
 
 mkdir -p "$BUILD_DIR"
 mkdir -p "$ROC_CACHE_DIR"
@@ -39,10 +40,18 @@ echo "Roc: $("$ROC_BIN" version)"
 echo "Zig: $(zig version)"
 
 # host object
-zig build
+if [ "$SKIP_ZIG_BUILD" = "1" ]; then
+    echo "Skipping zig build because SKIP_ZIG_BUILD=1"
+else
+    zig build
+fi
 
 # zig tests
-zig build test
+if [ "$SKIP_ZIG_BUILD" = "1" ]; then
+    echo "Skipping zig build test because SKIP_ZIG_BUILD=1"
+else
+    zig build test
+fi
 
 # roc check
 for roc_file in "$EXAMPLES_DIR"*.roc; do
@@ -62,10 +71,18 @@ for roc_file in "$EXAMPLES_DIR"*.roc; do
 done
 
 # test building docs website
-"$ROC_BIN" docs platform/main.roc --output="$BUILD_DIR/generated-docs"
+if [ "$SKIP_ZIG_BUILD" = "1" ]; then
+    echo "Skipping local docs generation because SKIP_ZIG_BUILD=1"
+else
+    "$ROC_BIN" docs platform/main.roc --output="$BUILD_DIR/generated-docs"
+fi
 
 # test packaging the platform archive
-ROC="$ROC_BIN" ./bundle.sh
+if [ "$SKIP_ZIG_BUILD" = "1" ]; then
+    echo "Skipping local platform bundling because SKIP_ZIG_BUILD=1"
+else
+    ROC="$ROC_BIN" ./bundle.sh
+fi
 
 # roc tests
 "$ROC_BIN" test platform/W4.roc
