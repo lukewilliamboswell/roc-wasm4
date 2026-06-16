@@ -1,6 +1,6 @@
 ## # roc-wasm4
 ##
-## Build [wasm4](https://wasm4.org) games using Roc.
+## Build [WASM-4](https://wasm4.org) games using Roc.
 ##
 ## This module provides the high-level, ergonomic API for the WASM-4 platform.
 ## Internally it wraps the low-level effects exposed by `Host`.
@@ -197,7 +197,7 @@ W4 :: [].{
     ## Text color is the Primary draw color.
     ## Background color is the Secondary draw color.
     ##
-    ## [Refer w4 docs for more information](https://wasm4.org/docs/guides/text)
+    ## [Refer to the WASM-4 docs for more information](https://wasm4.org/docs/guides/text)
     text! : Str, { x : I32, y : I32 } => {}
     text! = |str, { x, y }| Host.text!(str, x, y)
 
@@ -210,7 +210,7 @@ W4 :: [].{
     ## Fill color is the Primary draw color.
     ## Border color is the Secondary draw color.
     ##
-    ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#rect-x-y-width-height)
+    ## [Refer to the WASM-4 docs for more information](https://wasm4.org/docs/reference/functions#rect-x-y-width-height)
     rect! : { x : I32, y : I32, width : U32, height : U32 } => {}
     rect! = |{ x, y, width, height }| Host.rect!(x, y, width, height)
 
@@ -223,7 +223,7 @@ W4 :: [].{
     ## Fill color is the Primary draw color.
     ## Border color is the Secondary draw color.
     ##
-    ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#oval-x-y-width-height)
+    ## [Refer to the WASM-4 docs for more information](https://wasm4.org/docs/reference/functions#oval-x-y-width-height)
     oval! : { x : I32, y : I32, width : U32, height : U32 } => {}
     oval! = |{ x, y, width, height }| Host.oval!(x, y, width, height)
 
@@ -235,7 +235,7 @@ W4 :: [].{
     ##
     ## Line color is the Primary draw color.
     ##
-    ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#line-x1-y1-x2-y2)
+    ## [Refer to the WASM-4 docs for more information](https://wasm4.org/docs/reference/functions#line-x1-y1-x2-y2)
     line! : { x : I32, y : I32 }, { x : I32, y : I32 } => {}
     line! = |{ x: x1, y: y1 }, { x: x2, y: y2 }| Host.line!(x1, y1, x2, y2)
 
@@ -329,7 +329,7 @@ W4 :: [].{
     ##
     ## Note: All WASM-4 games that support local multiplayer automatically support netplay.
     ##
-    ## [Refer w4 docs for more information](https://wasm4.org/docs/guides/multiplayer)
+    ## [Refer to the WASM-4 docs for more information](https://wasm4.org/docs/guides/multiplayer)
     get_netplay! : () => Netplay
     get_netplay! = || {
         flags = Host.get_netplay!()
@@ -384,7 +384,7 @@ W4 :: [].{
     ## W4.trace!("Hello, World")
     ## ```
     ##
-    ## [Refer w4 docs for more information](https://wasm4.org/docs/guides/trace)
+    ## [Refer to the WASM-4 docs for more information](https://wasm4.org/docs/guides/trace)
     trace! : Str => {}
     trace! = |str| Host.trace!(str)
 
@@ -402,7 +402,7 @@ W4 :: [].{
     ##
     ## Games can persist up to 1024 bytes of data.
     ##
-    ## [Refer w4 docs for more information](https://wasm4.org/docs/guides/diskw)
+    ## [Refer to the WASM-4 docs for more information](https://wasm4.org/docs/guides/diskw)
     save_to_disk! : List(U8) => Try({}, [SaveFailed])
     save_to_disk! = |data|
         if Host.disk_write!(data) {
@@ -419,7 +419,7 @@ W4 :: [].{
     ##
     ## Games can persist up to 1024 bytes of data.
     ##
-    ## [Refer w4 docs for more information](https://wasm4.org/docs/guides/diskw)
+    ## [Refer to the WASM-4 docs for more information](https://wasm4.org/docs/guides/diskw)
     load_from_disk! : () => List(U8)
     load_from_disk! = || Host.disk_read!()
 
@@ -479,10 +479,10 @@ W4 :: [].{
 
     ## Plays a tone sound.
     ##
-    ## Please refer to the [wasm4 audio docs](https://wasm4.org/docs/guides/audio/).
+    ## Please refer to the [WASM-4 audio docs](https://wasm4.org/docs/guides/audio/).
     ##
     ## The sound.roc example app along with the
-    ## [wasm4 sound tools](https://wasm4.org/docs/guides/audio/#sound-tool) can be
+    ## [WASM-4 sound tools](https://wasm4.org/docs/guides/audio/#sound-tool) can be
     ## quite helpful to play with.
     tone! :
         {

@@ -4,7 +4,7 @@
 ## or 2 bits per pixel (`BPP2`), along with information about how to read the
 ## pixel data.
 ##
-## [Refer w4 docs for more information](https://wasm4.org/docs/guides/sprites)
+## [Refer to the WASM-4 docs for more information](https://wasm4.org/docs/guides/sprites)
 import Host
 
 ## Represents a [sprite](https://en.wikipedia.org/wiki/Sprite_(computer_graphics))
@@ -48,7 +48,7 @@ Sprite := {
     ## Sprite.blit!(fruit_sprite, { x: 0, y: 0, flags: [FlipX, Rotate] })
     ## ```
     ##
-    ## [Refer w4 docs for more information](https://wasm4.org/docs/reference/functions#blit-spriteptr-x-y-width-height-flags)
+    ## [Refer to the WASM-4 docs for more information](https://wasm4.org/docs/reference/functions#blit-spriteptr-x-y-width-height-flags)
     blit! : Sprite, { x : I32, y : I32, flags : List([FlipX, FlipY, Rotate]) } => {}
     blit! = |sprite, { x, y, flags }| {
         { src_x, src_y, width, height } = sprite.region

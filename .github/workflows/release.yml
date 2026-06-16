@@ -1,0 +1,224 @@
+name: Release
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Tag to publish, for example v0.1.0
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+# this cancels workflows currently in progress if you start a new one
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ZIG_VERSION: 0.16.0
+  ROC_VERSION: nightly-new-compiler
+
+jobs:
+  build_and_bundle:
+    name: build-and-bundle
+    runs-on: ubuntu-24.04
+    outputs:
+      bundle_name: ${{ steps.bundle.outputs.bundle_name }}
+      roc_version: ${{ steps.roc_version.outputs.roc_version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: ${{ env.ZIG_VERSION }}
+
+      - name: Install Roc
+        uses: roc-lang/setup-roc@v0.2.0
+        with:
+          version: ${{ env.ROC_VERSION }}
+
+      - name: Capture Roc version
+        id: roc_version
+        shell: bash
+        run: |
+          set -euo pipefail
+          roc_version="$(roc version)"
+          echo "$roc_version"
+          {
+            echo "roc_version<<EOF"
+            echo "$roc_version"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build host object
+        run: zig build -Doptimize=ReleaseSafe
+
+      - name: Bundle platform
+        id: bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          output="$(ROC=roc ./bundle.sh)"
+          printf '%s\n' "$output"
+
+          bundle_path="$(printf '%s\n' "$output" | sed -n 's/^Created: //p' | tail -n 1)"
+          if [ -z "$bundle_path" ]; then
+            echo "ERROR: Could not find bundle path in bundle.sh output" >&2
+            exit 1
+          fi
+
+          bundle_name="$(basename "$bundle_path")"
+          case "$bundle_name" in
+            *.tar.zst) ;;
+            *)
+              echo "ERROR: Expected a .tar.zst bundle, got $bundle_name" >&2
+              exit 1
+              ;;
+          esac
+
+          if [ ! -f "$bundle_path" ]; then
+            echo "ERROR: Bundle does not exist: $bundle_path" >&2
+            exit 1
+          fi
+
+          echo "bundle_name=$bundle_name" >> "$GITHUB_OUTPUT"
+          echo "bundle_path=$bundle_path" >> "$GITHUB_OUTPUT"
+
+      - name: Upload platform bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: platform-bundle
+          path: ${{ steps.bundle.outputs.bundle_path }}
+          if-no-files-found: error
+
+  test_bundle:
+    name: test-bundle (${{ matrix.os }})
+    needs: build_and_bundle
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-15-intel
+          - macos-15
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
+          - windows-2022
+          - windows-2025
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: ${{ env.ZIG_VERSION }}
+
+      - name: Install Roc
+        uses: roc-lang/setup-roc@v0.2.0
+        with:
+          version: ${{ env.ROC_VERSION }}
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Download platform bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: platform-bundle
+          path: bundle
+
+      - name: Serve platform bundle
+        id: bundle_server
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8000 --bind 127.0.0.1 --directory bundle &
+          echo "pid=$!" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for platform bundle
+        shell: bash
+        env:
+          BUNDLE_NAME: ${{ needs.build_and_bundle.outputs.bundle_name }}
+        run: |
+          set -euo pipefail
+          for _ in {1..30}; do
+            if curl --fail --silent --head "http://127.0.0.1:8000/$BUNDLE_NAME" > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+
+          curl --fail --verbose --head "http://127.0.0.1:8000/$BUNDLE_NAME"
+
+      - name: Rewrite examples to use platform bundle
+        shell: bash
+        env:
+          BUNDLE_URL: http://127.0.0.1:8000/${{ needs.build_and_bundle.outputs.bundle_name }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          bundle_url = os.environ["BUNDLE_URL"]
+          old = '"../platform/main.roc"'
+          new = f'"{bundle_url}"'
+
+          for roc_file in sorted(Path("examples").glob("*.roc")):
+              text = roc_file.read_text()
+              if old not in text:
+                  raise SystemExit(f"ERROR: {roc_file} does not contain {old}")
+              roc_file.write_text(text.replace(old, new))
+          PY
+
+      - name: Test platform bundle
+        shell: bash
+        run: SKIP_ZIG_BUILD=1 ROC=roc ./ci/all_tests.sh
+
+      - name: Stop platform bundle server
+        if: always()
+        shell: bash
+        run: |
+          if [ -n "${{ steps.bundle_server.outputs.pid }}" ]; then
+            kill "${{ steps.bundle_server.outputs.pid }}" || true
+          fi
+
+  create_release:
+    name: create-release
+    if: github.event_name == 'workflow_dispatch'
+    needs:
+      - build_and_bundle
+      - test_bundle
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Download platform bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: platform-bundle
+          path: bundle
+
+      - name: Create GitHub release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          BUNDLE_NAME: ${{ needs.build_and_bundle.outputs.bundle_name }}
+          ROC_VERSION_ACTUAL: ${{ needs.build_and_bundle.outputs.roc_version }}
+          ZIG_VERSION_ACTUAL: ${{ env.ZIG_VERSION }}
+        run: |
+          set -euo pipefail
+          notes="Built with Zig $ZIG_VERSION_ACTUAL and $ROC_VERSION_ACTUAL."
+
+          gh release create "$RELEASE_TAG" "bundle/$BUNDLE_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$RELEASE_TAG" \
+            --generate-notes \
+            --notes "$notes"
