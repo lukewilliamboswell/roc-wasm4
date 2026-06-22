@@ -29,13 +29,13 @@ Run the full local check suite with:
 ROC=roc ./ci/all_tests.sh
 ```
 
-This builds the Zig host, runs Zig tests, checks every Roc example and platform module, smoke-builds the example carts, generates docs, creates a local platform bundle, and runs platform Roc tests.
+This builds the Zig host, runs Zig tests, checks every Roc example and platform module, smoke-builds the example carts, generates docs, creates a local platform bundle, and runs platform Roc tests. Checked-in examples point at the latest released platform bundle; temporarily use the local platform path when you need examples to exercise source changes in this checkout.
 
 `SKIP_ZIG_BUILD=1` is reserved for release validation. It skips local host builds, docs generation, and local bundling so rewritten examples can prove they build against a downloaded platform archive.
 
 ## Local Examples
 
-The checked-in examples use:
+The checked-in examples use the latest released platform bundle for copy/paste usability. When testing source changes locally, temporarily point an example at:
 
 ```roc
 w4: platform "../platform/main.roc"
@@ -101,7 +101,7 @@ Use the exact `.tar.zst` asset URL from the GitHub Release in downstream apps:
 
 ```roc
 app [main] {
-    w4: platform "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/<tag>/<bundle>.tar.zst",
+    w4: platform "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/0.6/ADeKYHzDvyXSEZjj4wG3qRLTFRYiiEWLuVMPD5S8uBF3.tar.zst",
 }
 ```
 

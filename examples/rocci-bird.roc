@@ -1,5 +1,5 @@
 app [main] {
-    w4: platform "../platform/main.roc",
+    w4: platform "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/0.6/ADeKYHzDvyXSEZjj4wG3qRLTFRYiiEWLuVMPD5S8uBF3.tar.zst",
 }
 
 import w4.W4
