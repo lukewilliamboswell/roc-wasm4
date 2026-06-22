@@ -97,9 +97,48 @@ pub fn increfBox(data_ptr: ?*anyopaque, amount: isize) void {
     _ = @atomicRmw(isize, rc, .Add, amount, .monotonic);
 }
 
+/// Allocate a Roc box and return a pointer to its payload data.
+pub fn allocateBox(
+    payload_size: usize,
+    payload_alignment: usize,
+    payload_contains_refcounted: bool,
+    roc_host: *RocHost,
+) *anyopaque {
+    const ptr_width = @sizeOf(usize);
+    const required_space: usize = if (payload_contains_refcounted) (2 * ptr_width) else ptr_width;
+    const header_bytes = @max(required_space, payload_alignment);
+    const alloc_alignment = @max(ptr_width, payload_alignment);
+    const base: [*]u8 = @ptrCast(roc_host.roc_alloc(roc_host, header_bytes + payload_size, alloc_alignment));
+    const data = base + header_bytes;
+    const rc: *isize = @ptrFromInt(@intFromPtr(data) - @sizeOf(isize));
+    rc.* = 1;
+    return @ptrCast(data);
+}
+
 /// Decrement a pointer-aligned boxed payload with no Roc refcounted values.
 pub fn decrefBox(data_ptr: ?*anyopaque, roc_host: *RocHost) void {
     decrefBoxWith(data_ptr, @alignOf(usize), null, roc_host);
+}
+
+/// Increment a boxed function closure.
+pub fn increfErasedCallable(callable: RocErasedCallable, amount: isize) void {
+    const data = callable orelse return;
+    increfBox(@ptrCast(data), amount);
+}
+
+/// Decrement a boxed function closure and run its capture drop callback on final release.
+pub fn decrefErasedCallable(callable: RocErasedCallable, roc_host: *RocHost) void {
+    const data = callable orelse return;
+    decrefBoxWith(@ptrCast(data), roc_erased_callable_payload_alignment, &dropErasedCallablePayload, roc_host);
+}
+
+fn dropErasedCallablePayload(data_ptr: ?*anyopaque, roc_host: *RocHost) callconv(.c) void {
+    const data = data_ptr orelse return;
+    const callable: RocErasedCallable = @ptrCast(data);
+    const payload = rocErasedCallablePayloadPtr(callable);
+    if (payload.on_drop) |on_drop| {
+        on_drop(rocErasedCallableCapturePtr(callable), roc_host);
+    }
 }
 
 /// Decrement a boxed payload and run payload teardown when this is the final ref.
@@ -321,6 +360,14 @@ pub fn RocListWith(comptime T: type, comptime elements_refcounted: bool) type {
             return &[_]T{};
         }
 
+        /// Return every initialized element in the backing allocation.
+        pub fn allocationItems(self: Self) []const T {
+            const alloc_ptr = self.getAllocationPtr() orelse return &[_]T{};
+            const count = self.allocationElementCount();
+            const ptr: [*]const T = @ptrCast(@alignCast(alloc_ptr));
+            return ptr[0..count];
+        }
+
         /// Return the number of elements in the list.
         pub fn len(self: Self) usize {
             return self.length;
@@ -352,6 +399,15 @@ pub fn RocListWith(comptime T: type, comptime elements_refcounted: bool) type {
             }
             const ptr = self.elements_ptr orelse return null;
             return @ptrCast(ptr);
+        }
+
+        fn allocationElementCount(self: Self) usize {
+            if (self.isSeamlessSlice() and elements_refcounted) {
+                const alloc_ptr = self.getAllocationPtr() orelse return 0;
+                const ptr: [*]const usize = @ptrCast(@alignCast(alloc_ptr));
+                return (ptr - 2)[0];
+            }
+            return self.length;
         }
 
         /// Allocate a new list with space for `length` elements.
@@ -408,6 +464,13 @@ pub fn RocListWith(comptime T: type, comptime elements_refcounted: bool) type {
             if (rc.* == 0) return true; // REFCOUNT_STATIC_DATA — treated as unique
             return rc.* == 1;
         }
+
+        /// Return true if this list's allocation has exactly one counted ref.
+        pub fn hasOneRef(self: Self) bool {
+            const alloc_ptr = self.getAllocationPtr() orelse return false;
+            const rc: *const isize = @ptrFromInt(@intFromPtr(alloc_ptr) - @sizeOf(isize));
+            return rc.* == 1;
+        }
     };
 }
 
@@ -458,7 +521,7 @@ pub const RocIo = struct {
     }
 
     fn nativeWriteStderr(_: ?*anyopaque, data: []const u8) void {
-        std.fs.File.stderr().writeAll(data) catch {};
+        std.Io.File.stderr().writeStreamingAll(std.Io.Threaded.global_single_threaded.io(), data) catch {};
     }
 
     fn nativeOnFatal(_: ?*anyopaque) noreturn {
@@ -688,6 +751,22 @@ pub const HostVlineArgs = extern struct {
     arg1: i32,
     arg2: u32,
 };
+
+// =============================================================================
+// Generated Refcount Helpers
+// =============================================================================
+
+/// Recursively decrement Roc-owned fields in __AnonStruct10.
+pub fn decref__AnonStruct10(value: __AnonStruct10, roc_host: *RocHost) void {
+    _ = value;
+    _ = roc_host;
+}
+
+/// Increment Roc-owned fields in __AnonStruct10.
+pub fn incref__AnonStruct10(value: __AnonStruct10, amount: isize) void {
+    _ = value;
+    _ = amount;
+}
 
 
 // =============================================================================

@@ -7,6 +7,17 @@
 ## [Refer to the WASM-4 docs for more information](https://wasm4.org/docs/guides/sprites)
 import Host
 
+BlitTransform : [FlipX, FlipY, Rotate]
+
+# Keep flag bit computation outside the effectful opaque method until roc-lang/roc#9749 is fixed.
+blitTransformFlags : List(BlitTransform) -> U32
+blitTransformFlags = |flags| {
+    flip_x_bit = if flags.contains(FlipX) { 2 } else { 0 }
+    flip_y_bit = if flags.contains(FlipY) { 4 } else { 0 }
+    rotate_bit = if flags.contains(Rotate) { 8 } else { 0 }
+    flip_x_bit + flip_y_bit + rotate_bit
+}
+
 ## Represents a [sprite](https://en.wikipedia.org/wiki/Sprite_(computer_graphics))
 ## for drawing to the screen.
 Sprite := {
@@ -49,7 +60,7 @@ Sprite := {
     ## ```
     ##
     ## [Refer to the WASM-4 docs for more information](https://wasm4.org/docs/reference/functions#blit-spriteptr-x-y-width-height-flags)
-    blit! : Sprite, { x : I32, y : I32, flags : List([FlipX, FlipY, Rotate]) } => {}
+    blit! : Sprite, { x : I32, y : I32, flags : List(BlitTransform) } => {}
     blit! = |sprite, { x, y, flags }| {
         { src_x, src_y, width, height } = sprite.region
 
@@ -58,11 +69,7 @@ Sprite := {
             BPP2 => 1
         }
 
-        # Each flag occupies a distinct bit, so we can sum non-duplicate contributions.
-        flip_x_bit = if flags.contains(FlipX) { 2 } else { 0 }
-        flip_y_bit = if flags.contains(FlipY) { 4 } else { 0 }
-        rotate_bit = if flags.contains(Rotate) { 8 } else { 0 }
-        combined = format + flip_x_bit + flip_y_bit + rotate_bit
+        combined = format + blitTransformFlags(flags)
 
         Host.blit_sub!(sprite.data, x, y, width, height, src_x, src_y, sprite.stride, combined)
     }

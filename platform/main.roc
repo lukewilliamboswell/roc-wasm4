@@ -34,7 +34,7 @@ platform ""
         "host_vline": Host.vline!,
     }
     targets: {
-        inputs: "targets/",
+        inputs_dir: "targets/",
         wasm32: {
             inputs: ["host.wasm", app],
             output: Shared,
