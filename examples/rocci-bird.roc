@@ -1,5 +1,5 @@
 app [main] {
-    w4: platform "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/0.5/sZGj6cG7ted2RNohpqvQwqb7pvBd5C5zotA5XXyJZnA.tar.zst",
+    w4: platform "../platform/main.roc",
 }
 
 import w4.W4
@@ -127,7 +127,7 @@ GameState : {
 }
 
 initGame! : TitleScreenState => Model
-initGame! = |{ frameCount, plants }| {
+initGame! = |{ frameCount, plants, .. }| {
     # Seed the randomness with number of frames since the start of the game.
     # This makes the game feel like it is truely randomly seeded cause players won't always start on the same frame.
     saveRandToDisk!(frameCount)
@@ -215,7 +215,7 @@ runGame! = |prev| {
     plants =
         appendIfOk(updatePlants(prev.plants), plant)
 
-    gainPoint = U64.to_u8_wrap(List.count_if(prev.pipes, |{ x }| x == playerX - 2))
+    gainPoint = U64.to_u8_wrap(List.count_if(prev.pipes, |{ x, .. }| x == playerX - 2))
     y = prev.player.y + yVel
     score = U8.plus_saturated(prev.score, gainPoint)
     state = { ..prev,
@@ -276,7 +276,7 @@ GameOverState : {
 }
 
 initGameOver! : GameState => Model
-initGameOver! = |{ frameCount, maxScore, score, player, pipes, plants, groundX }| {
+initGameOver! = |{ frameCount, maxScore, score, player, pipes, plants, groundX, .. }| {
     hs = loadHighScoreFromDisk!()
     newHighScore = maxScore > hs
     highScore =
@@ -653,7 +653,7 @@ updateAnimation : U64, Animation -> Animation
 updateAnimation = |frameCount, anim| {
     framesPerUpdate =
         match List.get(anim.cells, anim.index) {
-            Ok({ frames }) => frames
+            Ok({ frames, .. }) => frames
             Err(_) => { crash "animation cell out of bounds at index: ${U64.to_str(anim.index)}" }
         }
 
@@ -681,7 +681,7 @@ updateAnimation = |frameCount, anim| {
 drawAnimation! : Animation, { x : I32, y : I32, flags : List([FlipX, FlipY, Rotate]) } => {}
 drawAnimation! = |anim, { x, y, flags }|
     match List.get(anim.cells, anim.index) {
-        Ok({ sprite }) => {
+        Ok({ sprite, .. }) => {
             setSpriteColors!()
             Sprite.blit!(sprite, { x, y, flags })
         }
@@ -700,7 +700,7 @@ wrappedInc = |val, count| {
 }
 
 idleShift : U64, Animation -> I32
-idleShift = |frameCount, { index, lastUpdated }|
+idleShift = |frameCount, { index, lastUpdated, .. }|
     if index == 2 {
         0
     } else if index == 1 and frameCount - lastUpdated > 3 {
@@ -722,7 +722,7 @@ createRocciIdleAnim = |frameCount| {
 }
 
 flapAllowed : U64, Animation -> Bool
-flapAllowed = |frameCount, { index, lastUpdated }|
+flapAllowed = |frameCount, { index, lastUpdated, .. }|
     if index == 2 {
         Bool.True
     } else if index == 1 {
