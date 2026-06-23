@@ -1,4 +1,4 @@
-app [main] { w4: platform "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/0.5/sZGj6cG7ted2RNohpqvQwqb7pvBd5C5zotA5XXyJZnA.tar.zst" }
+app [main] { w4: platform "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/0.6/ADeKYHzDvyXSEZjj4wG3qRLTFRYiiEWLuVMPD5S8uBF3.tar.zst" }
 
 import w4.W4
 

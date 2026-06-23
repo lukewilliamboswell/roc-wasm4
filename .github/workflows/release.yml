@@ -164,17 +164,24 @@ jobs:
           set -euo pipefail
           python3 - <<'PY'
           import os
+          import re
           from pathlib import Path
 
           bundle_url = os.environ["BUNDLE_URL"]
-          old = '"../platform/main.roc"'
           new = f'"{bundle_url}"'
+          patterns = [
+              r'"../platform/main\.roc"',
+              r'"https://github\.com/lukewilliamboswell/roc-wasm4/releases/download/[^"]+\.tar\.zst"',
+          ]
 
           for roc_file in sorted(Path("examples").glob("*.roc")):
               text = roc_file.read_text()
-              if old not in text:
-                  raise SystemExit(f"ERROR: {roc_file} does not contain {old}")
-              roc_file.write_text(text.replace(old, new))
+              updated = text
+              for pattern in patterns:
+                  updated = re.sub(pattern, new, updated)
+              if updated == text:
+                  raise SystemExit(f"ERROR: {roc_file} does not contain a platform bundle or local platform path")
+              roc_file.write_text(updated)
           PY
 
       - name: Test platform bundle

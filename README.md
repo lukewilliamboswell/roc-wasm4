@@ -16,7 +16,7 @@ Create `app.roc` and point `platform` at a released `.tar.zst` bundle:
 
 ```roc
 app [main] {
-    w4: platform "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/0.5/sZGj6cG7ted2RNohpqvQwqb7pvBd5C5zotA5XXyJZnA.tar.zst",
+    w4: platform "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/0.6/ADeKYHzDvyXSEZjj4wG3qRLTFRYiiEWLuVMPD5S8uBF3.tar.zst",
 }
 
 import w4.W4
@@ -62,17 +62,13 @@ This repository includes several example apps:
 - `examples/rocci-bird.roc`: a Rocci Bird demo by Brendan Hansknecht with art by Luke DeVault
 - `examples/sound.roc`: a tone parameter playground
 
-The checked-in examples use the local platform path so contributors can test source changes. To use one as a starting point outside this repository, replace:
+The checked-in examples use the latest released platform bundle so they can be copied into a game project directly:
 
 ```roc
-w4: platform "../platform/main.roc"
+w4: platform "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/0.6/ADeKYHzDvyXSEZjj4wG3qRLTFRYiiEWLuVMPD5S8uBF3.tar.zst"
 ```
 
-with a released bundle URL:
-
-```roc
-w4: platform "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/<tag>/<bundle>.tar.zst"
-```
+Contributors testing platform source changes can use the local path shown in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Then build and run the app:
 

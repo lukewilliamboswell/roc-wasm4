@@ -1,5 +1,5 @@
 app [main] {
-    w4: platform "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/0.5/sZGj6cG7ted2RNohpqvQwqb7pvBd5C5zotA5XXyJZnA.tar.zst",
+    w4: platform "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/0.6/ADeKYHzDvyXSEZjj4wG3qRLTFRYiiEWLuVMPD5S8uBF3.tar.zst",
 }
 
 import w4.W4
@@ -163,7 +163,7 @@ draw_snake_head! = |snake| {
 }
 
 update_snake : Snake, GamepadState, U64, Fruit -> (Snake, [AteFruit, DidNotEat])
-update_snake = |s0, { left, right, up, down }, frame_count, fruit| {
+update_snake = |s0, { left, right, up, down, .. }, frame_count, fruit| {
     s1 =
         if left and !right {
             { ..s0, direction: Left }
@@ -222,10 +222,10 @@ grow_snake = |{ head, body, direction }| {
 }
 
 snake_is_dead : Snake -> Bool
-snake_is_dead = |{ head, body }| List.contains(body, head)
+snake_is_dead = |{ head, body, .. }| List.contains(body, head)
 
 get_random_fruit! : Snake => Fruit
-get_random_fruit! = |{ head, body }| {
+get_random_fruit! = |{ head, body, .. }| {
     var $fruit = head
     var $done = Bool.False
 
