@@ -378,7 +378,7 @@ on_screen_collided! = |player_y, anim_index| {
 		{ x: 5, y: 9 },
 		{ x: 7, y: 10 },
 		{ x: 5, y: 12 },
-	] # TODO .iter() once we have iter.append()
+	]
 
 	collision_points =
 		if anim_index == 2 {
