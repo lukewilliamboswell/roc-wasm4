@@ -55,7 +55,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Build host object
-        run: zig build -Doptimize=ReleaseSafe
+        run: zig build -Doptimize=ReleaseSmall
 
       - name: Bundle platform
         id: bundle
