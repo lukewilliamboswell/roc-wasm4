@@ -84,7 +84,7 @@ run_title_screen! = |prev| {
 	set_text_colors!()
 	W4.text!("Rocci Bird!!!", { x: 32, y: 12 })
 	W4.text!("Click to start!", { x: 24, y: 72 })
-	draw_ground!(ground_sprite, 0)
+	draw_ground!(0)
 	draw_plants!(state.plants)
 
 	shift = idle_shift(state.frame_count, state.rocci_idle_anim)
@@ -121,29 +121,34 @@ GameState : {
 }
 
 init_game! : TitleScreenState => Model
-init_game! = |{ frame_count, plants }| {
+init_game! = |state| {
+	frame_count = state.frame_count
+	plants = state.plants
+
 	# Seed the randomness with number of frames since the start of the game.
 	# This makes the game feel like it is truely randomly seeded cause players won't always start on the same frame.
 	save_rand_to_disk!(frame_count)
 	W4.seed_rand!(frame_count)
 	W4.tone!(flap_tone)
 
-	Game({
-		frame_count,
-		score: 0,
-		max_score: 0,
-		player: {
-			y: player_start_y,
-			y_vel: jump_speed,
+	Game(
+		{
+			frame_count,
+			score: 0,
+			max_score: 0,
+			player: {
+				y: player_start_y,
+				y_vel: jump_speed,
+			},
+			last_pipe_generated: frame_count,
+			pipes: [],
+			plants,
+			last_plant_generated: sub_saturating_u64(frame_count, 4),
+			last_flap: True,
+			rocci_flap_anim: create_rocci_flap_anim(frame_count),
+			ground_x: 0,
 		},
-		last_pipe_generated: frame_count,
-		pipes: [],
-		plants,
-		last_plant_generated: sub_saturating_u64(frame_count, 4),
-		last_flap: True,
-		rocci_flap_anim: create_rocci_flap_anim(frame_count),
-		ground_x: 0,
-	})
+	)
 }
 
 # Useful to throw in WolframAlpha to help calculate these:
@@ -376,7 +381,7 @@ on_screen_collided! = |player_y, anim_index| {
 
 	collision_points =
 		if anim_index == 2 {
-		    base_points.append({ x: 2, y: 1 }).append({ x: 7, y: 1 })
+			base_points.append({ x: 2, y: 1 }).append({ x: 7, y: 1 })
 		} else if anim_index == 1 {
 			base_points.append({ x: 2, y: 2 })
 		} else {
@@ -384,10 +389,12 @@ on_screen_collided! = |player_y, anim_index| {
 		}
 
 	for { x, y } in collision_points {
-		if W4.get_pixel!({
-			x: I32.to_u8_wrap(player_x + x),
-			y: I32.to_u8_wrap(player_y + y),
-		}) != Color1 {
+		if W4.get_pixel!(
+			{
+				x: I32.to_u8_wrap(player_x + x),
+				y: I32.to_u8_wrap(player_y + y),
+			},
+		) != Color1 {
 			return True
 		}
 	}
@@ -397,10 +404,12 @@ on_screen_collided! = |player_y, anim_index| {
 
 off_screen_collided! : () => Bool
 off_screen_collided! = ||
-	W4.get_pixel!({
-		x: I32.to_u8_wrap(player_x + 13),
-		y: I32.to_u8_wrap(0),
-	}) != Color1
+	W4.get_pixel!(
+		{
+			x: I32.to_u8_wrap(player_x + 13),
+			y: I32.to_u8_wrap(0),
+		},
+	) != Color1
 
 # ===== Pipes =============================================
 
@@ -409,7 +418,7 @@ Pipe : { x : I32, gap_start : I32 }
 gap_height = 40
 
 draw_pipes! = |pipes|
-    pipes.for_each!(|pipe| draw_pipe!(pipe_sprite, pipe))
+	pipes.for_each!(|pipe| draw_pipe!(pipe_sprite, pipe))
 
 draw_pipe! : Sprite, Pipe => {}
 draw_pipe! = |sprite, { x, gap_start }| {
@@ -421,9 +430,9 @@ draw_pipe! = |sprite, { x, gap_start }| {
 update_pipes : List(Pipe) -> List(Pipe)
 update_pipes = |pipes|
 	pipes.iter()
-	    .map(|pipe| { ..pipe, x: pipe.x - 1 })
-    	.drop_if(moved, |pipe| pipe.x < -20)
-        .collect()
+		.map(|pipe| { ..pipe, x: pipe.x - 1 })
+		.drop_if(|pipe| pipe.x < -20)
+		.collect()
 
 maybe_generate_pipe! : U64, U64 => Try(Pipe, [NoPipe])
 maybe_generate_pipe! = |last_generated, frame_count|
@@ -444,20 +453,20 @@ plant_y = W4.screen_height() - 22
 
 random_plant! : I32 => Plant
 random_plant! = |x|
-    { x, type: I32.to_u32_wrap(W4.rand!()) % plant_types }
+	{ x, type: I32.to_u32_wrap(W4.rand!()) % plant_types }
 
 starting_plants! : () => List(Plant)
 starting_plants! = ||
-    (0..=14).stream()
-        .map(|i| random_plant!(i * 12))
-        .collect!()
+	(0..=14).stream()
+		.map(|i| random_plant!(i * 12))
+		.collect!()
 
 update_plants : List(Plant) -> List(Plant)
 update_plants = |plants|
-    plants.iter()
-    	.map(plants, |plant| { ..plant, x: plant.x - 1 })
-    	.drop_if(moved, |plant| plant.x < -12)
-        .collect()
+	plants.iter()
+		.map(|plant| { ..plant, x: plant.x - 1 })
+		.drop_if(|plant| plant.x < -12)
+		.collect()
 
 maybe_generate_plant! : U64, U64 => Try(Plant, [NoPlant])
 maybe_generate_plant! = |last_generated, frame_count|
@@ -469,7 +478,7 @@ maybe_generate_plant! = |last_generated, frame_count|
 
 draw_plants! : List(Plant) => {}
 draw_plants! = |plants|
-    plants.for_each!(|plant| draw_plant!(plant_sprite_sheet, plant))
+	plants.for_each!(|plant| draw_plant!(plant_sprite_sheet, plant))
 
 draw_plant! : Sprite, Plant => {}
 draw_plant! = |sprite_sheet, { x, type }| {
@@ -607,7 +616,9 @@ update_animation = |frame_count, anim| {
 	frames_per_update =
 		match anim.cells.get(anim.index) {
 			Ok(cell) => cell.frames
-			Err(_) => crash "animation cell out of bounds at index: ${anim.index.to_str()}"
+			Err(_) => {
+				crash "animation cell out of bounds at index: ${anim.index.to_str()}"
+			}
 		}
 
 	if frame_count - anim.last_updated < frames_per_update {
@@ -634,7 +645,9 @@ draw_animation! = |anim, { x, y, flags }|
 			set_sprite_colors!()
 			Sprite.blit!(cell.sprite, { x, y, flags })
 		}
-		Err(_) => crash "animation cell out of bounds at index: ${U64.to_str(anim.index)}"
+		Err(_) => {
+			crash "animation cell out of bounds at index: ${U64.to_str(anim.index)}"
+		}
 	}
 
 wrapped_inc : U64, U64 -> U64

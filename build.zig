@@ -15,13 +15,14 @@ pub fn build(b: *std.Build) void {
     // Build options exposed as the `config` module to allocator.zig / host.zig.
     // ---------------------------------------------------------------------
 
-    // Full mem size on WASM-4 is 58976, but we have to leave room for code + constants.
-    // Was u16 in the old build; widened to u32 for headroom.
+    // WASM-4 gives programs 58976 bytes after its reserved hardware range. The
+    // final module also needs room there for stack and Roc static data, so the
+    // default allocator arena intentionally leaves several KiB free.
     const mem_size = b.option(
         u32,
         "mem-size",
         "the amount of space reserved for dynamic memory allocation",
-    ) orelse 40960;
+    ) orelse 32768;
 
     // Enable this if you hit any sort of memory corruption. Costs performance.
     const zero_on_alloc = b.option(

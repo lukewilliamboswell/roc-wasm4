@@ -38,13 +38,18 @@ platform ""
         wasm32: {
             inputs: ["host.wasm", app],
             output: Shared,
-            import_memory: True,
+            import_memory: Zeroed,
             minimum_memory: 65536,
             maximum_memory: 65536,
             initial_stack_size: 14752,
-            global_base: 6592,
+            global_base: wasm4_program_memory_base,
         },
     }
+
+# WASM-4 owns 0x0000..0x199f for registers and the framebuffer.
+# Program data starts after that reserved range, rounded up to 32-byte alignment.
+wasm4_reserved_memory_end = 0x19a0
+wasm4_program_memory_base = 0x19c0
 
 import W4
 import Sprite
