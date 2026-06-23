@@ -43,23 +43,6 @@ update! = |model|
 update_frame_count = |prev|
 	{ ..prev, frame_count: prev.frame_count + 1 }
 
-# TODO: switch for builtin List.append_if_ok
-append_if_ok : List(a), Try(a, err) -> List(a)
-append_if_ok = |items, maybe_item|
-	match maybe_item {
-		Ok(item) => items.append(item)
-		Err(_) => items
-	}
-
-# TODO: use the builtin once it exists
-sub_saturating_u64 : U64, U64 -> U64
-sub_saturating_u64 = |x, y|
-	if x < y {
-		0
-	} else {
-		x - y
-	}
-
 # ===== Title Screen ======================================
 
 TitleScreenState : {
@@ -141,7 +124,7 @@ init_game! = |state| {
 		last_pipe_generated: frame_count,
 		pipes: [],
 		plants,
-		last_plant_generated: sub_saturating_u64(frame_count, 4),
+		last_plant_generated: U64.minus_saturated(frame_count, 4),
 		last_flap: True,
 		rocci_flap_anim: create_rocci_flap_anim(frame_count),
 		ground_x: 0,
@@ -189,7 +172,7 @@ run_game! = |prev| {
 			prev.last_pipe_generated
 		}
 
-	pipes = append_if_ok(update_pipes(prev.pipes), pipe)
+	pipes = List.append_if_ok(update_pipes(prev.pipes), pipe)
 	plant = maybe_generate_plant!(prev.last_plant_generated, prev.frame_count)
 
 	last_plant_generated = 
@@ -199,7 +182,7 @@ run_game! = |prev| {
 			prev.last_plant_generated
 		}
 
-	plants = append_if_ok(update_plants(prev.plants), plant)
+	plants = List.append_if_ok(update_plants(prev.plants), plant)
 	gain_point = U64.to_u8_wrap(prev.pipes.count_if(|candidate_pipe| candidate_pipe.x == player_x - 2))
 	y = prev.player.y + y_vel
 	score = U8.plus_saturated(prev.score, gain_point)
