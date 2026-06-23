@@ -369,38 +369,38 @@ on_screen_collided! = |player_y, anim_index| {
 	# This is written in a kinda silly but simple way.
 	# It checks to ensure a few points in the sprite are all background colored.
 	# This must be run before drawing the player.
-	if pixel_collided!(player_y, { x: 11, y: 2 }) {
-		return True
-	}
-	if pixel_collided!(player_y, { x: 13, y: 3 }) {
-		return True
-	}
-	if pixel_collided!(player_y, { x: 3, y: 5 }) {
-		return True
-	}
-	if pixel_collided!(player_y, { x: 11, y: 6 }) {
-		return True
-	}
-	if pixel_collided!(player_y, { x: 9, y: 8 }) {
-		return True
-	}
-	if pixel_collided!(player_y, { x: 5, y: 9 }) {
-		return True
-	}
-	if pixel_collided!(player_y, { x: 7, y: 10 }) {
-		return True
-	}
-	if pixel_collided!(player_y, { x: 5, y: 12 }) {
-		return True
+	base_points = [
+		{ x: 11, y: 2 },
+		{ x: 13, y: 3 },
+		{ x: 3, y: 5 },
+		{ x: 11, y: 6 },
+		{ x: 9, y: 8 },
+		{ x: 5, y: 9 },
+		{ x: 7, y: 10 },
+		{ x: 5, y: 12 },
+	] # TODO .iter() once we have iter.append()
+
+	collision_points =
+		if anim_index == 2 {
+			base_points.append({ x: 2, y: 1 }).append({ x: 7, y: 1 })
+		} else if anim_index == 1 {
+			base_points.append({ x: 2, y: 2 })
+		} else {
+			base_points
+		}
+
+	for { x, y } in collision_points {
+		if W4.get_pixel!(
+			{
+				x: I32.to_u8_wrap(player_x + x),
+				y: I32.to_u8_wrap(player_y + y),
+			},
+		) != Color1 {
+			return True
+		}
 	}
 
-	if anim_index == 2 {
-		pixel_collided!(player_y, { x: 2, y: 1 }) or pixel_collided!(player_y, { x: 7, y: 1 })
-	} else if anim_index == 1 {
-		pixel_collided!(player_y, { x: 2, y: 2 })
-	} else {
-		False
-	}
+	False
 }
 
 off_screen_collided! : () => Bool
@@ -409,15 +409,6 @@ off_screen_collided! = ||
 		{
 			x: I32.to_u8_wrap(player_x + 13),
 			y: I32.to_u8_wrap(0),
-		},
-	) != Color1
-
-pixel_collided! : I32, { x : I32, y : I32 } => Bool
-pixel_collided! = |player_y, { x, y }|
-	W4.get_pixel!(
-		{
-			x: I32.to_u8_wrap(player_x + x),
-			y: I32.to_u8_wrap(player_y + y),
 		},
 	) != Color1
 
