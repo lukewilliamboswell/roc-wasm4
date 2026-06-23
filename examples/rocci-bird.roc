@@ -429,11 +429,16 @@ draw_pipe! = |sprite, { x, gap_start }| {
 }
 
 update_pipes : List(Pipe) -> List(Pipe)
-update_pipes = |pipes|
-	pipes.iter()
-		.map(|pipe| { ..pipe, x: pipe.x - 1 })
-		.drop_if(|pipe| pipe.x < -20)
-		.collect()
+update_pipes = |pipes| {
+	var $out = List.with_capacity(pipes.len())
+	for pipe in pipes {
+		moved = { ..pipe, x: pipe.x - 1 }
+		if moved.x >= -20 {
+			$out = $out.append(moved)
+		}
+	}
+	$out
+}
 
 maybe_generate_pipe! : U64, U64 => Try(Pipe, [NoPipe])
 maybe_generate_pipe! = |last_generated, frame_count|
@@ -457,17 +462,27 @@ random_plant! = |x|
 	{ x, type: I32.to_u32_wrap(W4.rand!()) % plant_types }
 
 starting_plants! : () => List(Plant)
-starting_plants! = ||
-	(0..=14).stream()
-		.map(|i| random_plant!(i * 12))
-		.collect!()
+starting_plants! = || {
+	var $plants = List.with_capacity(15)
+	var $i = 0
+	while $i <= 14 {
+		$plants = $plants.append(random_plant!($i * 12))
+		$i = $i + 1
+	}
+	$plants
+}
 
 update_plants : List(Plant) -> List(Plant)
-update_plants = |plants|
-	plants.iter()
-		.map(|plant| { ..plant, x: plant.x - 1 })
-		.drop_if(|plant| plant.x < -12)
-		.collect()
+update_plants = |plants| {
+	var $out = List.with_capacity(plants.len())
+	for plant in plants {
+		moved = { ..plant, x: plant.x - 1 }
+		if moved.x >= -12 {
+			$out = $out.append(moved)
+		}
+	}
+	$out
+}
 
 maybe_generate_plant! : U64, U64 => Try(Plant, [NoPlant])
 maybe_generate_plant! = |last_generated, frame_count|
