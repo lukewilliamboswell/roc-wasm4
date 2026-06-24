@@ -392,11 +392,13 @@ Pipe : { x : I32, gap_start : I32 }
 gap_height = 40
 
 draw_pipes! = |pipes|
-    pipes.for_each!(|{ x, gap_start }| {
-       	set_sprite_colors!()
-       	Sprite.blit!(sprite, { x, y: gap_start - W4.screen_height(), flags: Sprite.Flags.default().flip_y() })
-       	Sprite.blit!(sprite, { x, y: gap_start + gap_height, flags: Sprite.Flags.default() })
-    })
+	pipes.for_each!(
+		|{ x, gap_start }| {
+			set_sprite_colors!()
+			Sprite.blit!(pipe_sprite, { x, y: gap_start - W4.screen_height(), flags: Sprite.Flags.default().flip_y() })
+			Sprite.blit!(pipe_sprite, { x, y: gap_start + gap_height, flags: Sprite.Flags.default() })
+		},
+	)
 
 update_pipes : List(Pipe) -> List(Pipe)
 update_pipes = |pipes| {
@@ -464,11 +466,13 @@ maybe_generate_plant! = |last_generated, frame_count|
 
 draw_plants! : List(Plant) => {}
 draw_plants! = |plants|
-    plants.for_each!(|{ x, type }| {
-       	sprite = Sprite.sub_or_crash(sprite_sheet, { src_x: type * 12, src_y: 0, width: 12, height: 12 })
-       	set_sprite_colors!()
-       	Sprite.blit!(sprite, { x, y: plant_y, flags: Sprite.Flags.default() })
-    })
+	plants.for_each!(
+		|{ x, type }| {
+			sprite = Sprite.sub_or_crash(plant_sprite_sheet, { src_x: type * 12, src_y: 0, width: 12, height: 12 })
+			set_sprite_colors!()
+			Sprite.blit!(sprite, { x, y: plant_y, flags: Sprite.Flags.default() })
+		},
+	)
 
 # ===== Sounds ============================================
 
