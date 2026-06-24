@@ -664,7 +664,11 @@ create_rocci_idle_anim = |frame_count| {
 	last_updated: frame_count,
 	index: 0,
 	state: Loop,
-	cells: rocci_idle_cells,
+	cells: [
+		{ frames: 17, sprite: Sprite.sub_or_crash(rocci_sprite_sheet, { src_x: 0, src_y: 0, width: 16, height: 16 }) },
+		{ frames: 6, sprite: Sprite.sub_or_crash(rocci_sprite_sheet, { src_x: 16, src_y: 0, width: 16, height: 16 }) },
+		{ frames: 17, sprite: Sprite.sub_or_crash(rocci_sprite_sheet, { src_x: 32, src_y: 0, width: 16, height: 16 }) },
+	],
 }
 
 flap_allowed : U64, Animation -> Bool
@@ -682,7 +686,11 @@ create_rocci_flap_anim = |frame_count| {
 	last_updated: frame_count,
 	index: 2,
 	state: Completed,
-	cells: rocci_flap_cells,
+	cells: [
+		{ frames: 6, sprite: Sprite.sub_or_crash(rocci_sprite_sheet, { src_x: 16, src_y: 0, width: 16, height: 16 }) },
+		{ frames: 12, sprite: Sprite.sub_or_crash(rocci_sprite_sheet, { src_x: 32, src_y: 0, width: 16, height: 16 }) },
+		{ frames: 1, sprite: Sprite.sub_or_crash(rocci_sprite_sheet, { src_x: 0, src_y: 0, width: 16, height: 16 }) },
+	],
 }
 
 create_rocci_fall_anim : U64 -> Animation
@@ -690,7 +698,10 @@ create_rocci_fall_anim = |frame_count| {
 	last_updated: frame_count,
 	index: 0,
 	state: Loop,
-	cells: rocci_fall_cells,
+	cells: [
+		{ frames: 10, sprite: Sprite.sub_or_crash(rocci_sprite_sheet, { src_x: 48, src_y: 0, width: 16, height: 16 }) },
+		{ frames: 10, sprite: Sprite.sub_or_crash(rocci_sprite_sheet, { src_x: 64, src_y: 0, width: 16, height: 16 }) },
+	],
 }
 
 create_high_score_anim : U64 -> Animation
@@ -698,7 +709,12 @@ create_high_score_anim = |frame_count| {
 	last_updated: frame_count,
 	index: 0,
 	state: Loop,
-	cells: high_score_cells,
+	cells: [
+		{ frames: 5, sprite: Sprite.sub_or_crash(high_score_sprite_sheet, { src_x: 0, src_y: 0, width: 32, height: 16 }) },
+		{ frames: 5, sprite: Sprite.sub_or_crash(high_score_sprite_sheet, { src_x: 32, src_y: 0, width: 32, height: 16 }) },
+		{ frames: 5, sprite: Sprite.sub_or_crash(high_score_sprite_sheet, { src_x: 64, src_y: 0, width: 32, height: 16 }) },
+		{ frames: 5, sprite: Sprite.sub_or_crash(high_score_sprite_sheet, { src_x: 96, src_y: 0, width: 32, height: 16 }) },
+	],
 }
 
 # ===== Sprites ===========================================
@@ -750,33 +766,3 @@ high_score_sprite_sheet = Sprite.new({
 	width: 128,
 	height: 16,
 })
-
-# ===== Animation Cells ===================================
-
-rocci_idle_cells : List({ frames : U64, sprite : Sprite })
-rocci_idle_cells = [
-	{ frames: 17, sprite: Sprite.sub_or_crash(rocci_sprite_sheet, { src_x: 0, src_y: 0, width: 16, height: 16 }) },
-	{ frames: 6, sprite: Sprite.sub_or_crash(rocci_sprite_sheet, { src_x: 16, src_y: 0, width: 16, height: 16 }) },
-	{ frames: 17, sprite: Sprite.sub_or_crash(rocci_sprite_sheet, { src_x: 32, src_y: 0, width: 16, height: 16 }) },
-]
-
-rocci_flap_cells : List({ frames : U64, sprite : Sprite })
-rocci_flap_cells = [
-	{ frames: 6, sprite: Sprite.sub_or_crash(rocci_sprite_sheet, { src_x: 16, src_y: 0, width: 16, height: 16 }) },
-	{ frames: 12, sprite: Sprite.sub_or_crash(rocci_sprite_sheet, { src_x: 32, src_y: 0, width: 16, height: 16 }) },
-	{ frames: 1, sprite: Sprite.sub_or_crash(rocci_sprite_sheet, { src_x: 0, src_y: 0, width: 16, height: 16 }) },
-]
-
-rocci_fall_cells : List({ frames : U64, sprite : Sprite })
-rocci_fall_cells = [
-	{ frames: 10, sprite: Sprite.sub_or_crash(rocci_sprite_sheet, { src_x: 48, src_y: 0, width: 16, height: 16 }) },
-	{ frames: 10, sprite: Sprite.sub_or_crash(rocci_sprite_sheet, { src_x: 64, src_y: 0, width: 16, height: 16 }) },
-]
-
-high_score_cells : List({ frames : U64, sprite : Sprite })
-high_score_cells = [
-	{ frames: 5, sprite: Sprite.sub_or_crash(high_score_sprite_sheet, { src_x: 0, src_y: 0, width: 32, height: 16 }) },
-	{ frames: 5, sprite: Sprite.sub_or_crash(high_score_sprite_sheet, { src_x: 32, src_y: 0, width: 32, height: 16 }) },
-	{ frames: 5, sprite: Sprite.sub_or_crash(high_score_sprite_sheet, { src_x: 64, src_y: 0, width: 32, height: 16 }) },
-	{ frames: 5, sprite: Sprite.sub_or_crash(high_score_sprite_sheet, { src_x: 96, src_y: 0, width: 32, height: 16 }) },
-]
