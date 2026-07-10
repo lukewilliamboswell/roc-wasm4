@@ -40,6 +40,7 @@ platform ""
 		wasm32: {
 			inputs: ["host.wasm", app],
 			output: Shared,
+			exports: ["start", "update"],
 			import_memory: Zeroed,
 			minimum_memory: 65536,
 			maximum_memory: 65536,
