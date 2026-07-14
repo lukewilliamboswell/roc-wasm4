@@ -51,8 +51,6 @@ fn blockDataPtr(c: u15) *anyopaque {
 }
 
 pub fn init() void {
-    @memset(MEM[0..], 0);
-
     // The zeroth block is special.
     // Labelled as allocated, but is really just the head of the free list.
     BLOCKS[0] = .{

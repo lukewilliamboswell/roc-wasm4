@@ -84,7 +84,7 @@ If hot reloading stops working, press `R` in the WASM-4 runtime to reload the ca
 Package the platform as a Roc archive with:
 
 ```shell
-zig build -Doptimize=ReleaseSafe
+zig build -Doptimize=ReleaseSmall
 ROC=roc ./bundle.sh
 ```
 
@@ -114,4 +114,4 @@ zig build -Doptimize=ReleaseSmall
 roc build examples/snake.roc --opt=size
 ```
 
-If the cart is too large, you can try lowering the dynamic memory space with `-Dmem-size=<bytes>`. The default is `40960` bytes.
+If the cart is too large, you can try lowering the dynamic memory space with `-Dmem-size=<bytes>`. The default is `32768` bytes.

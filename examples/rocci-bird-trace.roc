@@ -106,6 +106,7 @@ init_game! : TitleScreenState => Model
 init_game! = |state| {
 	frame_count = state.frame_count
 	plants = state.plants
+	W4.trace!("init_game frame=${frame_count.to_str()}")
 
 	# Seed the randomness with number of frames since the start of the game.
 	# This makes the game feel like it is truely randomly seeded cause players won't always start on the same frame.
@@ -413,13 +414,31 @@ update_pipes = |pipes| {
 }
 
 maybe_generate_pipe! : U64, U64 => Try(Pipe, [NoPipe])
-maybe_generate_pipe! = |last_generated, frame_count|
-	if frame_count - last_generated > 90 {
+maybe_generate_pipe! = |last_generated, frame_count| {
+	diff = frame_count - last_generated
+	should_generate = diff > 90
+	diff_is_one = diff == 1
+	diff_u8 = U64.to_u8_wrap(diff)
+	gen_text =
+		if should_generate {
+			"true"
+		} else {
+			"false"
+		}
+	one_text =
+		if diff_is_one {
+			"true"
+		} else {
+			"false"
+		}
+	W4.trace!("pipe last=${last_generated.to_str()} frame=${frame_count.to_str()} diff=${diff.to_str()} diff_u8=${diff_u8.to_str()} diff_eq_1=${one_text} gen=${gen_text}")
+	if should_generate {
 		gap_start = W4.rand_between!({ start: 0, before: 16 })
 		Ok({ x: W4.screen_width(), gap_start: gap_start * 5 + 10 })
 	} else {
 		Err(NoPipe)
 	}
+}
 
 # ===== Plants ============================================
 

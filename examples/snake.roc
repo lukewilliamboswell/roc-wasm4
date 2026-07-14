@@ -1,5 +1,5 @@
 app [main] {
-    w4: platform "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/0.6/ADeKYHzDvyXSEZjj4wG3qRLTFRYiiEWLuVMPD5S8uBF3.tar.zst",
+    w4: platform "../platform/main.roc",
 }
 
 import w4.W4
@@ -118,7 +118,7 @@ draw_game! = |model| {
     Sprite.blit!(model.fruit_sprite, {
         x: model.fruit.x * 8,
         y: model.fruit.y * 8,
-        flags: [],
+        flags: Sprite.Flags.default(),
     })
 
     W4.set_shape_colors!({ border: blue, fill: green })

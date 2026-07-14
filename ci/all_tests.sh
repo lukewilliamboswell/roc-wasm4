@@ -39,7 +39,7 @@ echo "Zig: $(zig version)"
 if [ "$SKIP_ZIG_BUILD" = "1" ]; then
     echo "Skipping zig build because SKIP_ZIG_BUILD=1"
 else
-    zig build
+    zig build -Doptimize=ReleaseSmall
 fi
 
 # zig tests
