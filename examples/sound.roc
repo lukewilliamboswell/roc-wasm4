@@ -1,5 +1,5 @@
 app [main] {
-    w4: platform "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/0.6/ADeKYHzDvyXSEZjj4wG3qRLTFRYiiEWLuVMPD5S8uBF3.tar.zst",
+    w4: platform "../platform/main.roc",
 }
 
 import w4.W4
@@ -95,7 +95,7 @@ update! = |model| {
     Sprite.blit!(model.arrow_sprite, {
         x: x - 8 - 4,
         y: y + U64.to_i32_wrap(model.arrow_idx) * spacing,
-        flags: [],
+        flags: Sprite.Flags.default(),
     })
 
     gamepad = W4.get_gamepad!(Player1)
