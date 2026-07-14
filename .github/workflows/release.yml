@@ -37,9 +37,10 @@ jobs:
           version: ${{ env.ZIG_VERSION }}
 
       - name: Install Roc
-        uses: roc-lang/setup-roc@v0.2.0
+        uses: roc-lang/setup-roc@main
         with:
           version: ${{ env.ROC_VERSION }}
+          nightly-tag: nightly-2026-July-14-c9147c2
 
       - name: Capture Roc version
         id: roc_version
@@ -118,9 +119,10 @@ jobs:
           version: ${{ env.ZIG_VERSION }}
 
       - name: Install Roc
-        uses: roc-lang/setup-roc@v0.2.0
+        uses: roc-lang/setup-roc@main
         with:
           version: ${{ env.ROC_VERSION }}
+          nightly-tag: nightly-2026-July-14-c9147c2
 
       - name: Install Python
         uses: actions/setup-python@v5
