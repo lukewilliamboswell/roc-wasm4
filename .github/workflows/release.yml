@@ -19,7 +19,6 @@ concurrency:
 
 env:
   ZIG_VERSION: 0.16.0
-  ROC_VERSION: nightly-new-compiler
 
 jobs:
   build_and_bundle:
@@ -31,6 +30,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Read Roc version
+        id: pinned_roc
+        shell: bash
+        run: echo "nightly_tag=$(<.roc-version)" >> "$GITHUB_OUTPUT"
+
       - name: Install Zig
         uses: mlugg/setup-zig@v2
         with:
@@ -39,8 +43,8 @@ jobs:
       - name: Install Roc
         uses: roc-lang/setup-roc@main
         with:
-          version: ${{ env.ROC_VERSION }}
-          nightly-tag: nightly-2026-July-14-c9147c2
+          version: nightly-new-compiler
+          nightly-tag: ${{ steps.pinned_roc.outputs.nightly_tag }}
 
       - name: Capture Roc version
         id: roc_version
@@ -113,6 +117,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Read Roc version
+        id: pinned_roc
+        shell: bash
+        run: echo "nightly_tag=$(<.roc-version)" >> "$GITHUB_OUTPUT"
+
       - name: Install Zig
         uses: mlugg/setup-zig@v2
         with:
@@ -121,8 +130,8 @@ jobs:
       - name: Install Roc
         uses: roc-lang/setup-roc@main
         with:
-          version: ${{ env.ROC_VERSION }}
-          nightly-tag: nightly-2026-July-14-c9147c2
+          version: nightly-new-compiler
+          nightly-tag: ${{ steps.pinned_roc.outputs.nightly_tag }}
 
       - name: Install Python
         uses: actions/setup-python@v5
