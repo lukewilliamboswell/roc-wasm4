@@ -505,15 +505,15 @@ W4 :: [].{
         => {}
     tone! = |{ start_freq, end_freq, channel, pan, sustain_time, release_time, decay_time, attack_time, volume, peak_volume }| {
         # Each component occupies a disjoint byte/range, so OR is equivalent to addition.
-        freq = U32.shift_left_by(U16.to_u32(end_freq), 16) + U16.to_u32(start_freq)
+        freq = U32.shl_wrap(U16.to_u32(end_freq), 16) + U16.to_u32(start_freq)
 
         duration =
-            U32.shift_left_by(U8.to_u32(attack_time), 24)
-            + U32.shift_left_by(U8.to_u32(decay_time), 16)
-            + U32.shift_left_by(U8.to_u32(release_time), 8)
+            U32.shl_wrap(U8.to_u32(attack_time), 24)
+            + U32.shl_wrap(U8.to_u32(decay_time), 16)
+            + U32.shl_wrap(U8.to_u32(release_time), 8)
             + U8.to_u32(sustain_time)
 
-        volume_bits = U16.shift_left_by(U8.to_u16(peak_volume), 8) + U8.to_u16(volume)
+        volume_bits = U16.shl_wrap(U8.to_u16(peak_volume), 8) + U8.to_u16(volume)
 
         pan_bits : U8
         pan_bits = match pan {
@@ -545,7 +545,7 @@ W4 :: [].{
 
     ## Returns Bool.True if bit `n` (0-indexed from LSB) is set in `byte`.
     bit_is_set : U8, U8 -> Bool
-    bit_is_set = |byte, n| U8.shift_right_zf_by(byte, n) % 2 == 1
+    bit_is_set = |byte, n| U8.shr_zf_wrap(byte, n) % 2 == 1
 
     convert_mode : [Eighth, Quarter, Half, ThreeQuarters] -> U8
     convert_mode = |m| match m {
@@ -611,9 +611,9 @@ W4 :: [].{
     from_color_flags = |flags| {
         # Each draw color occupies one nibble (4 bits); extract via shift + mod.
         pos1 = U16.to_u8_wrap(flags % 16)
-        pos2 = U16.to_u8_wrap(U16.shift_right_zf_by(flags, 4) % 16)
-        pos3 = U16.to_u8_wrap(U16.shift_right_zf_by(flags, 8) % 16)
-        pos4 = U16.to_u8_wrap(U16.shift_right_zf_by(flags, 12) % 16)
+        pos2 = U16.to_u8_wrap(U16.shr_zf_wrap(flags, 4) % 16)
+        pos3 = U16.to_u8_wrap(U16.shr_zf_wrap(flags, 8) % 16)
+        pos4 = U16.to_u8_wrap(U16.shr_zf_wrap(flags, 12) % 16)
 
         {
             primary: W4.extract_color(pos1),
