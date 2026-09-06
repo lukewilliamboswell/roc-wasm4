@@ -1,0 +1,18 @@
+name: Update Roc nightly
+on:
+  schedule:
+    # Once daily, about four hours after the upstream 09:00 UTC build.
+    - cron: "46 13 * * *"
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: roc-nightly-update
+  cancel-in-progress: false
+jobs:
+  update:
+    # Ceiling only: the reusable workflow narrows permissions per job.
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    uses: lukewilliamboswell/roc-automation/.github/workflows/update-roc-nightly.yml@c6711b0f46ee57beda8e1db4f3eafcbcd9cddae2

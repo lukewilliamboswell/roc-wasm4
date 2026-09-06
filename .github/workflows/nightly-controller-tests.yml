@@ -1,0 +1,9 @@
+name: Nightly configuration
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  configuration:
+    uses: lukewilliamboswell/roc-automation/.github/workflows/check-config.yml@c6711b0f46ee57beda8e1db4f3eafcbcd9cddae2

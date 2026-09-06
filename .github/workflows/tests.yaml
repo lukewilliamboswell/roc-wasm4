@@ -3,18 +3,27 @@ name: Tests
 on:
   pull_request:
   workflow_dispatch:
+    inputs:
+      nightly_validation:
+        description: "Validate a nightly candidate without publishing or deploying"
+        type: boolean
+        required: false
+        default: false
 
 # this cancels workflows currently in progress if you start a new one
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
 
   test-examples:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Read Roc version
         id: pinned_roc
@@ -22,12 +31,12 @@ jobs:
         run: echo "nightly_tag=$(<.roc-version)" >> "$GITHUB_OUTPUT"
 
       - name: install Zig
-        uses: mlugg/setup-zig@v2
+        uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2
         with:
           version: 0.16.0
 
       - name: Install Roc
-        uses: roc-lang/setup-roc@main
+        uses: roc-lang/setup-roc@f5a74bf90aa694b43ab4a7cbfdb19273bc6aa697
         with:
           version: nightly-new-compiler
           nightly-tag: ${{ steps.pinned_roc.outputs.nightly_tag }}
