@@ -1,0 +1,6 @@
+{
+  "workflows": [
+    "tests.yaml",
+    "release.yml"
+  ]
+}
