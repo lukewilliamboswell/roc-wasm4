@@ -2,8 +2,9 @@ name: Update Roc nightly
 
 on:
   schedule:
-    # Check repeatedly: release publication time varies. Stagger repository runs.
-    - cron: "46 1,7,13,19 * * *"
+    # Once daily, about four hours after the 09:00 UTC upstream build.
+    # Stagger repositories; a late release can wait until the next daily check.
+    - cron: "46 13 * * *"
   workflow_dispatch:
 
 permissions: {}
