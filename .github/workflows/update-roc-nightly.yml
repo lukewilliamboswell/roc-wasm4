@@ -1,83 +1,18 @@
 name: Update Roc nightly
-
 on:
   schedule:
-    # Once daily, about four hours after the 09:00 UTC upstream build.
-    # Stagger repositories; a late release can wait until the next daily check.
+    # Once daily, about four hours after the upstream 09:00 UTC build.
     - cron: "46 13 * * *"
   workflow_dispatch:
-
 permissions: {}
-
 concurrency:
   group: roc-nightly-update
   cancel-in-progress: false
-
-env:
-  DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
-
 jobs:
-  prepare:
-    if: github.ref_name == github.event.repository.default_branch
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
+  update:
+    # Ceiling only: the reusable workflow narrows permissions per job.
     permissions:
       contents: write
       pull-requests: write
-    outputs:
-      changed: ${{ steps.prepare.outputs.changed }}
-      sha: ${{ steps.prepare.outputs.sha }}
-      nightly: ${{ steps.prepare.outputs.nightly }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - id: prepare
-        name: Prepare signed pin commit and PR
-        env:
-          GH_TOKEN: ${{ github.token }}
-          FORCE: ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
-        run: python3 scripts/nightly_update.py prepare
-
-  validate:
-    needs: prepare
-    if: needs.prepare.outputs.changed == 'true'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 90
-    permissions:
-      contents: read
       actions: write
-    outputs:
-      runs: ${{ steps.validate.outputs.runs }}
-    steps:
-      # This is the trusted controller, not a checkout of the candidate.
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - id: validate
-        name: Dispatch candidate validation and await its results
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CANDIDATE_SHA: ${{ needs.prepare.outputs.sha }}
-        run: python3 scripts/nightly_update.py validate
-
-  report:
-    needs: [prepare, validate]
-    if: always() && needs.prepare.outputs.changed == 'true'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Report results for this candidate
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CANDIDATE_SHA: ${{ needs.prepare.outputs.sha }}
-          NIGHTLY_TAG: ${{ needs.prepare.outputs.nightly }}
-          TEST_RESULT: ${{ needs.validate.result }}
-          VALIDATION_RUNS: ${{ needs.validate.outputs.runs }}
-        run: python3 scripts/nightly_update.py report
+    uses: lukewilliamboswell/roc-automation/.github/workflows/update-roc-nightly.yml@c6711b0f46ee57beda8e1db4f3eafcbcd9cddae2

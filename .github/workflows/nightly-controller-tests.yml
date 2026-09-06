@@ -1,14 +1,9 @@
-name: Nightly controller tests
+name: Nightly configuration
 on:
   pull_request:
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  controller-tests:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - run: python3 -m unittest discover -s scripts/tests_nightly -v
+  configuration:
+    uses: lukewilliamboswell/roc-automation/.github/workflows/check-config.yml@c6711b0f46ee57beda8e1db4f3eafcbcd9cddae2
