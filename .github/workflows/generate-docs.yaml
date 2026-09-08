@@ -16,10 +16,6 @@ jobs:
     steps:
       - name: Check out the repository
         uses: actions/checkout@v4
-      - name: Read Roc version
-        id: pinned_roc
-        shell: bash
-        run: echo "nightly_tag=$(<.roc-version)" >> "$GITHUB_OUTPUT"
       - name: Install Zig
         uses: mlugg/setup-zig@v2
         with:
@@ -28,7 +24,9 @@ jobs:
         uses: roc-lang/setup-roc@main
         with:
           version: nightly-new-compiler
-          nightly-tag: ${{ steps.pinned_roc.outputs.nightly_tag }}
+
+      - name: Show installed Roc version
+        run: roc version
       - name: Build host object
         run: zig build
       - name: Generate docs

@@ -1,117 +1,58 @@
 # Contributing
 
-This document is for roc-wasm4 platform development. If you are building a game with a released platform bundle, start with the [README](README.md).
+Install the Zig version specified in [build.zig.zon](build.zig.zon), Roc, and
+WASM-4 (`w4`). The `roc` field in [platform/main.roc](platform/main.roc) declares
+the development compiler. Run `roc version` to check your installation.
 
-## Requirements
+CI installs the latest nightly, so its compiler can be newer than your local one.
 
-- [Roc](https://www.roc-lang.org/install) new-compiler nightly, available as `roc`
-- [Zig](https://ziglang.org/download/) `0.16.0`
-- [WASM-4 CLI](https://wasm4.org), available as `w4`, for running and bundling carts
-- A Unix-like shell for `ci/all_tests.sh` and `bundle.sh`
+## Validation
 
-## Source Build
-
-Zig builds the wasm32 host object that lives at `platform/targets/wasm32/host.wasm`. Roc links that host object with an app when building a WASM-4 cart from the local platform path.
-
-```shell
-zig build
-roc build examples/snake.roc
-w4 run snake.wasm
-```
-
-Re-run `zig build` when changing host code or host build options such as `-Dmem-size=<bytes>`.
-
-## Local Checks
-
-Run the full local check suite with:
-
-```shell
+```sh
 ROC=roc ./ci/all_tests.sh
+ROC=roc python3 ci/examples.py published
 ```
 
-This builds the Zig host, runs Zig tests, checks every Roc example and platform module, smoke-builds the example carts, generates docs, creates a local platform bundle, and runs platform Roc tests. Checked-in examples point at the latest released platform bundle; temporarily use the local platform path when you need examples to exercise source changes in this checkout.
+The first command builds and tests the host, checks platform modules, builds all
+examples against current source in temporary application copies, runs platform
+Roc tests, generates docs, and bundles the platform. The second checks and builds
+committed public examples against their immutable release URLs with a fresh cache.
+Neither command edits committed examples. CI names these lanes Current source
+and Published examples; Release separately tests the exact proposed archive on
+Linux, macOS, and Windows. Cart builds are smoke tests; play-test drawing, input,
+audio and game behavior with WASM-4 before release.
 
-`SKIP_ZIG_BUILD=1` is reserved for release validation. It skips local host builds, docs generation, and local bundling so rewritten examples can prove they build against a downloaded platform archive.
+To work on a game, copy its whole directory and change the platform URL in your
+copy to the absolute path of `platform/main.roc`. Run `zig build` before building
+the copied application. For smaller carts use `zig build -Doptimize=ReleaseSmall`
+and `roc build path/to/main.roc --opt=size --output=game.wasm`, then
+`w4 run game.wasm`. The host defaults to 32768 bytes of dynamic memory;
+`-Dmem-size=<bytes>` changes it.
 
-## Local Examples
+## Compiler and release policy
 
-The checked-in examples use the latest released platform bundle for copy/paste usability. When testing source changes locally, temporarily point an example at:
+`main` is the development branch. Compiler pins live in root headers selected by
+`.github/roc-nightly.json`. Nightly updates advance all selected compiler pins and
+leave released URLs unchanged. Both compatibility lanes must pass. A source fix
+may require a new platform release and a separately reviewed example URL update.
+Automatic merging is disabled. See [.github/ROC_NIGHTLY.md](.github/ROC_NIGHTLY.md).
 
-```roc
-w4: platform "../platform/main.roc"
-```
+Dispatch **Release** on the reviewed candidate branch with a new SemVer
+`release_tag`. It checks release policy, builds the platform archive, tests that
+archive across the runner matrix, and publishes the tested bytes and commit.
+The installed build compiler must match the platform header before publication.
+Existing tags are rejected; inspect existing assets before retrying a partial
+publication. PR and nightly-validation runs cannot publish.
 
-That keeps local examples pointed at source changes. After `zig build`, run an example with:
-
-```shell
-roc build examples/basic.roc
-w4 run basic.wasm
-```
+After publishing, update example URLs through a reviewed PR and run the published
+example checks against the downloads.
 
 ## Documentation
 
-Generate platform API docs locally with:
+Generate local docs with:
 
-```shell
+```sh
 zig build
-roc docs platform/main.roc --output=generated-docs
-python3 -m http.server 8000 --directory generated-docs
+roc docs platform/main.roc --output=.zig-cache/generated-docs
+python3 -m http.server 8000 --directory .zig-cache/generated-docs
 ```
-
-Then open `http://localhost:8000`.
-
-Docs are published by the `Generate docs` workflow when a GitHub Release is published.
-
-## Hot Reloading
-
-Hot reloading is useful while iterating, but it can break when state layout changes. One setup is to use [`entr`](https://github.com/eradman/entr):
-
-```shell
-find examples platform src \( -name "*.roc" -o -name "*.zig" \) \
-    | entr -ccr sh -c 'zig build && roc build examples/snake.roc'
-```
-
-In another terminal:
-
-```shell
-w4 run snake.wasm --hot
-```
-
-If hot reloading stops working, press `R` in the WASM-4 runtime to reload the cart.
-
-## Platform Bundles
-
-Package the platform as a Roc archive with:
-
-```shell
-zig build -Doptimize=ReleaseSmall
-ROC=roc ./bundle.sh
-```
-
-The bundle script writes a hash-named `.tar.zst` archive in the repository root and prints its path as `Created: ...`.
-
-## Release Workflow
-
-The `Release` workflow validates platform bundles before publishing:
-
-- On pull requests, it builds a bundle and tests examples against the downloaded archive on Linux, macOS, and Windows.
-- On manual dispatch with a `release_tag`, it creates a GitHub Release and attaches the generated `.tar.zst` archive.
-
-Use the exact `.tar.zst` asset URL from the GitHub Release in downstream apps:
-
-```roc
-app [main] {
-    w4: platform "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/0.6/ADeKYHzDvyXSEZjj4wG3qRLTFRYiiEWLuVMPD5S8uBF3.tar.zst",
-}
-```
-
-## Game Distribution From Source
-
-When testing a game against a local platform checkout, build the host and Roc app with size-oriented optimizations:
-
-```shell
-zig build -Doptimize=ReleaseSmall
-roc build examples/snake.roc --opt=size
-```
-
-If the cart is too large, you can try lowering the dynamic memory space with `-Dmem-size=<bytes>`. The default is `32768` bytes.

@@ -2,5 +2,14 @@
   "workflows": [
     "tests.yaml",
     "release.yml"
-  ]
+  ],
+  "compiler_roots": [
+    "platform/main.roc",
+    "examples/basic/main.roc",
+    "examples/rocci-bird-trace/main.roc",
+    "examples/rocci-bird/main.roc",
+    "examples/snake/main.roc",
+    "examples/sound/main.roc"
+  ],
+  "auto_merge": false
 }
