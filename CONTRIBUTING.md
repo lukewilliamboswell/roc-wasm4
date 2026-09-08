@@ -1,7 +1,8 @@
 # Contributing
 
-Install Zig `0.16.0` and the exact Roc compiler printed by
-`python3 ci/compiler_version.py`. Install WASM-4 (`w4`) to play carts.
+Install Zig `0.16.0` and the exact Roc compiler named in the `roc` field of
+`platform/main.roc`. Run `roc version` to check your installed compiler.
+Install WASM-4 (`w4`) to play carts.
 
 ## Validation
 

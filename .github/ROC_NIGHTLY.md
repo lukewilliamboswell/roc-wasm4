@@ -6,8 +6,9 @@ All public application pins advance together with the platform pin while release
 dependency URLs stay unchanged. Automatic merging is explicitly disabled.
 
 Shared workflows and release policy are pinned to `5c1f09b7190118f43eb901eaed0110cd53029199`.
-The vendored `ci/compiler_pins.py` is copied unchanged from that revision's
-`actions/nightly/compiler_pins.py`; review and update it with the shared pin.
+CI reads the platform header pin with `sed` before installing Roc through
+`setup-roc`. Use `roc version` to report the installed compiler. The shared
+configuration check verifies that all selected compiler headers agree.
 
 Tests validates Published examples from unchanged files and a fresh cache, plus
 Current source using temporary application copies. Release validates the exact

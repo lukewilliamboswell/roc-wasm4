@@ -53,11 +53,12 @@ jobs:
           allow-default-branch: 'true'
           allow-nightly-bootstrap: 'true'
 
-      - name: Read Roc version
+      - name: Read compiler pin for installation
         id: pinned_roc
         shell: bash
         run: |
-          nightly_tag="$(python3 ci/compiler_version.py)"
+          nightly_tag="$(sed -n 's/^[[:space:]]*packages { roc: "\([^"]*\)" }$/\1/p' platform/main.roc)"
+          [[ "$nightly_tag" =~ ^nightly-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9a-f]{7,40}$ ]]
           echo "nightly_tag=$nightly_tag" >> "$GITHUB_OUTPUT"
 
       - name: Install Zig
@@ -147,11 +148,12 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Read Roc version
+      - name: Read compiler pin for installation
         id: pinned_roc
         shell: bash
         run: |
-          nightly_tag="$(python3 ci/compiler_version.py)"
+          nightly_tag="$(sed -n 's/^[[:space:]]*packages { roc: "\([^"]*\)" }$/\1/p' platform/main.roc)"
+          [[ "$nightly_tag" =~ ^nightly-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9a-f]{7,40}$ ]]
           echo "nightly_tag=$nightly_tag" >> "$GITHUB_OUTPUT"
 
       - name: Install Zig
