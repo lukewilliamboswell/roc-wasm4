@@ -1,4 +1,4 @@
-app [main] { roc: "nightly-2026-08-08-195c9e7",
+app [main] { roc: "nightly-2026-09-07-14d9829",
 	w4: platform "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/0.7.0/BGmWeWePVmGCq1S6FArkz2rdw2t3BMfWsK6WinpTyTp4.tar.zst",
 }
 

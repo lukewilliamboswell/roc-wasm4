@@ -6,7 +6,7 @@ roc-wasm4 gives Roc apps a high-level `W4` API for drawing, input, audio, disk p
 
 ## Requirements
 
-- [Roc](https://www.roc-lang.org/install) `nightly-2026-08-08-195c9e7`, available as `roc` (the compiler tested with platform [0.7.0](https://github.com/lukewilliamboswell/roc-wasm4/releases/tag/0.7.0))
+- [Roc](https://www.roc-lang.org/install) `nightly-2026-09-07-14d9829`, available as `roc` (the compiler tested with platform [0.7.0](https://github.com/lukewilliamboswell/roc-wasm4/releases/tag/0.7.0))
 - [WASM-4 CLI](https://wasm4.org), available as `w4`
 - A roc-wasm4 `.tar.zst` platform bundle URL from the [GitHub Releases page](https://github.com/lukewilliamboswell/roc-wasm4/releases)
 
@@ -16,7 +16,7 @@ Create `app.roc` and point `platform` at a released `.tar.zst` bundle:
 
 ```roc
 app [main] {
-    roc: "nightly-2026-08-08-195c9e7",
+    roc: "nightly-2026-09-07-14d9829",
     w4: platform "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/0.7.0/BGmWeWePVmGCq1S6FArkz2rdw2t3BMfWsK6WinpTyTp4.tar.zst",
 }
 
