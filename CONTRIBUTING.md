@@ -1,13 +1,10 @@
 # Contributing
 
-Install Zig `0.16.0` and the exact Roc compiler named in the `roc` field of
-`platform/main.roc`. Run `roc version` to check your installed compiler.
-Install WASM-4 (`w4`) to play carts.
+Install the Zig version specified in [build.zig.zon](build.zig.zon), Roc, and
+WASM-4 (`w4`). The `roc` field in [platform/main.roc](platform/main.roc) declares
+the development compiler. Run `roc version` to check your installation.
 
-CI installs the latest published new-compiler nightly through `setup-roc` and
-prints `roc version`. It does not select the compiler from the headers, so a
-rerun can use a newer nightly. Local checks with the header compiler and CI
-checks with the latest nightly can therefore exercise different versions.
+CI installs the latest nightly, so its compiler can be newer than your local one.
 
 ## Validation
 
@@ -40,26 +37,17 @@ leave released URLs unchanged. Both compatibility lanes must pass. A source fix
 may require a new platform release and a separately reviewed example URL update.
 Automatic merging is disabled. See [.github/ROC_NIGHTLY.md](.github/ROC_NIGHTLY.md).
 
-Until a usable stable compiler is adopted, releases explicitly use the shared
-exact-nightly bootstrap policy on `main`. This makes no stable or LTS commitment.
-Remove the bootstrap exception when adopting a stable compiler. Add a compiler
-compatibility branch such as `roc-0.1.x` only when that line actually exists and
-needs maintenance. Backports and forward-ports are reviewed and tested manually.
+Dispatch **Release** on the reviewed candidate branch with a new SemVer
+`release_tag`. It checks release policy, builds the platform archive, tests that
+archive across the runner matrix, and publishes the tested bytes and commit.
+The installed build compiler must match the platform header before publication.
+Existing tags are rejected; inspect existing assets before retrying a partial
+publication. PR and nightly-validation runs cannot publish.
 
-Dispatch Release on the reviewed candidate branch with a new unprefixed SemVer
-`release_tag`, for example `0.8.0`. It checks compiler/release policy, builds once,
-tests that archive across the runner matrix using the latest nightly, and publishes those same bytes at
-the tested SHA. Publication requires the installed build compiler to match the
-release-policy header pin; update the headers before publishing if necessary.
-Existing tags are rejected. Never blindly rerun a partial
-publication: inspect the tag and assets and preserve their identity first.
-PR and `nightly_validation: true` runs cannot publish.
+After publishing, update example URLs through a reviewed PR and run the published
+example checks against the downloads.
 
-After publication, maintainers must prepare a reviewed follow-up updating example
-URLs and README release links, test actual downloads with `ci/examples.py published`,
-and provide complete starter application directories and compiler instructions.
-Keep the development compiler pins intact. Follow-up PR creation and validation
-are currently manual; publication does not prove those tasks completed.
+## Documentation
 
 Generate local docs with:
 
@@ -68,8 +56,3 @@ zig build
 roc docs platform/main.roc --output=.zig-cache/generated-docs
 python3 -m http.server 8000 --directory .zig-cache/generated-docs
 ```
-
-The existing release-event Pages workflow publishes the current API site.
-Versioned docs retention and explicit dispatch from token-created releases still
-need a separate Pages migration; do not assume a token-created release triggers
-that workflow. Preserve historical URLs when implementing that migration.

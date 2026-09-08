@@ -6,43 +6,25 @@ roc-wasm4 gives Roc apps a high-level `W4` API for drawing, input, audio, disk p
 
 ## Requirements
 
-- [Roc](https://www.roc-lang.org/install) `nightly-2026-09-07-14d9829`, available as `roc` (the compiler tested with platform [0.7.0](https://github.com/lukewilliamboswell/roc-wasm4/releases/tag/0.7.0))
+- [Roc](https://www.roc-lang.org/install), available as `roc`; use the compiler declared in the example you build
 - [WASM-4 CLI](https://wasm4.org), available as `w4`
 - A roc-wasm4 `.tar.zst` platform bundle URL from the [GitHub Releases page](https://github.com/lukewilliamboswell/roc-wasm4/releases)
 
 ## Quick Start
 
-Create `app.roc` and point `platform` at a released `.tar.zst` bundle:
+Copy the [basic example](examples/basic/main.roc) into your own application directory.
+Its header declares the compiler and released platform bundle it uses. Keep those
+entries when adapting the example into your own game.
 
-```roc
-app [main] {
-    roc: "nightly-2026-09-07-14d9829",
-    w4: platform "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/0.7.0/BGmWeWePVmGCq1S6FArkz2rdw2t3BMfWsK6WinpTyTp4.tar.zst",
-}
-
-import w4.W4
-
-Model : {}
-
-main = {
-    init!: || {},
-    update!: |model| {
-        W4.text!("Hello from Roc!", { x: 8, y: 8 })
-        model
-    },
-}
-```
-
-Build the cart and run it with WASM-4:
+Build the example and run it with WASM-4:
 
 ```shell
-roc build app.roc
-w4 run app.wasm
+roc version
+roc build examples/basic/main.roc --output=basic.wasm
+w4 run basic.wasm
 ```
 
-Because roc-wasm4 only declares a `wasm32` target, `roc build app.roc` defaults to writing `app.wasm`.
-
-For the native WASM-4 runtime, use `w4 run-native app.wasm`. Native can be much slower than the web runtime, especially for non-optimized builds.
+For the native WASM-4 runtime, use `w4 run-native basic.wasm`. Native can be much slower than the web runtime, especially for non-optimized builds.
 
 ## Platform API
 
@@ -63,13 +45,9 @@ This repository includes several example apps:
 - `examples/rocci-bird/main.roc`: a Rocci Bird demo by Brendan Hansknecht with art by Luke DeVault
 - `examples/sound/main.roc`: a tone parameter playground
 
-The checked-in examples use the pinned released platform bundle so they can be copied into a game project directly:
-
-```roc
-w4: platform "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/0.7.0/BGmWeWePVmGCq1S6FArkz2rdw2t3BMfWsK6WinpTyTp4.tar.zst"
-```
-
-Each application lives in its own directory. Install the compiler in its `roc` header before building; the header does not install it. Newer platform releases do not imply support for every compiler.
+Each application lives in its own directory and uses a released platform bundle.
+Copy the whole directory when starting a game. Install the compiler in its `roc`
+header before building; the header does not install it.
 
 Contributors testing platform source changes can use the local path shown in [CONTRIBUTING.md](CONTRIBUTING.md).
 
