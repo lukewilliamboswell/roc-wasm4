@@ -16,13 +16,6 @@ jobs:
     steps:
       - name: Check out the repository
         uses: actions/checkout@v4
-      - name: Read compiler pin for installation
-        id: pinned_roc
-        shell: bash
-        run: |
-          nightly_tag="$(sed -n 's/^[[:space:]]*packages { roc: "\([^"]*\)" }$/\1/p' platform/main.roc)"
-          [[ "$nightly_tag" =~ ^nightly-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9a-f]{7,40}$ ]]
-          echo "nightly_tag=$nightly_tag" >> "$GITHUB_OUTPUT"
       - name: Install Zig
         uses: mlugg/setup-zig@v2
         with:
@@ -31,7 +24,9 @@ jobs:
         uses: roc-lang/setup-roc@main
         with:
           version: nightly-new-compiler
-          nightly-tag: ${{ steps.pinned_roc.outputs.nightly_tag }}
+
+      - name: Show installed Roc version
+        run: roc version
       - name: Build host object
         run: zig build
       - name: Generate docs

@@ -1,14 +1,19 @@
 # Roc nightly updates
 
 The daily caller runs at 13:46 UTC. Root header pins selected in
-`.github/roc-nightly.json` are the compiler authority; `.roc-version` is removed.
+`.github/roc-nightly.json` declare the requested compiler; `.roc-version` is removed.
 All public application pins advance together with the platform pin while released
 dependency URLs stay unchanged. Automatic merging is explicitly disabled.
 
 Shared workflows and release policy are pinned to `5c1f09b7190118f43eb901eaed0110cd53029199`.
-CI reads the platform header pin with `sed` before installing Roc through
-`setup-roc`. Use `roc version` to report the installed compiler. The shared
-configuration check verifies that all selected compiler headers agree.
+CI uses `setup-roc` with `version: nightly-new-compiler` and no `nightly-tag`,
+so each job installs the latest published nightly. `roc version` reports the
+actual installed compiler. Reruns may use a newer compiler than the header pins;
+these checks do not prove compatibility with an exact pinned compiler. This is
+an explicit departure from the guide's exact-compiler validation policy.
+The shared configuration check still verifies that selected header pins agree.
+Publication requires the installed compiler to match the release-policy pin;
+update the headers if a newer nightly has appeared before publishing.
 
 Tests validates Published examples from unchanged files and a fresh cache, plus
 Current source using temporary application copies. Release validates the exact

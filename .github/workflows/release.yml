@@ -53,14 +53,6 @@ jobs:
           allow-default-branch: 'true'
           allow-nightly-bootstrap: 'true'
 
-      - name: Read compiler pin for installation
-        id: pinned_roc
-        shell: bash
-        run: |
-          nightly_tag="$(sed -n 's/^[[:space:]]*packages { roc: "\([^"]*\)" }$/\1/p' platform/main.roc)"
-          [[ "$nightly_tag" =~ ^nightly-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9a-f]{7,40}$ ]]
-          echo "nightly_tag=$nightly_tag" >> "$GITHUB_OUTPUT"
-
       - name: Install Zig
         uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2
         with:
@@ -70,7 +62,9 @@ jobs:
         uses: roc-lang/setup-roc@f5a74bf90aa694b43ab4a7cbfdb19273bc6aa697
         with:
           version: nightly-new-compiler
-          nightly-tag: ${{ steps.pinned_roc.outputs.nightly_tag }}
+
+      - name: Show installed Roc version
+        run: roc version
 
       - name: Capture Roc version
         id: roc_version
@@ -84,6 +78,18 @@ jobs:
             echo "$roc_version"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
+
+      - name: Verify publication compiler matches release policy
+        if: github.event_name == 'workflow_dispatch' && !inputs.nightly_validation
+        shell: bash
+        env:
+          EXPECTED_COMPILER: ${{ steps.release_policy.outputs.compiler-pin }}
+        run: |
+          actual="$(roc version)"
+          test "$actual" = "Roc compiler version $EXPECTED_COMPILER" || {
+            echo "Update the compiler headers to the installed nightly before publishing: $actual" >&2
+            exit 1
+          }
 
       - name: Validate release source
         run: ROC=roc ./ci/all_tests.sh
@@ -148,14 +154,6 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Read compiler pin for installation
-        id: pinned_roc
-        shell: bash
-        run: |
-          nightly_tag="$(sed -n 's/^[[:space:]]*packages { roc: "\([^"]*\)" }$/\1/p' platform/main.roc)"
-          [[ "$nightly_tag" =~ ^nightly-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9a-f]{7,40}$ ]]
-          echo "nightly_tag=$nightly_tag" >> "$GITHUB_OUTPUT"
-
       - name: Install Zig
         uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2
         with:
@@ -165,7 +163,9 @@ jobs:
         uses: roc-lang/setup-roc@f5a74bf90aa694b43ab4a7cbfdb19273bc6aa697
         with:
           version: nightly-new-compiler
-          nightly-tag: ${{ steps.pinned_roc.outputs.nightly_tag }}
+
+      - name: Show installed Roc version
+        run: roc version
 
       - name: Download platform bundle
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1

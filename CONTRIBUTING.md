@@ -4,6 +4,11 @@ Install Zig `0.16.0` and the exact Roc compiler named in the `roc` field of
 `platform/main.roc`. Run `roc version` to check your installed compiler.
 Install WASM-4 (`w4`) to play carts.
 
+CI installs the latest published new-compiler nightly through `setup-roc` and
+prints `roc version`. It does not select the compiler from the headers, so a
+rerun can use a newer nightly. Local checks with the header compiler and CI
+checks with the latest nightly can therefore exercise different versions.
+
 ## Validation
 
 ```sh
@@ -43,8 +48,10 @@ needs maintenance. Backports and forward-ports are reviewed and tested manually.
 
 Dispatch Release on the reviewed candidate branch with a new unprefixed SemVer
 `release_tag`, for example `0.8.0`. It checks compiler/release policy, builds once,
-tests that archive across the runner matrix, and publishes those same bytes at
-the tested SHA. Existing tags are rejected. Never blindly rerun a partial
+tests that archive across the runner matrix using the latest nightly, and publishes those same bytes at
+the tested SHA. Publication requires the installed build compiler to match the
+release-policy header pin; update the headers before publishing if necessary.
+Existing tags are rejected. Never blindly rerun a partial
 publication: inspect the tag and assets and preserve their identity first.
 PR and `nightly_validation: true` runs cannot publish.
 

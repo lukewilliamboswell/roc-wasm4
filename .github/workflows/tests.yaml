@@ -26,14 +26,6 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - name: Read compiler pin for installation
-        id: pinned_roc
-        shell: bash
-        run: |
-          nightly_tag="$(sed -n 's/^[[:space:]]*packages { roc: "\([^"]*\)" }$/\1/p' platform/main.roc)"
-          [[ "$nightly_tag" =~ ^nightly-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9a-f]{7,40}$ ]]
-          echo "nightly_tag=$nightly_tag" >> "$GITHUB_OUTPUT"
-
       - name: install Zig
         uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2
         with:
@@ -43,9 +35,9 @@ jobs:
         uses: roc-lang/setup-roc@f5a74bf90aa694b43ab4a7cbfdb19273bc6aa697
         with:
           version: nightly-new-compiler
-          nightly-tag: ${{ steps.pinned_roc.outputs.nightly_tag }}
 
-      - run: roc version
+      - name: Show installed Roc version
+        run: roc version
 
       - run: ROC=roc ./ci/all_tests.sh
 
@@ -54,15 +46,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-      - name: Read compiler pin for installation
-        id: pinned_roc
-        run: |
-          nightly_tag="$(sed -n 's/^[[:space:]]*packages { roc: "\([^"]*\)" }$/\1/p' platform/main.roc)"
-          [[ "$nightly_tag" =~ ^nightly-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9a-f]{7,40}$ ]]
-          echo "nightly_tag=$nightly_tag" >> "$GITHUB_OUTPUT"
       - uses: roc-lang/setup-roc@f5a74bf90aa694b43ab4a7cbfdb19273bc6aa697
         with:
           version: nightly-new-compiler
-          nightly-tag: ${{ steps.pinned_roc.outputs.nightly_tag }}
+
+      - name: Show installed Roc version
+        run: roc version
       - name: Check and build committed release URLs with a fresh cache
         run: ROC=roc python3 ci/examples.py published
