@@ -54,3 +54,15 @@ jobs:
         run: roc version
       - name: Check and build committed release URLs with a fresh cache
         run: ROC=roc python3 ci/examples.py published
+
+  test-examples:
+    name: test-examples
+    if: always()
+    needs: [current-source, published-examples]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require both example validation lanes
+        env:
+          SOURCE_RESULT: ${{ needs.current-source.result }}
+          PUBLISHED_RESULT: ${{ needs.published-examples.result }}
+        run: test "$SOURCE_RESULT" = success && test "$PUBLISHED_RESULT" = success
