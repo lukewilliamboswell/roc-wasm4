@@ -1,29 +1,40 @@
 # Roc nightly updates
 
-This repository checks once daily at 13:46 UTC, about four hours
-after the upstream 09:00 UTC build. Late publication can wait until the next day.
+The daily caller runs at 13:46 UTC. Root header pins selected in
+`.github/roc-nightly.json` are the compiler authority; `.roc-version` is removed.
+All public application pins advance together with the platform pin while released
+dependency URLs stay unchanged. Automatic merging is explicitly disabled.
 
-`.roc-version` is the compiler pin. `.github/roc-nightly.json` selects this
-repository's validation workflows, including their validation-only release paths.
-The controller, its tests, and job permissions are maintained in
-[roc-automation](https://github.com/lukewilliamboswell/roc-automation).
-The caller workflows pin shared code to `c6711b0f46ee57beda8e1db4f3eafcbcd9cddae2`.
-Dependabot proposes reviewed updates to Actions/workflow references.
+Shared workflows and release policy are pinned to `5c1f09b7190118f43eb901eaed0110cd53029199`.
+The vendored `ci/compiler_pins.py` is copied unchanged from that revision's
+`actions/nightly/compiler_pins.py`; review and update it with the shared pin.
 
-Follow the shared [integration and permissions guide](https://github.com/lukewilliamboswell/roc-automation/blob/c6711b0f46ee57beda8e1db4f3eafcbcd9cddae2/docs/integration.md)
-for the PR-creation setting, action allowlists, required checks, and first live
-GITHUB_TOKEN run. Keep default token permissions read-only. The updater never
-approves or merges PRs and receives no protection bypass.
+Tests validates Published examples from unchanged files and a fresh cache, plus
+Current source using temporary application copies. Release validates the exact
+candidate archive in temporary copies. Nightly validation cannot publish.
 
-`automation/roc-nightly` is reserved for the bot's pin-only commits. Put manual
-compatibility changes on a separate branch. Candidate failures require diagnosis;
-do not weaken tests or mechanically replace baselines to accept a compiler.
+## Rollout evidence and outstanding work
 
-The PR configuration check validates the local pin and selected workflow files.
-The shared repository owns the controller regression suite. Project tests remain
-in this repository and run on the exact candidate commit. Scheduled bot-token
-acceptance must be verified after merge; file changes alone cannot prove it.
+The September 7 run [34151407002](https://github.com/lukewilliamboswell/roc-wasm4/actions/runs/34151407002)
+failed creating the update PR. On September 8, the repository API reported
+`can_approve_pull_request_reviews: false`; the Actions PR creation setting was
+enabled and read back as true, retaining read-only default token permissions.
+GitHub combines creation and approval in this setting; the controller never
+approves itself. The old controller suppressed the API error body.
 
-Use the shared [OpenSSF rollout checklist](https://github.com/lukewilliamboswell/roc-automation/blob/c6711b0f46ee57beda8e1db4f3eafcbcd9cddae2/docs/openssf.md)
-to record project-specific evidence. This integration does not establish badge
-compliance or change repository settings.
+The effective main-branch rules API returned an empty list. Maintain manual review;
+configure required current-commit checks and branch protection before relying on
+protected merges. No bot bypass or automatic merging is configured here.
+
+After merging these workflow changes, manually dispatch the updater and verify
+its signed candidate commit, both validation lanes, failure reporting, and a
+subsequent no-op. This live acceptance has not yet been performed. Bot-triggered
+PR workflows may still need workflow-start approval; dispatch success alone does
+not establish required-check satisfaction.
+
+Release URL follow-ups, starter downloads and play-testing remain manual.
+Versioned Pages preservation and release-follow-up automation need separate work;
+see CONTRIBUTING.md. No OpenSSF compliance or LTS support is claimed.
+
+Follow the [integration guide](https://github.com/lukewilliamboswell/roc-automation/blob/5c1f09b7190118f43eb901eaed0110cd53029199/docs/integration.md)
+for action allowlists, repository permissions and protected-merge verification.

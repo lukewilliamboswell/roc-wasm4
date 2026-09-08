@@ -10,7 +10,7 @@ on:
         required: false
         default: false
       release_tag:
-        description: Tag to publish, for example v0.1.0
+        description: Tag to publish, for example 0.8.0
         required: false
         type: string
 
@@ -20,7 +20,7 @@ permissions:
 # this cancels workflows currently in progress if you start a new one
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || inputs.nightly_validation }}
 
 env:
   ZIG_VERSION: 0.16.0
@@ -32,6 +32,7 @@ jobs:
     outputs:
       bundle_name: ${{ steps.bundle.outputs.bundle_name }}
       roc_version: ${{ steps.roc_version.outputs.roc_version }}
+      release_sha: ${{ steps.release_policy.outputs.sha }}
     steps:
       - name: Require a version for publication
         if: github.event_name == 'workflow_dispatch' && !inputs.nightly_validation
@@ -42,10 +43,22 @@ jobs:
 
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
+      - name: Check release policy
+        if: github.event_name == 'workflow_dispatch' && !inputs.nightly_validation
+        id: release_policy
+        uses: lukewilliamboswell/roc-automation/actions/check-release@5c1f09b7190118f43eb901eaed0110cd53029199
+        with:
+          version: ${{ inputs.release_tag }}
+          compiler-root: platform/main.roc
+          allow-default-branch: 'true'
+          allow-nightly-bootstrap: 'true'
+
       - name: Read Roc version
         id: pinned_roc
         shell: bash
-        run: echo "nightly_tag=$(<.roc-version)" >> "$GITHUB_OUTPUT"
+        run: |
+          nightly_tag="$(python3 ci/compiler_version.py)"
+          echo "nightly_tag=$nightly_tag" >> "$GITHUB_OUTPUT"
 
       - name: Install Zig
         uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2
@@ -71,8 +84,8 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Build host object
-        run: zig build -Doptimize=ReleaseSmall
+      - name: Validate release source
+        run: ROC=roc ./ci/all_tests.sh
 
       - name: Bundle platform
         id: bundle
@@ -129,10 +142,17 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
+      - name: Install Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.x"
+
       - name: Read Roc version
         id: pinned_roc
         shell: bash
-        run: echo "nightly_tag=$(<.roc-version)" >> "$GITHUB_OUTPUT"
+        run: |
+          nightly_tag="$(python3 ci/compiler_version.py)"
+          echo "nightly_tag=$nightly_tag" >> "$GITHUB_OUTPUT"
 
       - name: Install Zig
         uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2
@@ -144,11 +164,6 @@ jobs:
         with:
           version: nightly-new-compiler
           nightly-tag: ${{ steps.pinned_roc.outputs.nightly_tag }}
-
-      - name: Install Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3.x"
 
       - name: Download platform bundle
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -179,37 +194,11 @@ jobs:
 
           curl --fail --verbose --head "http://127.0.0.1:8000/$BUNDLE_NAME"
 
-      - name: Rewrite examples to use platform bundle
+      - name: Test exact platform bundle with temporary examples
         shell: bash
         env:
           BUNDLE_URL: http://127.0.0.1:8000/${{ needs.build_and_bundle.outputs.bundle_name }}
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          import os
-          import re
-          from pathlib import Path
-
-          bundle_url = os.environ["BUNDLE_URL"]
-          new = f'"{bundle_url}"'
-          patterns = [
-              r'"../platform/main\.roc"',
-              r'"https://github\.com/lukewilliamboswell/roc-wasm4/releases/download/[^"]+\.tar\.zst"',
-          ]
-
-          for roc_file in sorted(Path("examples").glob("*.roc")):
-              text = roc_file.read_text()
-              updated = text
-              for pattern in patterns:
-                  updated = re.sub(pattern, new, updated)
-              if updated == text:
-                  raise SystemExit(f"ERROR: {roc_file} does not contain a platform bundle or local platform path")
-              roc_file.write_text(updated)
-          PY
-
-      - name: Test platform bundle
-        shell: bash
-        run: SKIP_ZIG_BUILD=1 ROC=roc ./ci/all_tests.sh
+        run: ROC=roc python3 ci/examples.py bundle --bundle-url "$BUNDLE_URL"
 
       - name: Stop platform bundle server
         if: always()
@@ -240,15 +229,25 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ inputs.release_tag }}
+          RELEASE_SHA: ${{ needs.build_and_bundle.outputs.release_sha }}
           BUNDLE_NAME: ${{ needs.build_and_bundle.outputs.bundle_name }}
           ROC_VERSION_ACTUAL: ${{ needs.build_and_bundle.outputs.roc_version }}
           ZIG_VERSION_ACTUAL: ${{ env.ZIG_VERSION }}
         run: |
           set -euo pipefail
-          notes="Built with Zig $ZIG_VERSION_ACTUAL and $ROC_VERSION_ACTUAL."
+          test -n "$RELEASE_SHA"
+          # Fail closed on API errors and reject existing tags before publication.
+          gh api --paginate "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/$RELEASE_TAG" > tags.json
+          python3 -c 'import json, os; assert not any(r["ref"] == "refs/tags/" + os.environ["RELEASE_TAG"] for r in json.load(open("tags.json"))), "Release tag already exists"'
+          digest="$(sha256sum "bundle/$BUNDLE_NAME" | cut -d ' ' -f 1)"
+          notes="Exact-nightly bootstrap release. Built from $RELEASE_SHA with Zig $ZIG_VERSION_ACTUAL and $ROC_VERSION_ACTUAL.
+          Platform: https://github.com/$GITHUB_REPOSITORY/releases/download/$RELEASE_TAG/$BUNDLE_NAME
+          SHA-256: $digest"
+
 
           gh release create "$RELEASE_TAG" "bundle/$BUNDLE_NAME" \
             --repo "$GITHUB_REPOSITORY" \
+            --target "$RELEASE_SHA" \
             --title "$RELEASE_TAG" \
             --generate-notes \
             --notes "$notes"

@@ -19,7 +19,9 @@ jobs:
       - name: Read Roc version
         id: pinned_roc
         shell: bash
-        run: echo "nightly_tag=$(<.roc-version)" >> "$GITHUB_OUTPUT"
+        run: |
+          nightly_tag="$(python3 ci/compiler_version.py)"
+          echo "nightly_tag=$nightly_tag" >> "$GITHUB_OUTPUT"
       - name: Install Zig
         uses: mlugg/setup-zig@v2
         with:

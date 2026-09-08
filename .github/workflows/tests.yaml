@@ -20,7 +20,8 @@ permissions:
 
 jobs:
 
-  test-examples:
+  current-source:
+    name: Current source
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -28,7 +29,9 @@ jobs:
       - name: Read Roc version
         id: pinned_roc
         shell: bash
-        run: echo "nightly_tag=$(<.roc-version)" >> "$GITHUB_OUTPUT"
+        run: |
+          nightly_tag="$(python3 ci/compiler_version.py)"
+          echo "nightly_tag=$nightly_tag" >> "$GITHUB_OUTPUT"
 
       - name: install Zig
         uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2
@@ -44,3 +47,20 @@ jobs:
       - run: roc version
 
       - run: ROC=roc ./ci/all_tests.sh
+
+  published-examples:
+    name: Published examples
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Read compiler headers
+        id: pinned_roc
+        run: |
+          nightly_tag="$(python3 ci/compiler_version.py)"
+          echo "nightly_tag=$nightly_tag" >> "$GITHUB_OUTPUT"
+      - uses: roc-lang/setup-roc@f5a74bf90aa694b43ab4a7cbfdb19273bc6aa697
+        with:
+          version: nightly-new-compiler
+          nightly-tag: ${{ steps.pinned_roc.outputs.nightly_tag }}
+      - name: Check and build committed release URLs with a fresh cache
+        run: ROC=roc python3 ci/examples.py published

@@ -6,7 +6,7 @@ roc-wasm4 gives Roc apps a high-level `W4` API for drawing, input, audio, disk p
 
 ## Requirements
 
-- [Roc](https://www.roc-lang.org/install) new-compiler nightly, available as `roc`
+- [Roc](https://www.roc-lang.org/install) `nightly-2026-08-08-195c9e7`, available as `roc` (the compiler tested with platform [0.7.0](https://github.com/lukewilliamboswell/roc-wasm4/releases/tag/0.7.0))
 - [WASM-4 CLI](https://wasm4.org), available as `w4`
 - A roc-wasm4 `.tar.zst` platform bundle URL from the [GitHub Releases page](https://github.com/lukewilliamboswell/roc-wasm4/releases)
 
@@ -16,7 +16,8 @@ Create `app.roc` and point `platform` at a released `.tar.zst` bundle:
 
 ```roc
 app [main] {
-    w4: platform "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/0.6/ADeKYHzDvyXSEZjj4wG3qRLTFRYiiEWLuVMPD5S8uBF3.tar.zst",
+    roc: "nightly-2026-08-08-195c9e7",
+    w4: platform "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/0.7.0/BGmWeWePVmGCq1S6FArkz2rdw2t3BMfWsK6WinpTyTp4.tar.zst",
 }
 
 import w4.W4
@@ -57,23 +58,26 @@ Platform API docs are hosted at [lukewilliamboswell.github.io/roc-wasm4/](https:
 
 This repository includes several example apps:
 
-- `examples/basic.roc`: drawing, text, input, mouse, trace, and tone basics
-- `examples/snake.roc`: a small playable snake game
-- `examples/rocci-bird.roc`: a Rocci Bird demo by Brendan Hansknecht with art by Luke DeVault
-- `examples/sound.roc`: a tone parameter playground
+- `examples/basic/main.roc`: drawing, text, input, mouse, trace, and tone basics
+- `examples/snake/main.roc`: a small playable snake game
+- `examples/rocci-bird/main.roc`: a Rocci Bird demo by Brendan Hansknecht with art by Luke DeVault
+- `examples/sound/main.roc`: a tone parameter playground
 
-The checked-in examples use the latest released platform bundle so they can be copied into a game project directly:
+The checked-in examples use the pinned released platform bundle so they can be copied into a game project directly:
 
 ```roc
-w4: platform "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/0.6/ADeKYHzDvyXSEZjj4wG3qRLTFRYiiEWLuVMPD5S8uBF3.tar.zst"
+w4: platform "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/0.7.0/BGmWeWePVmGCq1S6FArkz2rdw2t3BMfWsK6WinpTyTp4.tar.zst"
 ```
+
+Each application lives in its own directory. Install the compiler in its `roc` header before building; the header does not install it. Newer platform releases do not imply support for every compiler.
 
 Contributors testing platform source changes can use the local path shown in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Then build and run the app:
 
 ```shell
-roc build snake.roc
+roc version
+roc build examples/snake/main.roc --output=snake.wasm
 w4 run snake.wasm
 ```
 
