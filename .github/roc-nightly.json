@@ -11,5 +11,5 @@
     "examples/snake/main.roc",
     "examples/sound/main.roc"
   ],
-  "auto_merge": false
+  "auto_merge": true
 }
