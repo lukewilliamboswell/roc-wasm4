@@ -41,7 +41,7 @@ jobs:
           RELEASE_VERSION: ${{ inputs.release_tag }}
         run: test -n "$RELEASE_VERSION" || { echo "A release version is required for publication" >&2; exit 1; }
 
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Check release policy
         if: github.event_name == 'workflow_dispatch' && !inputs.nightly_validation
@@ -147,7 +147,7 @@ jobs:
           - windows-2022
           - windows-2025
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
