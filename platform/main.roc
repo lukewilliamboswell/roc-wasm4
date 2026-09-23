@@ -3,7 +3,7 @@ platform ""
 		[Model : model] for main : { init! : () => model, update! : model => model }
 	}
 	exposes [W4, Sprite, Host]
-	packages { roc: "nightly-2026-09-19-d025939" }
+	packages { roc: "nightly-2026-09-23-c7852fd" }
 	provides { "init_for_host": init_for_host!, "update_for_host": update_for_host! }
 	hosted {
 		"host_blit": Host.blit!,
