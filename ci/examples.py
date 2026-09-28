@@ -39,7 +39,7 @@ def main():
             if args.lane != 'published':
                 app = work / example.parent.name / 'main.roc'
                 shutil.copytree(example.parent, app.parent)
-                dependency = ((ROOT / 'platform/main.roc').as_posix()
+                dependency = (Path(os.path.relpath(ROOT / 'platform/main.roc', app.parent)).as_posix()
                               if args.lane == 'source' else args.bundle_url)
                 app.write_text(RELEASE.sub(lambda _: dependency, source))
             print(f'{args.lane}: {example.relative_to(ROOT)}', flush=True)
