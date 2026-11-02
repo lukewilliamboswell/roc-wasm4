@@ -40,7 +40,7 @@ The repository README links animated demonstrations.
 Import `w4.W4` for drawing, input, audio, persistence and utility functions.
 Use `w4.Sprite` for sprite data and blitting; `w4.Host` contains the lower-level
 hosted effects used by the platform.
-The generated API reference accompanies this manual in the documentation site.
+See the link:api/index.html[generated API reference] for function signatures and usage.
 
 == Distribute a game
 

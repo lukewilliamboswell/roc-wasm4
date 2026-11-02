@@ -46,8 +46,7 @@ check! = || {
 			Process.run!("roc", ["check", name])?
 		}
 	}
-	Process.run!("roc", ["test", "platform/W4.roc"])?
-	Process.run!("roc", ["test", "platform/Sprite.roc"])?
+	Process.run!("roc", ["test", "platform/main.roc"])?
 	Process.run!("roc", ["docs", "platform/main.roc", "--output=.zig-cache/generated-docs"])?
 	Process.run!("roc-stable", ["scripts/bundle.roc"])
 }
