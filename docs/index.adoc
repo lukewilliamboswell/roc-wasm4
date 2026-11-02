@@ -3,6 +3,8 @@
 roc-wasm4 is a Roc platform for https://wasm4.org[WASM-4] games.
 It provides drawing, input, audio, disk persistence, netplay state and sprites.
 
+include::release.adoc[]
+
 == Build a game
 
 Install a current Roc nightly and the WASM-4 CLI (`w4`).

@@ -39,12 +39,13 @@ config = [
 					},
 				),
 			]),
-			Expect(["roc", "sha256sum", "tar", "gzip", "zip", "unzip", "gh"]),
+			Expect(["roc", "sha256sum", "tar", "zstd", "gzip", "zip", "unzip", "gh"]),
 		],
 	),
 	Environment(
 		"docs",
 		[
+			Extend("scripts"),
 			Programs([
 				Fetch(
 					"roc-docs",
@@ -57,7 +58,7 @@ config = [
 			Expect(["roc"]),
 		],
 	),
-	Task("docs", [Use("docs"), Run(["roc-docs", "build", "--workspace", ".", "--pdf-filename", "roc-wasm4.pdf", "--site-url", "https://lukewilliamboswell.github.io/roc-wasm4/", "--api-entrypoint", "platform/main.roc"])]),
+	Task("docs", [Use("docs"), Run(["roc-stable", "scripts/docs.roc", "--"])]),
 	Environment(
 		"policy",
 		[
@@ -74,7 +75,7 @@ config = [
 	),
 	Task("policy", [Use("policy"), Run(["roc-policy", "check", "--root", "."])]),
 
-	Environment("release-tools", [Extend("scripts"), Programs([Fetch("release-package", Recipes.file("https://github.com/lukewilliamboswell/roc-automation/releases/download/tools-0.9.0/release-package-{system}"))]), Expect(["roc", "git", "gh", "tar", "unzip", "zip", "chmod", "touch", "env"])]),
+	Environment("release-tools", [Extend("scripts"), Programs([Fetch("release-package", Recipes.file("https://github.com/lukewilliamboswell/roc-automation/releases/download/tools-0.9.0/release-package-{system}"))]), Expect(["roc", "git", "gh", "tar", "zstd", "unzip", "zip", "chmod", "touch", "env"])]),
 	Environment(
 		"runtime",
 		[
@@ -91,6 +92,7 @@ config = [
 	Environment("release-build", [Extend("dev"), Programs([Fetch("release-package", Recipes.file("https://github.com/lukewilliamboswell/roc-automation/releases/download/tools-0.9.0/release-package-{system}"))])]),
 	Task("release-package", [Use("release-build"), Run(["release-package"])]),
 	Task("release-test", [Use("release-test"), Run(["roc-stable", "scripts/release_test.roc", "--"])]),
+	Task("distribution", [Use("runtime"), Run(["roc-stable", "scripts/distribution.roc"])]),
 	Task("runtime-tools", [Use("runtime"), Run(["node", "--version"])]),
 	Task("runtime", [Use("runtime"), Run(["node", "examples/support/run-cart.mjs"])]),
 	Task("nightly-prerequisites", [Use("runtime"), Run(["node", "examples/support/run-cart.mjs", "--export-tools"])]),
@@ -98,10 +100,8 @@ config = [
 	Shell("default", [Use("dev")]),
 	Task("check", [Use("release-build"), Run(["roc-stable", "scripts/check_all.roc"])]),
 	Task("build-host", [Use("dev"), Run(["zig", "build", "-Doptimize=ReleaseSmall"])]),
-	Environment("examples", [Extend("scripts"), Expect(["roc", "python3"])]),
-	Task("examples", [Use("examples"), Run(["roc-stable", "scripts/examples.roc", "--"])]),
 	Task("glue", [Use("dev"), Run(["roc-stable", "scripts/glue.roc", "--"])]),
-	Task("release", [Use("dev"), Run(["roc-stable", "scripts/release.roc", "--"])]),
+	Task("release", [Use("release-build"), Run(["roc-stable", "scripts/release.roc", "--"])]),
 	Task("bundle", [Use("dev"), Run(["roc-stable", "scripts/bundle.roc", "--"])]),
 	Task("format-scripts", [Use("scripts"), Run(["roc-stable", "fmt", "scripts", "Blueprint.roc"])]),
 	Task("tooling-version", [Use("scripts"), Run(["roc-stable", "version"])]),
@@ -112,8 +112,8 @@ tooling = { compiler: "nightly-2026-10-09-258ab27" }
 
 repository_policy = {
 	schema_version: 1,
-	roots: ["platform", "examples"],
-	rules: [{ kind: NoCompilerPin, scope: "platform" }, { kind: NoCompilerPin, scope: "examples" }],
+	roots: ["platform", "examples", "benchmarks"],
+	rules: [{ kind: NoCompilerPin, scope: "platform" }, { kind: NoCompilerPin, scope: "examples" }, { kind: NoCompilerPin, scope: "benchmarks" }],
 }
 
 script_policy = {
