@@ -1,8 +1,8 @@
 # Contributing
 
 Install the Zig version specified in [build.zig.zon](build.zig.zon), Roc, and
-WASM-4 (`w4`). The `roc` field in [platform/main.roc](platform/main.roc) declares
-the development compiler. Run `roc version` to check your installation.
+WASM-4 (`w4`). Use a current official Roc nightly and run `roc version` to
+check your installation.
 
 CI installs the latest nightly, so its compiler can be newer than your local one.
 
@@ -31,16 +31,15 @@ and `roc build path/to/main.roc --opt=size --output=game.wasm`, then
 
 ## Compiler and release policy
 
-`main` is the development branch. Compiler pins live in root headers selected by
-`.github/roc-nightly.json`. Nightly updates advance all selected compiler pins and
-leave released URLs unchanged. Both compatibility lanes must pass. A source fix
-may require a new platform release and a separately reviewed example URL update.
-Automatic merging is disabled. See [.github/ROC_NIGHTLY.md](.github/ROC_NIGHTLY.md).
+Upgrade the compiler through a reviewed pull request and run both source and
+published-example checks. Keep released platform URLs immutable; a source fix
+may require a new platform release and a separate example update. See
+[nightly maintenance](.github/ROC_NIGHTLY.md).
 
 Dispatch **Release** on the reviewed candidate branch with a new SemVer
 `release_tag`. It checks release policy, builds the platform archive, tests that
 archive across the runner matrix, and publishes the tested bytes and commit.
-The installed build compiler must match the platform header before publication.
+Retain the workflow’s release-admission checks before publication.
 Existing tags are rejected; inspect existing assets before retrying a partial
 publication. PR and nightly-validation runs cannot publish.
 
@@ -48,6 +47,8 @@ After publishing, update example URLs through a reviewed PR and run the publishe
 example checks against the downloads.
 
 ## Documentation
+
+Keep documentation focused on current reader tasks. Remove superseded guidance and status narratives; keep release changes in release records and investigations or unresolved work in issues. Follow the [shared documentation guide](https://lukewilliamboswell.github.io/roc-automation/documentation.html#write-project-documentation).
 
 Generate local docs with:
 
