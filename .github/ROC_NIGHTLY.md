@@ -1,23 +1,11 @@
-# Roc nightly updates
+# Roc nightly maintenance
 
-The scheduled workflow opens compiler-update PRs for the root headers selected
-in `.github/roc-nightly.json`. Released dependency URLs stay unchanged. With
-`auto_merge: true`, the updater squash-merges pin-only updates after all configured
-validation workflows pass and it rechecks the candidate and protected-branch rules.
-Failed candidates stay open; put compatibility fixes on a separate branch.
-GitHub's repository-level **Allow auto-merge** setting is not required by this
-controller, which requests an immediate merge after validation.
+Compiler upgrades are maintainer-reviewed pull requests. Install the selected exact official nightly and run the source checks with its path:
 
-CI uses the latest nightly installed by `setup-roc` and reports it with
-`roc version`. Published examples exercise released downloads; current-source
-checks use temporary application copies; release checks test the proposed archive.
-Validation runs cannot publish releases.
+```sh
+ROC=/path/to/roc ./ci/all_tests.sh
+```
 
-To retry an update, run **Update Roc nightly** from the Actions tab. Inspect its
-linked validation runs when diagnosing a failed candidate.
-After merging a compatibility fix, manually run the updater to rebuild and
-revalidate the candidate against the updated default branch. A scheduled run
-skips an unchanged candidate that already has an open PR.
+Use the Zig version selected by the workflows. Source and bundle lanes test temporary application copies; the published lane requires immutable released platform URLs. Keep the release workflow's existing admission checks until their reviewed replacement is ready.
 
-See the shared [integration guide](https://github.com/lukewilliamboswell/roc-automation/blob/main/docs/integration.md)
-for repository permissions and workflow configuration.
+The retired privileged pin updater no longer runs. A successful cart build alone does not establish a runtime compatibility verdict. The executable archive and shared published-release suite migration is tracked in [#73](https://github.com/lukewilliamboswell/roc-wasm4/issues/73).

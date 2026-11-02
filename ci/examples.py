@@ -8,6 +8,7 @@ import subprocess
 import tempfile
 
 ROOT = Path(__file__).resolve().parent.parent
+PLATFORM = re.compile(r'(?<=w4: platform ")[^"\r\n]+(?=")')
 RELEASE = re.compile(r'(?<=w4: platform ")https://github\.com/lukewilliamboswell/roc-wasm4/releases/download/[^/"\s]+/[A-Za-z0-9]+\.tar\.zst(?=")')
 
 
@@ -31,7 +32,9 @@ def main():
         env = dict(os.environ, ROC_CACHE_DIR=str(work / 'cache'))
         for example in examples:
             source = example.read_text()
-            if len(RELEASE.findall(source)) != 1:
+            if len(PLATFORM.findall(source)) != 1:
+                raise SystemExit(f'{example}: expected one platform dependency')
+            if args.lane == 'published' and len(RELEASE.findall(source)) != 1:
                 raise SystemExit(f'{example}: expected one immutable released platform URL')
             # Public validation uses the committed file, unchanged. Other lanes
             # copy the complete application, including any companion modules.
@@ -41,7 +44,7 @@ def main():
                 shutil.copytree(example.parent, app.parent)
                 dependency = (Path(os.path.relpath(ROOT / 'platform/main.roc', app.parent)).as_posix()
                               if args.lane == 'source' else args.bundle_url)
-                app.write_text(RELEASE.sub(lambda _: dependency, source))
+                app.write_text(PLATFORM.sub(lambda _: dependency, source))
             print(f'{args.lane}: {example.relative_to(ROOT)}', flush=True)
             subprocess.run([roc, 'check', str(app)], env=env, check=True)
             output = work / f'{example.parent.name}.wasm'

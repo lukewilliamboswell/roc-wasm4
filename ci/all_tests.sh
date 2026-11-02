@@ -36,6 +36,7 @@ echo "Zig: $(zig version)"
 # Build and test the current host. Archive validation uses ci/examples.py bundle.
 zig build -Doptimize=ReleaseSmall
 zig build test
+python3 -m unittest discover -s ci -p 'test_*.py'
 
 # Current-source examples are temporary copies; committed release URLs stay intact.
 ROC="$ROC_BIN" python3 ci/examples.py source

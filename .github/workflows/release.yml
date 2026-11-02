@@ -46,6 +46,7 @@ jobs:
       - name: Check release policy
         if: github.event_name == 'workflow_dispatch' && !inputs.nightly_validation
         id: release_policy
+        # Retain reviewed admission until its replacement is validated: roc-wasm4#73.
         uses: lukewilliamboswell/roc-automation/actions/check-release@5c1f09b7190118f43eb901eaed0110cd53029199
         with:
           version: ${{ inputs.release_tag }}
