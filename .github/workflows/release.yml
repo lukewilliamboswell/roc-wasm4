@@ -61,7 +61,7 @@ jobs:
       - name: Install Roc
         uses: roc-lang/setup-roc@dd81390553b0a1236aedb61cdd4c0ed7cf7eaec4
         with:
-          version: nightly-new-compiler
+          version: nightly
 
       - name: Show installed Roc version
         run: roc version
@@ -162,7 +162,7 @@ jobs:
       - name: Install Roc
         uses: roc-lang/setup-roc@dd81390553b0a1236aedb61cdd4c0ed7cf7eaec4
         with:
-          version: nightly-new-compiler
+          version: nightly
 
       - name: Show installed Roc version
         run: roc version
