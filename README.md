@@ -6,21 +6,22 @@ roc-wasm4 gives Roc apps a high-level `W4` API for drawing, input, audio, disk p
 
 ## Requirements
 
-- [Roc](https://www.roc-lang.org/install), available as `roc`; use the compiler declared in the example you build
+- [Roc](https://www.roc-lang.org/install), available as `roc`; use the compiler required by the release you select
 - [WASM-4 CLI](https://wasm4.org), available as `w4`
 - A roc-wasm4 `.tar.zst` platform bundle URL from the [GitHub Releases page](https://github.com/lukewilliamboswell/roc-wasm4/releases)
 
 ## Quick Start
 
 Copy the [basic example](examples/basic/main.roc) into your own application directory.
-Its header declares the compiler and released platform bundle it uses. Keep those
-entries when adapting the example into your own game.
+Checkout examples use the local platform and need [Blueprint](https://github.com/lukewilliamboswell/roc-blueprint/releases/tag/0.11.0) to build its host. For a standalone game, select an
+immutable platform bundle from GitHub Releases and follow that release’s
+compiler requirements.
 
 Build the example and run it with WASM-4:
 
 ```shell
-roc version
-roc build examples/basic/main.roc --output=basic.wasm
+blueprint run build-host
+roc build examples/basic/main.roc --target=wasm32 --output=basic.wasm
 w4 run basic.wasm
 ```
 
@@ -34,7 +35,7 @@ The platform exposes:
 - `w4.Sprite` for sprite data and blitting helpers
 - `w4.Host` for low-level hosted effects, mostly intended for platform internals
 
-Platform API docs are hosted at [lukewilliamboswell.github.io/roc-wasm4/](https://lukewilliamboswell.github.io/roc-wasm4/).
+The manual and platform API docs are hosted at [lukewilliamboswell.github.io/roc-wasm4/](https://lukewilliamboswell.github.io/roc-wasm4/).
 
 ## Examples
 
@@ -45,9 +46,8 @@ This repository includes several example apps:
 - `examples/rocci-bird/main.roc`: a Rocci Bird demo by Brendan Hansknecht with art by Luke DeVault
 - `examples/sound/main.roc`: a tone parameter playground
 
-Each application lives in its own directory and uses a released platform bundle.
-Copy the whole directory when starting a game. Install the compiler in its `roc`
-header before building; the header does not install it.
+Each application lives in its own directory. Copy the whole directory when
+starting a game and select the platform dependency for your deployment.
 
 Contributors testing platform source changes can use the local path shown in [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -55,7 +55,7 @@ Then build and run the app:
 
 ```shell
 roc version
-roc build examples/snake/main.roc --output=snake.wasm
+roc build examples/snake/main.roc --target=wasm32 --output=snake.wasm
 w4 run snake.wasm
 ```
 

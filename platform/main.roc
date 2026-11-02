@@ -2,8 +2,8 @@ platform ""
 	requires {
 		[Model : model] for main : { init! : () => model, update! : model => model }
 	}
-	exposes [W4, Sprite, Host]
-	packages { roc: "nightly-2026-11-01-48d3369" }
+	exposes [Host, Sprite, W4]
+	packages {}
 	provides { "init_for_host": init_for_host!, "update_for_host": update_for_host! }
 	hosted {
 		"host_blit": Host.blit!,
