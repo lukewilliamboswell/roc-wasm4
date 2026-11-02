@@ -1,11 +1,10 @@
 # Roc nightly maintenance
 
-Compiler upgrades are maintainer-reviewed pull requests. Install the selected exact official nightly and run the source checks with its path:
+Use a current official nightly as `roc` on PATH. Run `blueprint run check`,
+`blueprint run glue` and `blueprint run docs` before submitting an upgrade.
+The fixed `roc-stable` compiler runs automation only; its version lives in
+`Blueprint.roc` and script headers, independently of the product compiler.
 
-```sh
-ROC=/path/to/roc ./ci/all_tests.sh
-```
-
-Use the Zig version selected by the workflows. Source and bundle lanes test temporary application copies; the published lane requires immutable released platform URLs. Keep the release workflow's existing admission checks until their reviewed replacement is ready.
-
-A successful cart build alone does not establish a runtime compatibility verdict.
+Regenerate changed ABI bindings with `blueprint run glue -- --update` and review
+the diff before rebuilding the host. A successful cart build does not establish
+runtime compatibility; play-test with WASM-4 before release.

@@ -1,0 +1,73 @@
+= roc-wasm4
+
+roc-wasm4 is a Roc platform for https://wasm4.org[WASM-4] games.
+It provides drawing, input, audio, disk persistence, netplay state and sprites.
+
+== Build a game
+
+Install a current Roc nightly and the WASM-4 CLI (`w4`).
+For a checkout, install https://github.com/lukewilliamboswell/roc-blueprint/releases[Blueprint 0.11.0],
+then build the host and a cart:
+
+[source,shell]
+----
+blueprint run build-host
+roc build examples/basic/main.roc --target=wasm32 --output=basic.wasm
+w4 run basic.wasm
+----
+
+Checkout examples use the working-tree platform. For a standalone game, copy
+an entire example directory and replace its platform path with the immutable
+bundle URL from the https://github.com/lukewilliamboswell/roc-wasm4/releases[selected release].
+Follow that release's compiler requirements; older releases may require a specific nightly.
+
+== Choose an example
+
+[cols="1,3",options="header"]
+|===
+| Example | What it demonstrates
+| `examples/basic/main.roc` | Drawing, text, input, mouse, trace and tones
+| `examples/snake/main.roc` | A playable snake game
+| `examples/rocci-bird/main.roc` | Rocci Bird, by Brendan Hansknecht with art by Luke DeVault
+| `examples/sound/main.roc` | A tone parameter playground
+|===
+
+https://bren077s.itch.io/rocci-bird[Play Rocci Bird online].
+The repository README links animated demonstrations.
+
+== Use the platform API
+
+Import `w4.W4` for drawing, input, audio, persistence and utility functions.
+Use `w4.Sprite` for sprite data and blitting; `w4.Host` contains the lower-level
+hosted effects used by the platform.
+The generated API reference accompanies this manual in the documentation site.
+
+== Distribute a game
+
+Build with size-oriented optimization and use the WASM-4 CLI to produce an HTML game:
+
+[source,shell]
+----
+roc build app.roc --target=wasm32 --opt=size --output=app.wasm
+w4 bundle app.wasm --title "My Game" --html my-game.html
+----
+
+For native distribution:
+
+[source,shell]
+----
+w4 bundle app.wasm --title "My Game" --windows my-game-windows.exe --mac my-game-mac --linux my-game-linux
+----
+
+== Work on the platform
+
+Run `blueprint run check` from the repository root. Blueprint downloads and
+verifies the fixed tooling compiler and Zig; `roc` on PATH is the compiler
+under test. `blueprint run bundle` bundles an already-built host.
+
+CI checks and builds carts but does not execute them in WASM-4. Before release,
+play-test drawing, input, audio and game behavior in the runtime.
+The host reserves 32768 bytes for dynamic allocation by default; build with
+`zig build -Dmem-size=<bytes>` inside `blueprint shell` to change that limit.
+
+Run `blueprint run docs` to render the HTML, PDF and Markdown manual and API reference.

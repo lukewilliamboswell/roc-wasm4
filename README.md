@@ -13,15 +13,15 @@ roc-wasm4 gives Roc apps a high-level `W4` API for drawing, input, audio, disk p
 ## Quick Start
 
 Copy the [basic example](examples/basic/main.roc) into your own application directory.
-Checkout examples use the local platform. For a standalone game, select an
+Checkout examples use the local platform and need [Blueprint](https://github.com/lukewilliamboswell/roc-blueprint/releases/tag/0.11.0) to build its host. For a standalone game, select an
 immutable platform bundle from GitHub Releases and follow that release’s
 compiler requirements.
 
 Build the example and run it with WASM-4:
 
 ```shell
-roc version
-roc build examples/basic/main.roc --output=basic.wasm
+blueprint run build-host
+roc build examples/basic/main.roc --target=wasm32 --output=basic.wasm
 w4 run basic.wasm
 ```
 
@@ -35,7 +35,7 @@ The platform exposes:
 - `w4.Sprite` for sprite data and blitting helpers
 - `w4.Host` for low-level hosted effects, mostly intended for platform internals
 
-Platform API docs are hosted at [lukewilliamboswell.github.io/roc-wasm4/](https://lukewilliamboswell.github.io/roc-wasm4/).
+The manual and platform API docs are hosted at [lukewilliamboswell.github.io/roc-wasm4/](https://lukewilliamboswell.github.io/roc-wasm4/).
 
 ## Examples
 
@@ -55,7 +55,7 @@ Then build and run the app:
 
 ```shell
 roc version
-roc build examples/snake/main.roc --output=snake.wasm
+roc build examples/snake/main.roc --target=wasm32 --output=snake.wasm
 w4 run snake.wasm
 ```
 

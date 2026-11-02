@@ -621,7 +621,7 @@ update_animation = |frame_count, anim| {
 				} else {
 					{ ..anim, index: next_index, last_updated: frame_count }
 				}
-			}
+		}
 	}
 }
 

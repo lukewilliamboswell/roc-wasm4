@@ -1,59 +1,62 @@
 # Contributing
 
-Install the Zig version specified in [build.zig.zon](build.zig.zon), Roc, and
-WASM-4 (`w4`). Use a current official Roc nightly and run `roc version` to
-check your installation.
-
-CI installs the latest nightly, so its compiler can be newer than your local one.
+Install a current official Roc nightly as `roc` and [Blueprint 0.11.0](https://github.com/lukewilliamboswell/roc-blueprint/releases/tag/0.11.0).
+Blueprint downloads and verifies the Zig 0.16.0 toolchain and the fixed `roc-stable`
+compiler used by scripts. The platform and games use the `roc` on PATH.
 
 ## Validation
 
 ```sh
-ROC=roc ./ci/all_tests.sh
-ROC=roc python3 ci/examples.py published
+blueprint run check
+blueprint run glue
+blueprint run docs
 ```
 
-The first command builds and tests the host, checks platform modules, builds all
-examples against current source in temporary application copies, runs platform
-Roc tests, generates docs, and bundles the platform. The second checks and builds
-committed public examples against their immutable release URLs with a fresh cache.
-Neither command edits committed examples. CI names these lanes Current source
-and Published examples; Release separately tests the exact proposed archive on
-Linux, macOS, and Windows. Cart builds are smoke tests; play-test drawing, input,
-audio and game behavior with WASM-4 before release.
+The check runs shared compiler-pin and dependency policies, formatting, the Roc
+script regressions, Zig allocator tests, platform checks and tests, all five cart
+builds, API generation and bundling. The glue check downloads the installed
+nightly's source, verifies the release asset's SHA-256, and compares regenerated
+host bindings. It needs an authenticated `gh`. Review an ABI update with
+`blueprint run glue -- --update`, then rerun the checks.
 
-To work on a game, copy its whole directory and change the platform URL in your
-copy to the absolute path of `platform/main.roc`. Run `zig build` before building
-the copied application. For smaller carts use `zig build -Doptimize=ReleaseSmall`
-and `roc build path/to/main.roc --opt=size --output=game.wasm`, then
-`w4 run game.wasm`. The host defaults to 32768 bytes of dynamic memory;
-`-Dmem-size=<bytes>` changes it.
+Repository examples use `../../platform/main.roc`. `blueprint run build-host`
+builds the host before working on a game. In `blueprint shell`, build a cart with
+`roc build examples/basic/main.roc --target=wasm32 --output=basic.wasm`, then run it
+with `w4 run basic.wasm`. The host reserves 32768 bytes for dynamic allocation;
+`zig build -Dmem-size=<bytes>` changes that limit.
 
-## Compiler and release policy
+CI checks and builds carts; it does not execute WASM-4. Play-test drawing, input,
+audio and game behavior before release. The shared release-compatibility runner
+currently requires a runtime command for cross targets, so it cannot report a
+build-only WASM-4 suite as compatible. Remaining release-suite and runtime work
+is tracked in [#73](https://github.com/lukewilliamboswell/roc-wasm4/issues/73).
 
-Upgrade the compiler through a reviewed pull request and run both source and
-published-example checks. Keep released platform URLs immutable; a source fix
-may require a new platform release and a separate example update. See
-[nightly maintenance](.github/ROC_NIGHTLY.md).
+## Releases
 
-Dispatch **Release** on the reviewed candidate branch with a new SemVer
-`release_tag`. It checks release policy, builds the platform archive, tests that
-archive across the runner matrix, and publishes the tested bytes and commit.
-Retain the workflow’s release-admission checks before publication.
-Existing tags are rejected; inspect existing assets before retrying a partial
-publication. PR and nightly-validation runs cannot publish.
+Author `docs/releases/VERSION.md`, merge the reviewed changes, and dispatch
+**Release** on main with a new SemVer `release_tag` and `nightly_validation: false`.
+Admission checks the default-branch commit and rejects an existing tag before
+building. One nightly is selected for the entire bundle matrix. Linux, macOS
+and Windows check and build the examples against the exact candidate bundle
+using an empty package cache; they do not rebuild the host.
 
-After publishing, update example URLs through a reviewed PR and run the published
-example checks against the downloads.
+The separate shared publisher creates a draft, verifies uploaded assets against
+the tested bytes and publishes it. It runs no repository tasks with write access.
+Normal PR runs and the default manual validation mode cannot publish.
+A validation run uses `0.0.0-ci` when no release version is supplied.
+
+Committed examples always follow the working tree; never rewrite them after a
+release. To test a bundle locally, serve its directory on loopback and run
+`blueprint run examples -- --bundle-url http://127.0.0.1:8000/HASH.tar.zst`.
+Python is used in CI only as that HTTP adapter.
 
 ## Documentation
 
-Keep documentation focused on current reader tasks. Remove superseded guidance and status narratives; keep release changes in release records and investigations or unresolved work in issues. Follow the [shared documentation guide](https://lukewilliamboswell.github.io/roc-automation/documentation.html#write-project-documentation).
+Keep documentation focused on current reader tasks. Remove superseded guidance
+and status narratives; keep release changes in release records and unresolved
+work in issues. Follow the [shared documentation guide](https://lukewilliamboswell.github.io/roc-automation/documentation.html#write-project-documentation).
 
-Generate local docs with:
-
-```sh
-zig build
-roc docs platform/main.roc --output=.zig-cache/generated-docs
-python3 -m http.server 8000 --directory .zig-cache/generated-docs
-```
+Edit `docs/index.adoc` for the manual and source documentation for the API.
+`blueprint run docs` uses the locked `roc-docs` 0.9.0 utility to produce
+`.docs-out/site`, the PDF and Markdown manual. The documentation workflow builds
+with read-only permissions, then deploys the site in a separate job.

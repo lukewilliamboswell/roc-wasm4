@@ -1,0 +1,38 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  source:
+    name: Current source
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: lukewilliamboswell/roc-automation/actions/setup-blueprint@8afe656ea7de5586233683088eb6972b770f6832
+      - uses: roc-lang/setup-roc@dd81390553b0a1236aedb61cdd4c0ed7cf7eaec4
+        with:
+          version: nightly
+      - run: blueprint run check
+      - run: blueprint run glue
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - run: blueprint run docs
+  required:
+    name: test-examples
+    if: always()
+    needs: source
+    runs-on: ubuntu-24.04
+    steps:
+      - env:
+          SOURCE_RESULT: ${{ needs.source.result }}
+        run: test "$SOURCE_RESULT" = success

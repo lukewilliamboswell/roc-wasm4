@@ -1,42 +1,40 @@
-name: Generate docs
-
+name: Documentation site
 on:
-  # Run when a release is published
   release:
-    types:
-      - published
-
+    types: [published]
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: pages
+  cancel-in-progress: false
 jobs:
-  generate-docs:
-    name: Generate docs
-    runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.release.tag_name || github.sha }}
+          persist-credentials: false
+      - uses: lukewilliamboswell/roc-automation/actions/setup-blueprint@8afe656ea7de5586233683088eb6972b770f6832
+      - uses: roc-lang/setup-roc@dd81390553b0a1236aedb61cdd4c0ed7cf7eaec4
+        with:
+          version: nightly
+      - run: blueprint run build-host
+      - run: blueprint run docs
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
+        with:
+          path: .docs-out/site
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
     permissions:
       pages: write
       id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Check out the repository
-        uses: actions/checkout@v7
-      - name: Install Zig
-        uses: mlugg/setup-zig@v2
-        with:
-          version: 0.16.0
-      - name: Install Roc
-        uses: roc-lang/setup-roc@main
-        with:
-          version: nightly-new-compiler
-
-      - name: Show installed Roc version
-        run: roc version
-      - name: Build host object
-        run: zig build
-      - name: Generate docs
-        run: roc docs platform/main.roc
-      - name: Fix absolute paths
-        run: |
-          find generated-docs/ -type f -name '*.html' -exec sed -i "s/\(href\|src\)=\"\//\1=\"\/${{ github.event.repository.name }}\//g" {} +
-      - name: Upload docs artifact
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: generated-docs
-      - name: Deploy docs
-        uses: actions/deploy-pages@v5
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5

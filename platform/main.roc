@@ -2,7 +2,7 @@ platform ""
 	requires {
 		[Model : model] for main : { init! : () => model, update! : model => model }
 	}
-	exposes [W4, Sprite, Host]
+	exposes [Host, Sprite, W4]
 	packages {}
 	provides { "init_for_host": init_for_host!, "update_for_host": update_for_host! }
 	hosted {

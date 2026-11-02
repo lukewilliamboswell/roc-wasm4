@@ -31,3 +31,7 @@ _old_platform/
 format.sh
 
 __pycache__/
+
+.blueprint/
+.docs-out/
+dist/
