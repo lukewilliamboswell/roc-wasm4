@@ -1,0 +1,87 @@
+{
+  "apps": [
+    {
+      "cases": [
+        {
+          "args": [],
+          "exit_code": 0,
+          "name": "60-frames-input",
+          "stderr": "",
+          "stderr_match": "ignore",
+          "stdin": "",
+          "stdout": "{\"frames\":60,\"framebuffer_sha256\":[\"32931538287288de45feb0df2abbe2c99b25f87249a142f4b9d554f155e2be02\",\"a72ddda27bbd62c37177b935ae8013026c4b7c22cdf17d7ee59a7a93cda26ef2\",\"32931538287288de45feb0df2abbe2c99b25f87249a142f4b9d554f155e2be02\"],\"palette\":[16777215,16711680,65280,255],\"trace\":[\"basic example started\"],\"imports\":{\"traceUtf8\":1,\"tone\":1,\"textUtf8\":540,\"line\":60,\"hline\":60,\"vline\":60,\"oval\":60}}\n"
+        }
+      ],
+      "path": "examples/basic/main.roc",
+      "run": [
+        "/tmp/roc-wasm4-runtime-tools/node",
+        "../support/run-cart.mjs",
+        "{executable}"
+      ],
+      "target": "wasm32"
+    },
+    {
+      "cases": [
+        {
+          "args": [],
+          "exit_code": 0,
+          "name": "60-frames-input",
+          "stderr": "",
+          "stderr_match": "ignore",
+          "stdin": "",
+          "stdout": "{\"frames\":60,\"framebuffer_sha256\":[\"7f1a14cb2598a11e6fc6204a60ea17bbe1490e1d252b5a67bd6771851d2e16a8\",\"3dc809028d6bc8ce70d56795e15d4e2a02141aa045f1ea94c5dd6a5d96d2ca74\",\"d576e14ae4905b5a718ccf4fb1444e05358cb8b57f9a71ae40acd0113859244a\"],\"palette\":[15132352,11834551,4342638,2490687],\"trace\":[],\"imports\":{\"diskr\":2,\"textUtf8\":81,\"blitSub\":1089,\"diskw\":1,\"tone\":1}}\n"
+        }
+      ],
+      "path": "examples/rocci-bird/main.roc",
+      "run": [
+        "/tmp/roc-wasm4-runtime-tools/node",
+        "../support/run-cart.mjs",
+        "{executable}"
+      ],
+      "target": "wasm32"
+    },
+    {
+      "cases": [
+        {
+          "args": [],
+          "exit_code": 0,
+          "name": "60-frames-input",
+          "stderr": "",
+          "stderr_match": "ignore",
+          "stdin": "",
+          "stdout": "{\"frames\":60,\"framebuffer_sha256\":[\"529a6e03aaa642a33cc4c586803aa5ebe399b890fc9b5f07456d4891d44bdd94\",\"9327406ab881c7069cefed43a15e19310eecef619c36066163fb479713938517\",\"7c9d50041170fd13f797dbc0629b624c975aeb58bed90912228c1fb45eb7ff85\"],\"palette\":[16513011,15052931,4353629,2107453],\"trace\":[],\"imports\":{\"textUtf8\":21,\"blitSub\":39,\"rect\":117}}\n"
+        }
+      ],
+      "path": "examples/snake/main.roc",
+      "run": [
+        "/tmp/roc-wasm4-runtime-tools/node",
+        "../support/run-cart.mjs",
+        "{executable}"
+      ],
+      "target": "wasm32"
+    },
+    {
+      "cases": [
+        {
+          "args": [],
+          "exit_code": 0,
+          "name": "60-frames-input",
+          "stderr": "",
+          "stderr_match": "ignore",
+          "stdin": "",
+          "stdout": "{\"frames\":60,\"framebuffer_sha256\":[\"6166bb26ba19f260d0d947a161762f9717814dfef1a07b170e4e895c51d89b43\",\"6166bb26ba19f260d0d947a161762f9717814dfef1a07b170e4e895c51d89b43\",\"6166bb26ba19f260d0d947a161762f9717814dfef1a07b170e4e895c51d89b43\"],\"palette\":[14743759,8831084,3172432,464929],\"trace\":[],\"imports\":{\"rect\":1320,\"textUtf8\":1380,\"blitSub\":60,\"tone\":1}}\n"
+        }
+      ],
+      "path": "examples/sound/main.roc",
+      "run": [
+        "/tmp/roc-wasm4-runtime-tools/node",
+        "../support/run-cart.mjs",
+        "{executable}"
+      ],
+      "target": "wasm32"
+    }
+  ],
+  "dependencies": [],
+  "release": "working-tree",
+  "schema_version": 1
+}
