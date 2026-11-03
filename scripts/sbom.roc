@@ -64,7 +64,8 @@ prepare! = |version| {
 	compiler_version = Process.capture!("roc", ["version"])?
 	binary = Process.capture!("sh", ["-c", "command -v roc"])?
 	compiler_hash = hash!(binary)?
-	compiler = component("product-compiler", "Roc compiler executable", compiler_version, "UPL-1.0", "urn:roc-wasm4:compiler:${compiler_hash}", "NOASSERTION", compiler_hash, "Hash of the unpacked compiler executable on PATH; official nightly selection and archive verification are recorded by setup-roc")
+	compiler_base = component("product-compiler", "Roc compiler executable", compiler_version, "UPL-1.0", "urn:roc-wasm4:compiler:${compiler_hash}", "NOASSERTION", compiler_hash, "Hash of the unpacked compiler executable on PATH; official nightly selection and archive verification are recorded by setup-roc")
+	compiler = { ..compiler_base, producer: "Organization: Roc contributors" }
 	Path.create_all!(Path.utf8("dist/sbom")).map_err(|_| "cannot create SBOM composition directory")?
 	for (kind, root, description) in [("bundle", "platform", "Roc source modules and compiled wasm32 host"), ("examples", "examples", "Four games, companion modules, runtime adapter and illustration files"), ("api", "platform", "Versioned compiler-generated API reference and its static assets"), ("manual", "docs", "Rendered PDF manual with subset font data")] {
 		first_party = component("first-party", "roc-wasm4 ${kind}", version, "UPL-1.0", "${repository}/tree/${commit}/${root}", "${repository}/archive/${commit}.tar.gz", "", "${description}; selected content of the source revision, not the complete repository")
@@ -78,7 +79,8 @@ prepare! = |version| {
 			$edges = $edges.concat([edge("Subject", "wasm32-host", "contains", "", "Exact host.wasm bytes are included in the bundle"), edge("wasm32-host", "allocator", "contains", "", "Host allocation services compile and exercise this allocator implementation"), edge("wasm32-host", "tool-zig", "dependsOn", "build", "Locked Zig archive provides the compiler and standard library used by the host")])
 			$coverage = $coverage.append(gap("optimized-host-closure", "wasm32-host", "assembly", "The allocator is known, but exact optimized Zig standard-library/compiler-runtime contributions have not been enumerated. Source imports are not claimed as a complete binary closure."))
 		} else if kind == "examples" {
-			art = component("rocci-bird-art", "Rocci Bird artwork", commit, "NOASSERTION", "${repository}/tree/${commit}/examples/rocci-bird", "NOASSERTION", "", "Artwork credited to Luke DeVault; the original asset revision and license were not recorded in this repository")
+			art_base = component("rocci-bird-art", "Rocci Bird artwork", commit, "NOASSERTION", "${repository}/tree/${commit}/examples/rocci-bird", "NOASSERTION", "", "Artwork credited to Luke DeVault; the original asset revision and license were not recorded in this repository")
+			art = { ..art_base, producer: "Person: Luke DeVault" }
 			$components = $components.append(art)
 			$edges = $edges.concat([edge("first-party", "rocci-bird-art", "contains", "", "The example embeds sprite artwork credited in the repository README"), edge("Subject", "wasm32-platform", "dependsOn", "runtime", "Archived game headers declare this release's exact platform bundle")])
 			platform_component = component("wasm32-platform", "roc-wasm4 platform", version, "UPL-1.0 AND MIT AND ISC", "urn:roc-wasm4:platform:${version}", "${repository}/releases/tag/${version}", "", "Exact dependency URL and hash are recorded in the archived spec.json and game headers")
@@ -90,7 +92,9 @@ prepare! = |version| {
 				file_name = Path.filename(font_path).map_ok(Path.display).map_err(|_| "invalid font name")?
 				name = file_name.drop_suffix(".ttf")
 				digest = hash!(".docs-out/site/_roc-docs/fonts/${name}.ttf")?
-				font = component("font-${name}", name, "sha256-${digest}", "OFL-1.1", "urn:roc-wasm4:font:${name}:${digest}", "NOASSERTION", digest, "Exact original font input extracted by the locked roc-docs binary; the PDF embeds transformed/subset data")
+				font_base = component("font-${name}", name, "sha256-${digest}", "OFL-1.1", "urn:roc-wasm4:font:${name}:${digest}", "NOASSERTION", digest, "Exact original font input extracted by the locked roc-docs binary; the PDF embeds transformed/subset data")
+				producer = if name.starts_with("Inter-") "Organization: The Inter Project Authors" else if name.starts_with("FiraCode-") "Organization: The Fira Code Project Authors" else if name.starts_with("Merriweather-") "Organization: The Merriweather Project Authors" else return Err("review the upstream producer for new font ${name}")
+				font = { ..font_base, producer }
 				$components = $components.append(font)
 				$edges = $edges.append(edge("Subject", "font-${name}", "dependsOn", "build", "Manual rendering uses this exact font input; the complete original font file is not asserted to be contained in the PDF"))
 			}
