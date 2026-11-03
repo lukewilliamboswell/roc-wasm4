@@ -1,8 +1,8 @@
 Examples := [].{
 	dependency = "../../platform/main.roc"
 
-	# Build-only carts require the WASM-4 runtime to execute. Source headers
-	# remain unchanged; bundle validation uses Roc's dependency substitution.
+	# Compiler-host jobs only build carts. The Linux runtime suite executes
+	# them separately. Dependency substitution preserves source headers.
 	replacement : List(Str) -> Try(List(Str), Str)
 	replacement = |args| match args {
 		[] => Ok([])
@@ -12,7 +12,7 @@ Examples := [].{
 			} else {
 				Err("bundle URL must name a loopback .tar.zst archive")
 			}
-		_ => Err("usage: blueprint run examples [-- --bundle-url URL]")
+		_ => Err("usage: distribution --build-only [--bundle-url URL]")
 	}
 
 	local_header : Str -> Bool

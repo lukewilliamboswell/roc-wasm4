@@ -14,6 +14,7 @@ import src/Release
 
 main! = |args| {
 	result = match args.map(OsStr.display) {
+		["request"] => request!()
 		["validate", version] => validate!(version)
 		["prepare", version] => prepare!(version)
 		_ => Err("usage: blueprint run release -- validate|prepare VERSION")
@@ -49,31 +50,33 @@ validate! = |version| {
 	if refs.split_on("\n").contains("refs/tags/${version}") {
 		return Err("release tag already exists")
 	}
-	_ = Path.read_utf8!(Path.utf8("docs/releases/${version}.md")).map_err(|_| "author docs/releases/${version}.md before publication")?
+	_ = Path.read_utf8!(Path.utf8("docs/releases/${version}.adoc")).map_err(|_| "author docs/releases/${version}.adoc before publication")?
 	output!("sha=${sha}\nprerelease=${if version.contains("-") "true" else "false"}\n")
 }
 
 prepare! = |version| {
-	if !Release.valid_version(version) {
-		return Err("invalid release version")
+	if !Release.valid_version(version) or version == "0.0.0" or version.starts_with("0.0.0-") {
+		return Err("release version must be nonzero SemVer")
 	}
-	Process.run!("roc-stable", ["scripts/bundle.roc", "--", "--output-dir", "dist"])?
+	Process.run!("release-package", ["check-version", version])?
+	Env.with_temp_dir!(
+		|temporary| {
+			Process.run!("roc-stable", ["scripts/bundle.roc", "--", "--output-dir", Path.display(temporary)])?
+			Process.run!("release-package", ["build", version, "--platform-bundle", Path.display(temporary)])
+		},
+	).map_err(|_| "release packaging failed")?
 	files = Path.list!(Path.utf8("dist")).map_err(|_| "cannot list dist")?
-	archives = files.map(Path.display).keep_if(|path| path.ends_with(".tar.zst"))
-	archive = match archives {
+	archive = match files.map(Path.display).keep_if(|path| path.ends_with(".tar.zst")) {
 		[path] => path
-		_ => return Err("dist must contain exactly one candidate platform archive; use a clean directory")
+		_ => return Err("expected one platform archive in dist")
 	}
 	name = archive.split_on("/").last() ?? ""
-	compiler = Process.capture!("roc", ["version"])?
-	sha = Process.capture!("git", ["rev-parse", "HEAD"])?
-	notes = if version == "0.0.0-ci" {
-		"CI candidate for ${sha}; ${compiler}. Carts were built, not executed in WASM-4.\n"
-	} else {
-		Path.read_utf8!(Path.utf8("docs/releases/${version}.md")).map_err(|_| "missing authored release notes")?
-	}
-	Path.write_utf8!(Path.utf8("dist/release-notes.md"), "${notes}\nBuilt from ${sha} with ${compiler}.\n").map_err(|_| "cannot write release notes")?
-	output!("bundle_name=${name}\nbundle_path=${archive}\nroc_version=${compiler}\n")
+	Process.run!("blueprint", ["run", "docs", "--", version, name])?
+	Path.copy!(Path.utf8(".docs-out/roc-wasm4.pdf"), Path.utf8("dist/roc-wasm4-manual-${version}.pdf")).map_err(|_| "cannot stage release manual")?
+	notes = Path.read_utf8!(Path.utf8("dist/release-notes.md")).map_err(|_| "cannot read rendered release notes")?
+	tooling = Process.capture!("roc-stable", ["version"])?
+	Path.write_utf8!(Path.utf8("dist/release-notes.md"), "${notes}\n- Automation compiler: ${tooling}\n").map_err(|_| "cannot record tooling compiler")?
+	output!("bundle_name=${name}\nbundle_path=${archive}\n")
 }
 
 output! = |text| match Env.var_str!(OsStr.from_str("GITHUB_OUTPUT")) {
@@ -82,4 +85,14 @@ output! = |text| match Env.var_str!(OsStr.from_str("GITHUB_OUTPUT")) {
 		Path.write_utf8!(Path.utf8(path), "${previous}${text}").map_err(|_| "cannot write GITHUB_OUTPUT")
 	}
 	Err(_) => Stdout.write!(text).map_err(|_| "cannot print outputs")
+}
+
+request! = || {
+	selected = Env.var_str!(OsStr.from_str("RELEASE_VERSION")) ?? ""
+	version = if selected == "" "0.0.1-dryrun" else selected
+	if selected != "" {
+		validate!(version)?
+	}
+	commit = Process.capture!("git", ["rev-parse", "HEAD"])?
+	output!("version=${version}\nsha=${commit}\nprerelease=${if version.contains("-") "true" else "false"}\n")
 }

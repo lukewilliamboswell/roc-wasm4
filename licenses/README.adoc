@@ -1,0 +1,11 @@
+= Third-party notices
+
+The bundle carries the platform's UPL license and the upstream WASM-4 ISC and
+umm_malloc MIT notices. `src/allocator.zig` is a Zig rewrite based on umm_malloc;
+the original upstream revision was not recorded. `src/wasm4.zig` implements the
+WASM-4 ABI. The notices preserve upstream attribution without claiming either
+file is an unmodified upstream source.
+
+Build and browser-test tools are external, locked inputs. Their complete
+transitive native closures are not shipped as part of the source bundle and
+are not inferred from executable hashes. SBOM coverage states those gaps.

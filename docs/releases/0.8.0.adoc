@@ -1,0 +1,23 @@
+= roc-wasm4 0.8.0
+
+Use a current official Roc nightly. This platform has no compiler constraint.
+
+== Install
+
+Set the platform dependency of a standalone game to `{platform-url}`.
+Download the examples archive for this release for complete runnable games.
+
+== Changes
+
+* Check games in the official WASM-4 web runtime, including rendering, gamepad input, tones and disk calls.
+* Commit a sixty-frame deterministic suite and test that exact suite against the release bundle.
+* Publish the examples, versioned API reference and PDF manual with checked SPDX and CycloneDX sidecars.
+* Run local and hosted tasks through locked Blueprint tools and Roc scripts.
+* Regenerate and verify host bindings with the selected nightly.
+
+== Verification and scope
+
+The browser suite uses software-rendered Chromium and simulated audio. It does
+not establish physical sound output, native desktop runtime behavior or netplay
+between machines. SBOMs state their reviewed coverage and unresolved supplier
+and optimized-host dependency gaps explicitly.
