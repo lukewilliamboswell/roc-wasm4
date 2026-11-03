@@ -100,7 +100,9 @@ try {
         };
     });
     await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'load' });
-    await page.waitForFunction(() => document.querySelector('wasm4-app')?.runtime?.wasm);
+    // Animation is deliberately disabled above, so readiness must use a timer.
+    // Playwright's default animation-frame polling can otherwise stop forever.
+    await page.waitForFunction(() => document.querySelector('wasm4-app')?.runtime?.wasm, undefined, { polling: 25 });
     const result = await page.evaluate(async () => {
         const runtime = document.querySelector('wasm4-app').runtime;
         const snapshots = [];

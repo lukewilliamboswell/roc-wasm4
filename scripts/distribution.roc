@@ -62,5 +62,11 @@ run! = |args| {
 			}
 			Ok({})
 		},
-	).map_err(|_| "optimized WASM-4 distribution test failed")
+	).map_err(
+		|error| match error {
+			CallbackErr(message) => message
+			CallbackAndCleanupErr(message, _, _) => message
+			_ => "cannot prepare or clean up optimized WASM-4 distribution test"
+		},
+	)
 }

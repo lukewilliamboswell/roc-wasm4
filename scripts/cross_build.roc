@@ -22,8 +22,8 @@ main! = |_args| {
 
 run! = || {
 	entries = Path.list!(Path.utf8("dist")).map_err(|_| "missing candidate directory")?
-	bundle = match entries.map(Path.display).keep_if(|path| path.ends_with(".tar.zst")) {
-		[file] => file.split_on("/").last() ?? ""
+	bundle = match entries.keep_if(|path| Path.display(path).ends_with(".tar.zst")) {
+		[file] => Path.filename(file).map_ok(Path.display).map_err(|_| "invalid candidate filename")?
 		_ => return Err("expected one candidate bundle")
 	}
 	# Python supplies only a platform HTTP adapter. Roc owns admission, bounded
