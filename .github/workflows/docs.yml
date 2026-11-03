@@ -29,4 +29,5 @@ jobs:
       with:
         name: documentation-preview
         path: .docs-out/
+        include-hidden-files: true
         if-no-files-found: error
