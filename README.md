@@ -21,7 +21,7 @@ Build the example and run it with WASM-4:
 
 ```shell
 blueprint run build-host
-roc build examples/basic/main.roc --target=wasm32 --output=basic.wasm
+roc build examples/basic/main.roc --target=wasm32 --opt=size --output=basic.wasm
 w4 run basic.wasm
 ```
 
@@ -55,7 +55,7 @@ Then build and run the app:
 
 ```shell
 roc version
-roc build examples/snake/main.roc --target=wasm32 --output=snake.wasm
+roc build examples/snake/main.roc --target=wasm32 --opt=size --output=snake.wasm
 w4 run snake.wasm
 ```
 
@@ -76,7 +76,7 @@ Drum Roll is a separate demo by Isaac Van Doren. [Source](https://github.com/isa
 For a smaller game cart, build the Roc app with size-oriented optimizations:
 
 ```shell
-roc build app.roc --opt=size
+roc build app.roc --target=wasm32 --opt=size --output=app.wasm
 ```
 
 Bundle the generated cart with the WASM-4 CLI:

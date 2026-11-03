@@ -14,6 +14,7 @@ import src/Release
 
 main! = |args| {
 	result = match args.map(OsStr.display) {
+		["request"] => request!()
 		["validate", version] => validate!(version)
 		["prepare", version] => prepare!(version)
 		_ => Err("usage: blueprint run release -- validate|prepare VERSION")
@@ -84,4 +85,14 @@ output! = |text| match Env.var_str!(OsStr.from_str("GITHUB_OUTPUT")) {
 		Path.write_utf8!(Path.utf8(path), "${previous}${text}").map_err(|_| "cannot write GITHUB_OUTPUT")
 	}
 	Err(_) => Stdout.write!(text).map_err(|_| "cannot print outputs")
+}
+
+request! = || {
+	selected = Env.var_str!(OsStr.from_str("RELEASE_VERSION")) ?? ""
+	version = if selected == "" "0.0.1-dryrun" else selected
+	if selected != "" {
+		validate!(version)?
+	}
+	commit = Process.capture!("git", ["rev-parse", "HEAD"])?
+	output!("version=${version}\nsha=${commit}\nprerelease=${if version.contains("-") "true" else "false"}\n")
 }

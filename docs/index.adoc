@@ -14,7 +14,7 @@ then build the host and a cart:
 [source,shell]
 ----
 blueprint run build-host
-roc build examples/basic/main.roc --target=wasm32 --output=basic.wasm
+roc build examples/basic/main.roc --target=wasm32 --opt=size --output=basic.wasm
 w4 run basic.wasm
 ----
 
@@ -67,8 +67,10 @@ Run `blueprint run check` from the repository root. Blueprint downloads and
 verifies the fixed tooling compiler and Zig; `roc` on PATH is the compiler
 under test. `blueprint run bundle` bundles an already-built host.
 
-CI checks and builds carts but does not execute them in WASM-4. Before release,
-play-test drawing, input, audio and game behavior in the runtime.
+CI runs all four public carts for sixty deterministic frames in the official
+WASM-4 web runtime under locked headless Chromium on Linux. It checks framebuffer
+hashes, simulated input, trace output and host import calls. Play-test audible
+sound and native runtime behavior before release.
 The host reserves 32768 bytes for dynamic allocation by default; build with
 `zig build -Dmem-size=<bytes>` inside `blueprint shell` to change that limit.
 

@@ -1,0 +1,32 @@
+name: Documentation preview
+'on':
+  pull_request: null
+  push:
+    branches:
+    - main
+  workflow_dispatch: null
+permissions: {}
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        persist-credentials: false
+    - uses: lukewilliamboswell/roc-automation/actions/setup-blueprint@8afe656ea7de5586233683088eb6972b770f6832
+      with:
+        cache: true
+        cache-workload: docs-preview
+    - uses: roc-lang/setup-roc@dd81390553b0a1236aedb61cdd4c0ed7cf7eaec4
+      with:
+        version: nightly
+        nightly-tag: ''
+    - run: blueprint run docs
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: documentation-preview
+        path: .docs-out/
+        if-no-files-found: error

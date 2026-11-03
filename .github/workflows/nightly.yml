@@ -1,0 +1,26 @@
+name: Nightly compatibility
+'on':
+  schedule:
+  - cron: 17 13 * * *
+  workflow_dispatch:
+    inputs:
+      nightly-tag:
+        type: string
+        default: ''
+      release-tag:
+        type: string
+        default: ''
+permissions: {}
+jobs:
+  compatibility:
+    permissions:
+      contents: read
+      issues: write
+    uses: lukewilliamboswell/roc-automation/.github/workflows/nightly-compatibility.yml@8afe656ea7de5586233683088eb6972b770f6832
+    with:
+      nightly-tag: ${{ inputs.nightly-tag || '' }}
+      release-tag: ${{ inputs.release-tag || '' }}
+      runners: '["ubuntu-24.04"]'
+      install-blueprint: true
+      setup-command: '["blueprint","run","nightly-prerequisites"]'
+      case-timeout-ms: '20000'

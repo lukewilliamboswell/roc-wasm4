@@ -25,6 +25,15 @@ check! = |args| {
 		["--prebuilt-host"] => Bool.True
 		_ => return Err("usage: blueprint run check [-- --prebuilt-host]")
 	}
+	declaration = Path.read_utf8!(Path.utf8("Blueprint.roc")).map_err(|_| "cannot read tool declaration")?
+	version = match declaration.split_on("zig_version = \"") {
+		[_, rest] => rest.split_on("\"").first() ?? ""
+		_ => return Err("expected one Zig version declaration")
+	}
+	minimum = Path.read_utf8!(Path.utf8("build.zig.zon")).map_err(|_| "cannot read Zig build minimum")?
+	if version == "" or !minimum.contains(".minimum_zig_version = \"${version}\"") {
+		return Err("build.zig.zon minimum must equal Blueprint's Zig version")
+	}
 	for path in [".roc-version", ".github/roc-nightly.json"] {
 		if Path.exists!(Path.utf8(path)).map_err(|_| "cannot inspect ${path}")? {
 			return Err("remove obsolete compiler pin ${path}")
@@ -35,9 +44,12 @@ check! = |args| {
 	}
 	Process.run!("roc", ["version"])?
 	Process.run!("roc", ["fmt", "--check", "platform", "examples", "benchmarks"])?
-	Process.run!("zig", ["version"])?
+	if !prebuilt {
+		Process.run!("zig", ["version"])?
+	}
 	Process.run!("roc-stable", ["test", "scripts/src/Release.roc"])?
-	for file in ["bundle", "check_all", "release", "release_test", "glue", "docs", "distribution"] {
+	Process.run!("roc-stable", ["test", "scripts/src/Examples.roc"])?
+	for file in ["bundle", "check_all", "release", "release_test", "glue", "docs", "distribution", "cross_build", "host_fingerprint", "sbom", "sidecars"] {
 		Process.run!("roc-stable", ["check", "scripts/${file}.roc"])?
 	}
 	Process.run!("roc-stable", ["fmt", "--check", "scripts", "Blueprint.roc"])?

@@ -1,0 +1,747 @@
+{
+  "profile": "blueprint-spdx-3.0-v2",
+  "components": [
+    {
+      "id": "tool-roc-stable",
+      "name": "roc",
+      "version": "nightly-2026-10-09-258ab27",
+      "producer": "Organization: Roc contributors",
+      "license": "UPL-1.0",
+      "license_url": "",
+      "identity": "",
+      "download": "",
+      "sha256": "",
+      "modified": "",
+      "target": "",
+      "origin": "program:roc-stable:x86_64-linux"
+    },
+    {
+      "id": "tool-zig",
+      "name": "zig",
+      "version": "0.16.0",
+      "producer": "Organization: Zig Software Foundation",
+      "license": "MIT",
+      "license_url": "",
+      "identity": "",
+      "download": "",
+      "sha256": "",
+      "modified": "",
+      "target": "",
+      "origin": "program:zig:x86_64-linux"
+    },
+    {
+      "id": "tool-roc-docs",
+      "name": "roc-docs",
+      "version": "0.9.0",
+      "producer": "Person: Luke Boswell",
+      "license": "UPL-1.0 AND OFL-1.1",
+      "license_url": "",
+      "identity": "",
+      "download": "",
+      "sha256": "",
+      "modified": "",
+      "target": "",
+      "origin": "program:roc-docs:x86_64-linux"
+    },
+    {
+      "id": "tool-roc-policy",
+      "name": "roc-policy",
+      "version": "0.9.0",
+      "producer": "Person: Luke Boswell",
+      "license": "UPL-1.0 AND MIT",
+      "license_url": "",
+      "identity": "",
+      "download": "",
+      "sha256": "",
+      "modified": "",
+      "target": "",
+      "origin": "program:roc-policy:x86_64-linux"
+    },
+    {
+      "id": "tool-release-package",
+      "name": "release-package",
+      "version": "0.9.0",
+      "producer": "Person: Luke Boswell",
+      "license": "UPL-1.0",
+      "license_url": "",
+      "identity": "",
+      "download": "",
+      "sha256": "",
+      "modified": "",
+      "target": "",
+      "origin": "program:release-package:x86_64-linux"
+    },
+    {
+      "id": "tool-node",
+      "name": "node",
+      "version": "24.11.0",
+      "producer": "Organization: Node.js contributors",
+      "license": "MIT",
+      "license_url": "",
+      "identity": "",
+      "download": "",
+      "sha256": "",
+      "modified": "",
+      "target": "",
+      "origin": "program:node:x86_64-linux"
+    },
+    {
+      "id": "tool-w4-archive",
+      "name": "wasm4",
+      "version": "2.7.1",
+      "producer": "Person: Bruno Garcia",
+      "license": "ISC",
+      "license_url": "",
+      "identity": "",
+      "download": "",
+      "sha256": "",
+      "modified": "",
+      "target": "",
+      "origin": "program:w4-archive:x86_64-linux"
+    },
+    {
+      "id": "tool-wasm4-playwright",
+      "name": "playwright-core",
+      "version": "1.64.1",
+      "producer": "Organization: Microsoft",
+      "license": "Apache-2.0",
+      "license_url": "",
+      "identity": "",
+      "download": "",
+      "sha256": "",
+      "modified": "",
+      "target": "",
+      "origin": "program:wasm4-playwright:x86_64-linux"
+    },
+    {
+      "id": "tool-wasm4-chromium-archive",
+      "name": "chromium-headless-shell",
+      "version": "156.0.8078.4",
+      "producer": "Organization: Chromium contributors",
+      "license": "BSD-3-Clause",
+      "license_url": "",
+      "identity": "",
+      "download": "",
+      "sha256": "",
+      "modified": "",
+      "target": "",
+      "origin": "program:wasm4-chromium-archive:x86_64-linux"
+    },
+    {
+      "id": "node-openssl",
+      "name": "OpenSSL",
+      "version": "3.5.4",
+      "producer": "Organization: OpenSSL contributors",
+      "license": "Apache-2.0",
+      "license_url": "",
+      "identity": "https://github.com/openssl/openssl/tree/openssl-3.5.4",
+      "download": "https://github.com/openssl/openssl/tree/openssl-3.5.4",
+      "sha256": "",
+      "modified": "Version reported by the exact locked Node 24.11.0 Linux executable; this is test tooling, not code shipped in the platform",
+      "target": "",
+      "origin": "reviewed"
+    },
+    {
+      "id": "node-v8",
+      "name": "V8",
+      "version": "13.6.233.10-node.28",
+      "producer": "Organization: V8 contributors",
+      "license": "BSD-3-Clause",
+      "license_url": "",
+      "identity": "https://github.com/nodejs/node/tree/v24.11.0/deps/v8",
+      "download": "https://github.com/nodejs/node/tree/v24.11.0/deps/v8",
+      "sha256": "",
+      "modified": "Version reported by the exact locked Node 24.11.0 Linux executable; this is test tooling, not code shipped in the platform",
+      "target": "",
+      "origin": "reviewed"
+    },
+    {
+      "id": "tool-automation-sbom-sidecars",
+      "name": "roc-automation SBOM action client",
+      "version": "8afe656ea7de5586233683088eb6972b770f6832",
+      "producer": "Person: Luke Boswell",
+      "license": "UPL-1.0",
+      "license_url": "",
+      "identity": "",
+      "download": "",
+      "sha256": "",
+      "modified": "",
+      "target": "",
+      "origin": "program:automation-sbom-sidecars:x86_64-linux"
+    }
+  ],
+  "relationships": [
+    {
+      "from": "Subject",
+      "to": "tool-roc-stable",
+      "relation": "dependsOn",
+      "scope": "build",
+      "basis": "Locked build tool used by the common candidate build and validation pipeline; the executable is not shipped in this subject"
+    },
+    {
+      "from": "Subject",
+      "to": "tool-zig",
+      "relation": "dependsOn",
+      "scope": "build",
+      "basis": "Locked build tool used by the common candidate build and validation pipeline; the executable is not shipped in this subject"
+    },
+    {
+      "from": "Subject",
+      "to": "tool-roc-docs",
+      "relation": "dependsOn",
+      "scope": "build",
+      "basis": "Locked build tool used by the common candidate build and validation pipeline; the executable is not shipped in this subject"
+    },
+    {
+      "from": "Subject",
+      "to": "tool-roc-policy",
+      "relation": "dependsOn",
+      "scope": "test",
+      "basis": "Locked test tool used by the common candidate build and validation pipeline; the executable is not shipped in this subject"
+    },
+    {
+      "from": "Subject",
+      "to": "tool-release-package",
+      "relation": "dependsOn",
+      "scope": "build",
+      "basis": "Locked build tool used by the common candidate build and validation pipeline; the executable is not shipped in this subject"
+    },
+    {
+      "from": "Subject",
+      "to": "tool-node",
+      "relation": "dependsOn",
+      "scope": "test",
+      "basis": "Locked test tool used by the common candidate build and validation pipeline; the executable is not shipped in this subject"
+    },
+    {
+      "from": "Subject",
+      "to": "tool-w4-archive",
+      "relation": "dependsOn",
+      "scope": "test",
+      "basis": "Locked test tool used by the common candidate build and validation pipeline; the executable is not shipped in this subject"
+    },
+    {
+      "from": "Subject",
+      "to": "tool-wasm4-playwright",
+      "relation": "dependsOn",
+      "scope": "test",
+      "basis": "Locked test tool used by the common candidate build and validation pipeline; the executable is not shipped in this subject"
+    },
+    {
+      "from": "Subject",
+      "to": "tool-wasm4-chromium-archive",
+      "relation": "dependsOn",
+      "scope": "test",
+      "basis": "Locked test tool used by the common candidate build and validation pipeline; the executable is not shipped in this subject"
+    },
+    {
+      "from": "tool-node",
+      "to": "node-openssl",
+      "relation": "contains",
+      "scope": "",
+      "basis": "The locked Node executable reports this bundled version through process.versions; node_shared_openssl is false. The remaining native closure stays incomplete."
+    },
+    {
+      "from": "tool-node",
+      "to": "node-v8",
+      "relation": "contains",
+      "scope": "",
+      "basis": "The locked Node executable reports this bundled version through process.versions; node_shared_openssl is false. The remaining native closure stays incomplete."
+    },
+    {
+      "from": "Subject",
+      "to": "tool-automation-sbom-sidecars",
+      "relation": "dependsOn",
+      "scope": "build",
+      "basis": "Locked build tool used by the common candidate build and validation pipeline; the executable is not shipped in this subject"
+    }
+  ],
+  "coverage": [
+    {
+      "scope": "closure-roc-stable",
+      "component": "tool-roc-stable",
+      "aspect": "dependencies",
+      "status": "incomplete",
+      "reason": "The exact tool archive is locked; a complete transitive native/tool-data inventory is not available from the supplier and is not inferred from its executable hash",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "scope": "closure-zig",
+      "component": "tool-zig",
+      "aspect": "dependencies",
+      "status": "incomplete",
+      "reason": "The exact tool archive is locked; a complete transitive native/tool-data inventory is not available from the supplier and is not inferred from its executable hash",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "scope": "closure-roc-docs",
+      "component": "tool-roc-docs",
+      "aspect": "dependencies",
+      "status": "incomplete",
+      "reason": "The exact tool archive is locked; a complete transitive native/tool-data inventory is not available from the supplier and is not inferred from its executable hash",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "scope": "closure-roc-policy",
+      "component": "tool-roc-policy",
+      "aspect": "dependencies",
+      "status": "incomplete",
+      "reason": "The exact tool archive is locked; a complete transitive native/tool-data inventory is not available from the supplier and is not inferred from its executable hash",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "scope": "closure-release-package",
+      "component": "tool-release-package",
+      "aspect": "dependencies",
+      "status": "incomplete",
+      "reason": "The exact tool archive is locked; a complete transitive native/tool-data inventory is not available from the supplier and is not inferred from its executable hash",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "scope": "closure-node",
+      "component": "tool-node",
+      "aspect": "dependencies",
+      "status": "incomplete",
+      "reason": "The exact tool archive is locked; a complete transitive native/tool-data inventory is not available from the supplier and is not inferred from its executable hash",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "scope": "closure-w4-archive",
+      "component": "tool-w4-archive",
+      "aspect": "dependencies",
+      "status": "incomplete",
+      "reason": "The exact tool archive is locked; a complete transitive native/tool-data inventory is not available from the supplier and is not inferred from its executable hash",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "scope": "closure-wasm4-playwright",
+      "component": "tool-wasm4-playwright",
+      "aspect": "dependencies",
+      "status": "incomplete",
+      "reason": "The exact tool archive is locked; a complete transitive native/tool-data inventory is not available from the supplier and is not inferred from its executable hash",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "scope": "closure-wasm4-chromium-archive",
+      "component": "tool-wasm4-chromium-archive",
+      "aspect": "dependencies",
+      "status": "incomplete",
+      "reason": "The exact tool archive is locked; a complete transitive native/tool-data inventory is not available from the supplier and is not inferred from its executable hash",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "scope": "assembly-tool-roc-stable",
+      "component": "tool-roc-stable",
+      "aspect": "assembly",
+      "status": "incomplete",
+      "reason": "The native tool and its bundled third-party/data closure have not been fully enumerated; no executable hash is treated as a component inventory.",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "scope": "assembly-tool-zig",
+      "component": "tool-zig",
+      "aspect": "assembly",
+      "status": "incomplete",
+      "reason": "The native tool and its bundled third-party/data closure have not been fully enumerated; no executable hash is treated as a component inventory.",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "scope": "assembly-tool-roc-docs",
+      "component": "tool-roc-docs",
+      "aspect": "assembly",
+      "status": "incomplete",
+      "reason": "The native tool and its bundled third-party/data closure have not been fully enumerated; no executable hash is treated as a component inventory.",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "scope": "assembly-tool-roc-policy",
+      "component": "tool-roc-policy",
+      "aspect": "assembly",
+      "status": "incomplete",
+      "reason": "The native tool and its bundled third-party/data closure have not been fully enumerated; no executable hash is treated as a component inventory.",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "scope": "assembly-tool-release-package",
+      "component": "tool-release-package",
+      "aspect": "assembly",
+      "status": "incomplete",
+      "reason": "The native tool and its bundled third-party/data closure have not been fully enumerated; no executable hash is treated as a component inventory.",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "scope": "assembly-tool-node",
+      "component": "tool-node",
+      "aspect": "assembly",
+      "status": "incomplete",
+      "reason": "The native tool and its bundled third-party/data closure have not been fully enumerated; no executable hash is treated as a component inventory.",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "scope": "assembly-tool-w4-archive",
+      "component": "tool-w4-archive",
+      "aspect": "assembly",
+      "status": "incomplete",
+      "reason": "The native tool and its bundled third-party/data closure have not been fully enumerated; no executable hash is treated as a component inventory.",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "scope": "assembly-tool-wasm4-playwright",
+      "component": "tool-wasm4-playwright",
+      "aspect": "assembly",
+      "status": "incomplete",
+      "reason": "The native tool and its bundled third-party/data closure have not been fully enumerated; no executable hash is treated as a component inventory.",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "scope": "assembly-tool-wasm4-chromium-archive",
+      "component": "tool-wasm4-chromium-archive",
+      "aspect": "assembly",
+      "status": "incomplete",
+      "reason": "The native tool and its bundled third-party/data closure have not been fully enumerated; no executable hash is treated as a component inventory.",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "scope": "closure-node-openssl",
+      "component": "node-openssl",
+      "aspect": "dependencies",
+      "status": "unknown",
+      "reason": "This known bundled test-tool component is identified; its full transitive closure is not enumerated.",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "scope": "closure-node-v8",
+      "component": "node-v8",
+      "aspect": "dependencies",
+      "status": "unknown",
+      "reason": "This known bundled test-tool component is identified; its full transitive closure is not enumerated.",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "scope": "automation-sbom-sidecars-assembly",
+      "component": "tool-automation-sbom-sidecars",
+      "aspect": "assembly",
+      "status": "incomplete",
+      "reason": "The pinned action source is known; the host Python interpreter and its system library closure are not fully inventoried.",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "scope": "automation-sbom-sidecars-dependencies",
+      "component": "tool-automation-sbom-sidecars",
+      "aspect": "dependencies",
+      "status": "incomplete",
+      "reason": "The pinned action source is known; the host Python interpreter and its system library closure are not fully inventoried.",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    }
+  ],
+  "inputs": [
+    {
+      "input": "program:roc-stable:x86_64-linux",
+      "component": "tool-roc-stable",
+      "reason": "External build tool; not contained in the deliverable"
+    },
+    {
+      "input": "program:zig:x86_64-linux",
+      "component": "tool-zig",
+      "reason": "External build tool; not contained in the deliverable"
+    },
+    {
+      "input": "program:roc-docs:x86_64-linux",
+      "component": "tool-roc-docs",
+      "reason": "External build tool; not contained in the deliverable"
+    },
+    {
+      "input": "program:roc-policy:x86_64-linux",
+      "component": "tool-roc-policy",
+      "reason": "External test tool; not contained in the deliverable"
+    },
+    {
+      "input": "program:release-package:x86_64-linux",
+      "component": "tool-release-package",
+      "reason": "External build tool; not contained in the deliverable"
+    },
+    {
+      "input": "program:node:x86_64-linux",
+      "component": "tool-node",
+      "reason": "External test tool; not contained in the deliverable"
+    },
+    {
+      "input": "program:w4-archive:x86_64-linux",
+      "component": "tool-w4-archive",
+      "reason": "External test tool; not contained in the deliverable"
+    },
+    {
+      "input": "program:wasm4-playwright:x86_64-linux",
+      "component": "tool-wasm4-playwright",
+      "reason": "External test tool; not contained in the deliverable"
+    },
+    {
+      "input": "program:wasm4-chromium-archive:x86_64-linux",
+      "component": "tool-wasm4-chromium-archive",
+      "reason": "External test tool; not contained in the deliverable"
+    },
+    {
+      "input": "roc-package:CZsY7tYZwR3rj9kYbpaCfxki2yVAaRL8bBwMLvB2xkbA",
+      "component": "",
+      "reason": "Content-addressed basic-cli 0.25.0 runs repository automation only; it is not a platform dependency or shipped source"
+    },
+    {
+      "input": "build-source:roc-CZsY7tYZwR3rj9kYbpaCfxki2yVAaRL8bBwMLvB2xkbA",
+      "component": "",
+      "reason": "Content-addressed basic-cli 0.25.0 runs repository automation only; it is not a platform dependency or shipped source"
+    },
+    {
+      "input": "program:roc-stable:aarch64-linux",
+      "component": "",
+      "reason": "Contributor/cross-build tool for another compiler-host OS; not selected in the Linux artifact producer or shipped in its deliverables. The exact bytes remain recorded in Blueprint.lock."
+    },
+    {
+      "input": "program:roc-stable:aarch64-darwin",
+      "component": "",
+      "reason": "Contributor/cross-build tool for another compiler-host OS; not selected in the Linux artifact producer or shipped in its deliverables. The exact bytes remain recorded in Blueprint.lock."
+    },
+    {
+      "input": "program:roc-stable:x86_64-darwin",
+      "component": "",
+      "reason": "Contributor/cross-build tool for another compiler-host OS; not selected in the Linux artifact producer or shipped in its deliverables. The exact bytes remain recorded in Blueprint.lock."
+    },
+    {
+      "input": "program:roc-stable:x86_64-windows",
+      "component": "",
+      "reason": "Contributor/cross-build tool for another compiler-host OS; not selected in the Linux artifact producer or shipped in its deliverables. The exact bytes remain recorded in Blueprint.lock."
+    },
+    {
+      "input": "program:zig:aarch64-linux",
+      "component": "",
+      "reason": "Contributor/cross-build tool for another compiler-host OS; not selected in the Linux artifact producer or shipped in its deliverables. The exact bytes remain recorded in Blueprint.lock."
+    },
+    {
+      "input": "program:zig:aarch64-darwin",
+      "component": "",
+      "reason": "Contributor/cross-build tool for another compiler-host OS; not selected in the Linux artifact producer or shipped in its deliverables. The exact bytes remain recorded in Blueprint.lock."
+    },
+    {
+      "input": "program:zig:x86_64-darwin",
+      "component": "",
+      "reason": "Contributor/cross-build tool for another compiler-host OS; not selected in the Linux artifact producer or shipped in its deliverables. The exact bytes remain recorded in Blueprint.lock."
+    },
+    {
+      "input": "program:zig:x86_64-windows",
+      "component": "",
+      "reason": "Contributor/cross-build tool for another compiler-host OS; not selected in the Linux artifact producer or shipped in its deliverables. The exact bytes remain recorded in Blueprint.lock."
+    },
+    {
+      "input": "program:roc-docs:aarch64-linux",
+      "component": "",
+      "reason": "Contributor/cross-build tool for another compiler-host OS; not selected in the Linux artifact producer or shipped in its deliverables. The exact bytes remain recorded in Blueprint.lock."
+    },
+    {
+      "input": "program:roc-docs:aarch64-darwin",
+      "component": "",
+      "reason": "Contributor/cross-build tool for another compiler-host OS; not selected in the Linux artifact producer or shipped in its deliverables. The exact bytes remain recorded in Blueprint.lock."
+    },
+    {
+      "input": "program:roc-policy:aarch64-linux",
+      "component": "",
+      "reason": "Contributor/cross-build tool for another compiler-host OS; not selected in the Linux artifact producer or shipped in its deliverables. The exact bytes remain recorded in Blueprint.lock."
+    },
+    {
+      "input": "program:roc-policy:aarch64-darwin",
+      "component": "",
+      "reason": "Contributor/cross-build tool for another compiler-host OS; not selected in the Linux artifact producer or shipped in its deliverables. The exact bytes remain recorded in Blueprint.lock."
+    },
+    {
+      "input": "program:release-package:aarch64-linux",
+      "component": "",
+      "reason": "Contributor/cross-build tool for another compiler-host OS; not selected in the Linux artifact producer or shipped in its deliverables. The exact bytes remain recorded in Blueprint.lock."
+    },
+    {
+      "input": "program:release-package:aarch64-darwin",
+      "component": "",
+      "reason": "Contributor/cross-build tool for another compiler-host OS; not selected in the Linux artifact producer or shipped in its deliverables. The exact bytes remain recorded in Blueprint.lock."
+    },
+    {
+      "input": "program:release-package:x86_64-darwin",
+      "component": "",
+      "reason": "Contributor/cross-build tool for another compiler-host OS; not selected in the Linux artifact producer or shipped in its deliverables. The exact bytes remain recorded in Blueprint.lock."
+    },
+    {
+      "input": "program:release-package:x86_64-windows",
+      "component": "",
+      "reason": "Contributor/cross-build tool for another compiler-host OS; not selected in the Linux artifact producer or shipped in its deliverables. The exact bytes remain recorded in Blueprint.lock."
+    },
+    {
+      "input": "program:automation-sbom-sidecars:x86_64-linux",
+      "component": "tool-automation-sbom-sidecars",
+      "reason": "Pinned shared SBOM action source used for build tooling; not shipped in product subjects"
+    },
+    {
+      "input": "task:docs",
+      "component": "",
+      "reason": "Repository orchestration task, not a shipped component; tool and subject relationships are reviewed separately"
+    },
+    {
+      "input": "task:policy",
+      "component": "",
+      "reason": "Repository orchestration task, not a shipped component; tool and subject relationships are reviewed separately"
+    },
+    {
+      "input": "task:release-package",
+      "component": "",
+      "reason": "Repository orchestration task, not a shipped component; tool and subject relationships are reviewed separately"
+    },
+    {
+      "input": "task:release-test",
+      "component": "",
+      "reason": "Repository orchestration task, not a shipped component; tool and subject relationships are reviewed separately"
+    },
+    {
+      "input": "task:cross-build",
+      "component": "",
+      "reason": "Repository orchestration task, not a shipped component; tool and subject relationships are reviewed separately"
+    },
+    {
+      "input": "task:distribution",
+      "component": "",
+      "reason": "Repository orchestration task, not a shipped component; tool and subject relationships are reviewed separately"
+    },
+    {
+      "input": "task:runtime-tools",
+      "component": "",
+      "reason": "Repository orchestration task, not a shipped component; tool and subject relationships are reviewed separately"
+    },
+    {
+      "input": "task:runtime",
+      "component": "",
+      "reason": "Repository orchestration task, not a shipped component; tool and subject relationships are reviewed separately"
+    },
+    {
+      "input": "task:nightly-prerequisites",
+      "component": "",
+      "reason": "Repository orchestration task, not a shipped component; tool and subject relationships are reviewed separately"
+    },
+    {
+      "input": "task:check-source",
+      "component": "",
+      "reason": "Repository orchestration task, not a shipped component; tool and subject relationships are reviewed separately"
+    },
+    {
+      "input": "task:release-request",
+      "component": "",
+      "reason": "Repository orchestration task, not a shipped component; tool and subject relationships are reviewed separately"
+    },
+    {
+      "input": "task:check",
+      "component": "",
+      "reason": "Repository orchestration task, not a shipped component; tool and subject relationships are reviewed separately"
+    },
+    {
+      "input": "task:host-fingerprint",
+      "component": "",
+      "reason": "Repository orchestration task, not a shipped component; tool and subject relationships are reviewed separately"
+    },
+    {
+      "input": "task:host-test",
+      "component": "",
+      "reason": "Repository orchestration task, not a shipped component; tool and subject relationships are reviewed separately"
+    },
+    {
+      "input": "task:build-host",
+      "component": "",
+      "reason": "Repository orchestration task, not a shipped component; tool and subject relationships are reviewed separately"
+    },
+    {
+      "input": "task:glue",
+      "component": "",
+      "reason": "Repository orchestration task, not a shipped component; tool and subject relationships are reviewed separately"
+    },
+    {
+      "input": "task:sbom-sidecars",
+      "component": "",
+      "reason": "Repository orchestration task, not a shipped component; tool and subject relationships are reviewed separately"
+    },
+    {
+      "input": "task:sbom-suppliers",
+      "component": "",
+      "reason": "Repository orchestration task, not a shipped component; tool and subject relationships are reviewed separately"
+    },
+    {
+      "input": "task:sbom",
+      "component": "",
+      "reason": "Repository orchestration task, not a shipped component; tool and subject relationships are reviewed separately"
+    },
+    {
+      "input": "task:release",
+      "component": "",
+      "reason": "Repository orchestration task, not a shipped component; tool and subject relationships are reviewed separately"
+    },
+    {
+      "input": "task:bundle",
+      "component": "",
+      "reason": "Repository orchestration task, not a shipped component; tool and subject relationships are reviewed separately"
+    },
+    {
+      "input": "task:format-scripts",
+      "component": "",
+      "reason": "Repository orchestration task, not a shipped component; tool and subject relationships are reviewed separately"
+    },
+    {
+      "input": "task:tooling-version",
+      "component": "",
+      "reason": "Repository orchestration task, not a shipped component; tool and subject relationships are reviewed separately"
+    }
+  ],
+  "imported_documents": [],
+  "unavailable_sboms": [
+    {
+      "component": "tool-roc-stable",
+      "reason": "The supplier publishes no .spdx.json or .cdx.json beside this locked roc nightly-2026-10-09-258ab27 asset; checked during migration on 2026-11-02. The file digest remains locked and dependency coverage is incomplete.",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "component": "tool-zig",
+      "reason": "The supplier publishes no .spdx.json or .cdx.json beside this locked zig 0.16.0 asset; checked during migration on 2026-11-02. The file digest remains locked and dependency coverage is incomplete.",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "component": "tool-roc-docs",
+      "reason": "The supplier publishes no .spdx.json or .cdx.json beside this locked roc-docs 0.9.0 asset; checked during migration on 2026-11-02. The file digest remains locked and dependency coverage is incomplete.",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "component": "tool-roc-policy",
+      "reason": "The supplier publishes no .spdx.json or .cdx.json beside this locked roc-policy 0.9.0 asset; checked during migration on 2026-11-02. The file digest remains locked and dependency coverage is incomplete.",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "component": "tool-release-package",
+      "reason": "The supplier publishes no .spdx.json or .cdx.json beside this locked release-package 0.9.0 asset; checked during migration on 2026-11-02. The file digest remains locked and dependency coverage is incomplete.",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "component": "tool-node",
+      "reason": "The supplier publishes no .spdx.json or .cdx.json beside this locked node 24.11.0 asset; checked during migration on 2026-11-02. The file digest remains locked and dependency coverage is incomplete.",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "component": "tool-w4-archive",
+      "reason": "The supplier publishes no .spdx.json or .cdx.json beside this locked wasm4 2.7.1 asset; checked during migration on 2026-11-02. The file digest remains locked and dependency coverage is incomplete.",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "component": "tool-wasm4-playwright",
+      "reason": "The supplier publishes no .spdx.json or .cdx.json beside this locked playwright-core 1.64.1 asset; checked during migration on 2026-11-02. The file digest remains locked and dependency coverage is incomplete.",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "component": "tool-wasm4-chromium-archive",
+      "reason": "The supplier publishes no .spdx.json or .cdx.json beside this locked chromium-headless-shell 156.0.8078.4 asset; checked during migration on 2026-11-02. The file digest remains locked and dependency coverage is incomplete.",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    },
+    {
+      "component": "tool-automation-sbom-sidecars",
+      "reason": "The supplier publishes no adjacent .spdx.json or .cdx.json for this exact source archive; checked during migration on 2026-11-02. Python and system dependencies remain incompletely inventoried.",
+      "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
+    }
+  ]
+}

@@ -18,6 +18,11 @@ async function tool(name) {
     throw new Error(`Missing ${name}; run through the Blueprint runtime environment`);
 }
 
+if (process.argv[2] === '--tool-identities') {
+    console.log(JSON.stringify({ node: process.versions.node, openssl: process.versions.openssl, v8: process.versions.v8, shared_openssl: process.config.variables.node_shared_openssl }));
+    process.exit(0);
+}
+
 if (process.argv[2] === '--export-tools') {
     const directory = '/tmp/roc-wasm4-runtime-tools';
     await mkdir(directory, { recursive: true, mode: 0o700 });
