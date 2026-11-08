@@ -262,7 +262,7 @@ jobs:
             assert hashlib.sha256(path.read_bytes()).hexdigest() == subject['inventory_sha256'], path
         print('Every retained inventory matches its subject binding')
         PYVERIFY
-    - uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661
+    - uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a
       with:
         subject-path: ${{ needs.build.outputs.assets }}
     - uses: lukewilliamboswell/roc-automation/actions/publish-release@8afe656ea7de5586233683088eb6972b770f6832
