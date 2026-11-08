@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - uses: lukewilliamboswell/roc-automation/actions/setup-blueprint@8afe656ea7de5586233683088eb6972b770f6832
+      - uses: lukewilliamboswell/roc-automation/actions/setup-blueprint@60062e8909dcaf4bf449097132e440e9bc9c9ba6
       - id: inputs
         run: blueprint run host-fingerprint
       - id: host
