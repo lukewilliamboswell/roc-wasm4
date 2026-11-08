@@ -15,7 +15,7 @@ jobs:
       - id: inputs
         run: blueprint run host-fingerprint
       - id: host
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: platform/targets/wasm32/host.wasm
           key: wasm32-host-v1-${{ steps.inputs.outputs.fingerprint }}
