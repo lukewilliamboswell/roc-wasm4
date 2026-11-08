@@ -265,7 +265,7 @@ jobs:
     - uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661
       with:
         subject-path: ${{ needs.build.outputs.assets }}
-    - uses: lukewilliamboswell/roc-automation/actions/publish-release@8afe656ea7de5586233683088eb6972b770f6832
+    - uses: lukewilliamboswell/roc-automation/actions/publish-release@60062e8909dcaf4bf449097132e440e9bc9c9ba6
       with:
         version: ${{ needs.validate.outputs.version }}
         prerelease: ${{ needs.validate.outputs.prerelease }}
