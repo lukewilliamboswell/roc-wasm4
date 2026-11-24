@@ -46,6 +46,9 @@ See the link:api/index.html[generated API reference] for function signatures and
 
 == Distribute a game
 
+Each cartridge has one 64 KiB Wasm memory page. The platform reserves 8 KiB
+for the stack, leaving space for the program and its static data.
+
 Build with size-oriented optimization and use the WASM-4 CLI to produce an HTML game:
 
 [source,shell]
