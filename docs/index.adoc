@@ -14,7 +14,7 @@ then build the host and a cart:
 [source,shell]
 ----
 blueprint run build-host
-roc build examples/basic/main.roc --target=wasm32 --opt=size --output=basic.wasm
+roc build examples/basic/main.roc --target=wasm32 --opt=size --specialize=yes --output=basic.wasm
 w4 run basic.wasm
 ----
 
@@ -49,11 +49,12 @@ See the link:api/index.html[generated API reference] for function signatures and
 Each cartridge has one 64 KiB Wasm memory page. The platform reserves 8 KiB
 for the stack, leaving space for the program and its static data.
 
-Build with size-oriented optimization and use the WASM-4 CLI to produce an HTML game:
+Use size optimization with specialization to keep the cartridge within the
+64 KiB size limit. The WASM-4 CLI can then produce an HTML game.
 
 [source,shell]
 ----
-roc build app.roc --target=wasm32 --opt=size --output=app.wasm
+roc build app.roc --target=wasm32 --opt=size --specialize=yes --output=app.wasm
 w4 bundle app.wasm --title "My Game" --html my-game.html
 ----
 

@@ -42,7 +42,7 @@ run! = |args| {
 			for example in found.apps {
 				$number = $number + 1
 				output = Path.display(Path.join(temporary, "cart-${$number.to_str()}.wasm"))
-				Process.run!("roc", ["build", example.path, "--target=wasm32", "--opt=size", "--output=${output}"].concat(extra))?
+				Process.run!("roc", ["build", example.path, "--target=wasm32", "--opt=size", "--specialize=yes", "--output=${output}"].concat(extra))?
 				bytes = Path.size_in_bytes!(Path.utf8(output)).map_err(|_| "missing optimized cart")?
 				if bytes > 65536 or bytes == 0 {
 					return Err("${example.path}: distribution cart must be 1..65536 bytes")
