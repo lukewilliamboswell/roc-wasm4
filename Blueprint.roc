@@ -8,7 +8,8 @@ zig_version = "0.16.0"
 zig_program = Fetch(
 	"zig",
 	|system| match system {
-		"x86_64-linux" => Archive("https://ziglang.org/download/${zig_version}/zig-x86_64-linux-${zig_version}.tar.xz", TarXz, "zig-x86_64-linux-${zig_version}/zig")
+		# Try the project-listed mirror first for the Linux host build, then Zig's own server.
+		"x86_64-linux" => Mirrored(Archive("https://pkg.hexops.org/zig/zig-x86_64-linux-${zig_version}.tar.xz", TarXz, "zig-x86_64-linux-${zig_version}/zig"), ["https://ziglang.org/download/${zig_version}/zig-x86_64-linux-${zig_version}.tar.xz"])
 		"aarch64-linux" => Archive("https://ziglang.org/download/${zig_version}/zig-aarch64-linux-${zig_version}.tar.xz", TarXz, "zig-aarch64-linux-${zig_version}/zig")
 		"aarch64-darwin" => Archive("https://ziglang.org/download/${zig_version}/zig-aarch64-macos-${zig_version}.tar.xz", TarXz, "zig-aarch64-macos-${zig_version}/zig")
 		"x86_64-darwin" => Archive("https://ziglang.org/download/${zig_version}/zig-x86_64-macos-${zig_version}.tar.xz", TarXz, "zig-x86_64-macos-${zig_version}/zig")

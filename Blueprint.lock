@@ -42,11 +42,11 @@
 		(witness "https://api.github.com/repos/roc-lang/nightlies/releases/tags/nightly-2026-11-24-ff5e544")) (
 		(name "zig")
 		(obtained Computed)
-		(served ("ziglang.org"))
+		(served ("pkg.hexops.org"))
 		(sha256 "70e49664a74374b48b51e6f3fdfbf437f6395d42509050588bd49abe52ba3d00")
 		(size 55478392)
 		(system "x86_64-linux")
-		(urls ("https://ziglang.org/download/0.16.0/zig-x86_64-linux-0.16.0.tar.xz"))
+		(urls ("https://pkg.hexops.org/zig/zig-x86_64-linux-0.16.0.tar.xz" "https://ziglang.org/download/0.16.0/zig-x86_64-linux-0.16.0.tar.xz"))
 		(witness "")) (
 		(name "zig")
 		(obtained Computed)
