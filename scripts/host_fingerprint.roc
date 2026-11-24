@@ -1,7 +1,7 @@
 #!/usr/bin/env roc-stable
 app [main!] {
-	cli: platform "https://github.com/roc-lang/basic-cli/releases/download/0.25.0/CZsY7tYZwR3rj9kYbpaCfxki2yVAaRL8bBwMLvB2xkbA.tar.zst",
-	roc: "nightly-2026-10-09-258ab27",
+	cli: platform "https://github.com/roc-lang/basic-cli/releases/download/0.28.1/7brgwR8YUqfeGrkdfF1V4GPPN7DnP7ftqub9KcrTEZtr.tar.zst",
+	roc: "nightly-2026-11-23-b5c77fc",
 }
 
 import cli.Cmd
@@ -42,7 +42,7 @@ fingerprint! = || {
 	# Source and exact tool bytes, target and every fixed build option. Tooling,
 	# manual and example changes do not invalidate this fingerprint.
 	material = "${hashes}\nzig=${zig}\nwasm32-freestanding-none ReleaseSmall mem-size=32768 zero-on-alloc=false trace-allocs=false\n"
-	ran = Cmd.new_str("sha256sum").stdin(Bytes(material.to_utf8())).run!().map_err(|_| "cannot hash host inputs")?
+	ran = Cmd.new("sha256sum").stdin(Bytes(material.to_utf8())).run!().map_err(|_| "cannot hash host inputs")?
 	match ran.status {
 		Exited(0) => Ok(Str.from_utf8_lossy(ran.stdout_bytes).split_on(" ").first() ?? "")
 		_ => Err("host fingerprint failed")

@@ -1,7 +1,7 @@
 #!/usr/bin/env roc-stable
 app [main!] {
-	cli: platform "https://github.com/roc-lang/basic-cli/releases/download/0.25.0/CZsY7tYZwR3rj9kYbpaCfxki2yVAaRL8bBwMLvB2xkbA.tar.zst",
-	roc: "nightly-2026-10-09-258ab27",
+	cli: platform "https://github.com/roc-lang/basic-cli/releases/download/0.28.1/7brgwR8YUqfeGrkdfF1V4GPPN7DnP7ftqub9KcrTEZtr.tar.zst",
+	roc: "nightly-2026-11-23-b5c77fc",
 }
 
 import cli.Cmd
@@ -51,8 +51,8 @@ bundle! = |args| {
 				Path.copy!(Path.utf8("licenses/${license}"), Path.join(staging, "licenses/${license}")).map_err(|_| "cannot stage upstream license")?
 				$members = $members.append("licenses/${license}")
 			}
-			code = Cmd.new_str("roc").args_str(["bundle"].concat($members).concat(["--output-dir", Path.display(destination)])).cwd(staging).exec_exit_code!().map_err(|_| "cannot start bundler")?
-			if code == 0 Ok({}) else Err("platform bundling failed")
+			bundled = Cmd.new("roc").args(["bundle"].concat($members).concat(["--output-dir", Path.display(destination)]).map(OsStr.from_str)).cwd(staging).inherit_stdio().run!().map_err(|_| "cannot start bundler")?
+			if (bundled.status == Exited(0)) Ok({}) else Err("platform bundling failed")
 		},
 	).map_err(|_| "cannot build licensed platform bundle")
 }

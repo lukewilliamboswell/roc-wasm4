@@ -27,7 +27,7 @@ config = [
 			# Every bundle the scripts depend on, including dependencies of
 			# dependencies: `roc-stable deps scripts/check_all.roc` lists them.
 			RocPackages([
-				"https://github.com/roc-lang/basic-cli/releases/download/0.25.0/CZsY7tYZwR3rj9kYbpaCfxki2yVAaRL8bBwMLvB2xkbA.tar.zst",
+				"https://github.com/roc-lang/basic-cli/releases/download/0.28.1/7brgwR8YUqfeGrkdfF1V4GPPN7DnP7ftqub9KcrTEZtr.tar.zst",
 			]),
 			Expect(["git"]),
 		],
@@ -81,10 +81,10 @@ config = [
 		[
 			Extend("release-tools"),
 			Programs([
-				Fetch("node", |system| if system == "x86_64-linux" Archive("https://nodejs.org/dist/v24.11.0/node-v24.11.0-linux-x64.tar.xz", TarXz, "node-v24.11.0-linux-x64/bin/node") else Unavailable),
-				Fetch("w4-archive", |system| if system == "x86_64-linux" Recipes.file("https://github.com/aduros/wasm4/releases/download/v2.7.1/w4-linux.zip")(system) else Unavailable),
-				Fetch("wasm4-playwright", |system| if system == "x86_64-linux" Archive("https://registry.npmjs.org/playwright-core/-/playwright-core-1.64.1.tgz", TarGz, "package/cli.js") else Unavailable),
-				Fetch("wasm4-chromium-archive", |system| if system == "x86_64-linux" Recipes.file("https://storage.googleapis.com/chrome-for-testing-public/156.0.8078.4/linux64/chrome-headless-shell-linux64.zip")(system) else Unavailable),
+				Fetch("node", |system| if (system == "x86_64-linux") Archive("https://nodejs.org/dist/v24.11.0/node-v24.11.0-linux-x64.tar.xz", TarXz, "node-v24.11.0-linux-x64/bin/node") else Unavailable),
+				Fetch("w4-archive", |system| if (system == "x86_64-linux") Recipes.file("https://github.com/aduros/wasm4/releases/download/v2.7.1/w4-linux.zip")(system) else Unavailable),
+				Fetch("wasm4-playwright", |system| if (system == "x86_64-linux") Archive("https://registry.npmjs.org/playwright-core/-/playwright-core-1.64.1.tgz", TarGz, "package/cli.js") else Unavailable),
+				Fetch("wasm4-chromium-archive", |system| if (system == "x86_64-linux") Recipes.file("https://storage.googleapis.com/chrome-for-testing-public/156.0.8078.4/linux64/chrome-headless-shell-linux64.zip")(system) else Unavailable),
 			]),
 		],
 	),
@@ -110,7 +110,7 @@ config = [
 	Task("host-test", [Use("host"), Run(["zig", "build", "test"])]),
 	Task("build-host", [Use("host"), Run(["zig", "build", "-Doptimize=ReleaseSmall"])]),
 	Task("glue", [Use("dev"), Run(["roc-stable", "scripts/glue.roc", "--"])]),
-	Environment("sbom-adapter", [Extend("dev"), Programs([Fetch("automation-sbom-sidecars", |system| if system == "x86_64-linux" Archive("https://github.com/lukewilliamboswell/roc-automation/archive/8afe656ea7de5586233683088eb6972b770f6832.tar.gz", TarGz, "roc-automation-8afe656ea7de5586233683088eb6972b770f6832/actions/sbom-sidecars/sbom_sidecars.py") else Unavailable)]), Expect(["python3", "realpath"])]),
+	Environment("sbom-adapter", [Extend("dev"), Programs([Fetch("automation-sbom-sidecars", |system| if (system == "x86_64-linux") Archive("https://github.com/lukewilliamboswell/roc-automation/archive/8afe656ea7de5586233683088eb6972b770f6832.tar.gz", TarGz, "roc-automation-8afe656ea7de5586233683088eb6972b770f6832/actions/sbom-sidecars/sbom_sidecars.py") else Unavailable)]), Expect(["python3", "realpath"])]),
 	Task("sbom-sidecars", [Use("sbom-adapter"), Run(["roc-stable", "scripts/sidecars.roc", "--"])]),
 	Task("sbom-suppliers", [Use("sbom-adapter"), Run(["roc-stable", "scripts/sidecars.roc", "--", "--suppliers"])]),
 
@@ -122,7 +122,7 @@ config = [
 ]
 
 # Both the fetched script compiler and the policy check read this value.
-tooling = { compiler: "nightly-2026-10-09-258ab27" }
+tooling = { compiler: "nightly-2026-11-23-b5c77fc" }
 
 repository_policy = {
 	schema_version: 1,

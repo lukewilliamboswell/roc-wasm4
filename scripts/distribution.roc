@@ -1,7 +1,7 @@
 #!/usr/bin/env roc-stable
 app [main!] {
-	cli: platform "https://github.com/roc-lang/basic-cli/releases/download/0.25.0/CZsY7tYZwR3rj9kYbpaCfxki2yVAaRL8bBwMLvB2xkbA.tar.zst",
-	roc: "nightly-2026-10-09-258ab27",
+	cli: platform "https://github.com/roc-lang/basic-cli/releases/download/0.28.1/7brgwR8YUqfeGrkdfF1V4GPPN7DnP7ftqub9KcrTEZtr.tar.zst",
+	roc: "nightly-2026-11-23-b5c77fc",
 }
 
 import cli.Cmd
@@ -58,7 +58,7 @@ run! = |args| {
 					}
 				}
 
-				Stdout.line!("PASS ${example.path}: ${bytes.to_str()} bytes${if build_only " (compiler cross-build only)" else ", sixty optimized frames match"}").map_err(|_| "cannot report distribution test")?
+				Stdout.line!("PASS ${example.path}: ${bytes.to_str()} bytes${if (build_only) " (compiler cross-build only)" else ", sixty optimized frames match"}").map_err(|_| "cannot report distribution test")?
 			}
 			Ok({})
 		},

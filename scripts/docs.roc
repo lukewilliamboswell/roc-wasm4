@@ -1,7 +1,7 @@
 #!/usr/bin/env roc-stable
 app [main!] {
-	cli: platform "https://github.com/roc-lang/basic-cli/releases/download/0.25.0/CZsY7tYZwR3rj9kYbpaCfxki2yVAaRL8bBwMLvB2xkbA.tar.zst",
-	roc: "nightly-2026-10-09-258ab27",
+	cli: platform "https://github.com/roc-lang/basic-cli/releases/download/0.28.1/7brgwR8YUqfeGrkdfF1V4GPPN7DnP7ftqub9KcrTEZtr.tar.zst",
+	roc: "nightly-2026-11-23-b5c77fc",
 }
 
 import cli.OsStr
@@ -30,7 +30,7 @@ build! = |version, bundle| {
 		Path.delete_all!(Path.utf8(staging)).map_err(|_| "cannot clear generated documentation input")?
 	}
 	Path.create_all!(Path.utf8(staging)).map_err(|_| "cannot create documentation input")?
-	url = if version == "unreleased" "https://github.com/lukewilliamboswell/roc-wasm4/releases/latest" else "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/${version}/${bundle}"
+	url = if (version == "unreleased") "https://github.com/lukewilliamboswell/roc-wasm4/releases/latest" else "https://github.com/lukewilliamboswell/roc-wasm4/releases/download/${version}/${bundle}"
 	copy!("docs", staging, url)?
 	release = if version == "unreleased" {
 		"= Development preview\n\nThis preview describes the working tree. Choose a https://github.com/lukewilliamboswell/roc-wasm4/releases[published release] for an immutable platform and its matching examples.\n"

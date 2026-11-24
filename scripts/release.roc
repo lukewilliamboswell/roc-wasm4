@@ -1,7 +1,7 @@
 #!/usr/bin/env roc-stable
 app [main!] {
-	cli: platform "https://github.com/roc-lang/basic-cli/releases/download/0.25.0/CZsY7tYZwR3rj9kYbpaCfxki2yVAaRL8bBwMLvB2xkbA.tar.zst",
-	roc: "nightly-2026-10-09-258ab27",
+	cli: platform "https://github.com/roc-lang/basic-cli/releases/download/0.28.1/7brgwR8YUqfeGrkdfF1V4GPPN7DnP7ftqub9KcrTEZtr.tar.zst",
+	roc: "nightly-2026-11-23-b5c77fc",
 }
 
 import cli.Env
@@ -51,7 +51,7 @@ validate! = |version| {
 		return Err("release tag already exists")
 	}
 	_ = Path.read_utf8!(Path.utf8("docs/releases/${version}.adoc")).map_err(|_| "author docs/releases/${version}.adoc before publication")?
-	output!("sha=${sha}\nprerelease=${if version.contains("-") "true" else "false"}\n")
+	output!("sha=${sha}\nprerelease=${if (version.contains("-")) "true" else "false"}\n")
 }
 
 prepare! = |version| {
@@ -89,10 +89,10 @@ output! = |text| match Env.var_str!(OsStr.from_str("GITHUB_OUTPUT")) {
 
 request! = || {
 	selected = Env.var_str!(OsStr.from_str("RELEASE_VERSION")) ?? ""
-	version = if selected == "" "0.0.1-dryrun" else selected
+	version = if (selected == "") "0.0.1-dryrun" else selected
 	if selected != "" {
 		validate!(version)?
 	}
 	commit = Process.capture!("git", ["rev-parse", "HEAD"])?
-	output!("version=${version}\nsha=${commit}\nprerelease=${if version.contains("-") "true" else "false"}\n")
+	output!("version=${version}\nsha=${commit}\nprerelease=${if (version.contains("-")) "true" else "false"}\n")
 }
