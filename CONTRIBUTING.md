@@ -29,7 +29,7 @@ Repository examples use `../../platform/main.roc`. Build the host with
 `blueprint run build-host`, then build and play a cart:
 
 ```sh
-roc build examples/basic/main.roc --target=wasm32 --opt=size --output=basic.wasm
+roc build examples/basic/main.roc --target=wasm32 --opt=size --specialize=yes --output=basic.wasm
 w4 run basic.wasm
 ```
 
