@@ -61,7 +61,7 @@ prepare! = |version| {
 	Process.run!("release-package", ["check-version", version])?
 	Env.with_temp_dir!(
 		|temporary| {
-			Process.run!("roc-stable", ["scripts/bundle.roc", "--", "--output-dir", Path.display(temporary)])?
+			Process.run!("roc-stable", ["scripts/bundle.roc", "--output-dir", Path.display(temporary)])?
 			Process.run!("release-package", ["build", version, "--platform-bundle", Path.display(temporary)])
 		},
 	).map_err(|_| "release packaging failed")?

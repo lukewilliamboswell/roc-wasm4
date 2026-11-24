@@ -34,7 +34,7 @@ run! = || {
 	result = Env.with_temp_dir!(
 		|temporary| {
 			Process.run!("curl", ["--fail", "--silent", "--show-error", "--retry", "10", "--retry-connrefused", "--retry-delay", "1", "--max-time", "15", url, "--output", Path.display(Path.join(temporary, "probe.tar.zst"))])?
-			output = Cmd.new("roc-stable").args(["scripts/distribution.roc", "--", "--build-only", "--bundle-url", OsStr.from_str(url)]).env("ROC_CACHE_DIR", Path.to_os_str(Path.join(temporary, "cache"))).inherit_stdio().run!().map_err(|_| "cannot run isolated candidate build")?
+			output = Cmd.new("roc-stable").args(["scripts/distribution.roc", "--build-only", "--bundle-url", OsStr.from_str(url)]).env("ROC_CACHE_DIR", Path.to_os_str(Path.join(temporary, "cache"))).inherit_stdio().run!().map_err(|_| "cannot run isolated candidate build")?
 			if (output.status == Exited(0)) Ok({}) else Err("isolated candidate build failed")
 		},
 	).map_err(|_| "candidate cross-build failed")
