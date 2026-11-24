@@ -123,7 +123,7 @@ config = [
 ]
 
 # Both the fetched script compiler and the policy check read this value.
-tooling = { compiler: "nightly-2026-11-23-b5c77fc" }
+tooling = { compiler: "nightly-2026-11-24-ff5e544" }
 
 repository_policy = {
 	schema_version: 1,
