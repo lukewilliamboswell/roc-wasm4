@@ -1,5 +1,5 @@
 # Tools run on a fixed compiler; the platform uses the nightly roc on PATH.
-app [config] { pf: platform "https://github.com/lukewilliamboswell/roc-blueprint/releases/download/0.11.0/EuSPs8vc71qJNFg29YzegvVRL1bR9pKqUYDHFiSCPTQ1.tar.zst" }
+app [config] { pf: platform "https://github.com/lukewilliamboswell/roc-blueprint/releases/download/0.15.0-rc.1/FwWWY6PczB7QsUoWKgaLTuBGGajLjfA4MhaLD36sJxrN.tar.zst" }
 
 import pf.Recipes
 
@@ -8,7 +8,8 @@ zig_version = "0.16.0"
 zig_program = Fetch(
 	"zig",
 	|system| match system {
-		"x86_64-linux" => Archive("https://ziglang.org/download/${zig_version}/zig-x86_64-linux-${zig_version}.tar.xz", TarXz, "zig-x86_64-linux-${zig_version}/zig")
+		# Try the project-listed mirror first for the Linux host build, then Zig's own server.
+		"x86_64-linux" => Mirrored(Archive("https://pkg.hexops.org/zig/zig-x86_64-linux-${zig_version}.tar.xz", TarXz, "zig-x86_64-linux-${zig_version}/zig"), ["https://ziglang.org/download/${zig_version}/zig-x86_64-linux-${zig_version}.tar.xz"])
 		"aarch64-linux" => Archive("https://ziglang.org/download/${zig_version}/zig-aarch64-linux-${zig_version}.tar.xz", TarXz, "zig-aarch64-linux-${zig_version}/zig")
 		"aarch64-darwin" => Archive("https://ziglang.org/download/${zig_version}/zig-aarch64-macos-${zig_version}.tar.xz", TarXz, "zig-aarch64-macos-${zig_version}/zig")
 		"x86_64-darwin" => Archive("https://ziglang.org/download/${zig_version}/zig-x86_64-macos-${zig_version}.tar.xz", TarXz, "zig-x86_64-macos-${zig_version}/zig")
@@ -27,7 +28,8 @@ config = [
 			# Every bundle the scripts depend on, including dependencies of
 			# dependencies: `roc-stable deps scripts/check_all.roc` lists them.
 			RocPackages([
-				"https://github.com/roc-lang/basic-cli/releases/download/0.25.0/CZsY7tYZwR3rj9kYbpaCfxki2yVAaRL8bBwMLvB2xkbA.tar.zst",
+				"https://github.com/roc-lang/http/releases/download/1.0.0/6ZUwqYhCS8PU9Mo6MF7oV82ET2o7KYb57CLKDq4cq4sS.tar.zst",
+				"https://github.com/roc-lang/basic-cli/releases/download/0.28.1/7brgwR8YUqfeGrkdfF1V4GPPN7DnP7ftqub9KcrTEZtr.tar.zst",
 			]),
 			Expect(["git"]),
 		],
@@ -58,7 +60,7 @@ config = [
 			Expect(["roc"]),
 		],
 	),
-	Task("docs", [Use("docs"), Run(["roc-stable", "scripts/docs.roc", "--"])]),
+	Task("docs", [Use("docs"), Run(["roc-stable", "scripts/docs.roc"])]),
 	Environment(
 		"policy",
 		[
@@ -81,17 +83,17 @@ config = [
 		[
 			Extend("release-tools"),
 			Programs([
-				Fetch("node", |system| if system == "x86_64-linux" Archive("https://nodejs.org/dist/v24.11.0/node-v24.11.0-linux-x64.tar.xz", TarXz, "node-v24.11.0-linux-x64/bin/node") else Unavailable),
-				Fetch("w4-archive", |system| if system == "x86_64-linux" Recipes.file("https://github.com/aduros/wasm4/releases/download/v2.7.1/w4-linux.zip")(system) else Unavailable),
-				Fetch("wasm4-playwright", |system| if system == "x86_64-linux" Archive("https://registry.npmjs.org/playwright-core/-/playwright-core-1.64.1.tgz", TarGz, "package/cli.js") else Unavailable),
-				Fetch("wasm4-chromium-archive", |system| if system == "x86_64-linux" Recipes.file("https://storage.googleapis.com/chrome-for-testing-public/156.0.8078.4/linux64/chrome-headless-shell-linux64.zip")(system) else Unavailable),
+				Fetch("node", |system| if (system == "x86_64-linux") Archive("https://nodejs.org/dist/v24.11.0/node-v24.11.0-linux-x64.tar.xz", TarXz, "node-v24.11.0-linux-x64/bin/node") else Unavailable),
+				Fetch("w4-archive", |system| if (system == "x86_64-linux") Recipes.file("https://github.com/aduros/wasm4/releases/download/v2.7.1/w4-linux.zip")(system) else Unavailable),
+				Fetch("wasm4-playwright", |system| if (system == "x86_64-linux") Archive("https://registry.npmjs.org/playwright-core/-/playwright-core-1.64.1.tgz", TarGz, "package/cli.js") else Unavailable),
+				Fetch("wasm4-chromium-archive", |system| if (system == "x86_64-linux") Recipes.file("https://storage.googleapis.com/chrome-for-testing-public/156.0.8078.4/linux64/chrome-headless-shell-linux64.zip")(system) else Unavailable),
 			]),
 		],
 	),
 	Environment("release-test", [Extend("runtime")]),
 	Environment("release-build", [Extend("dev"), Programs([Fetch("release-package", Recipes.file("https://github.com/lukewilliamboswell/roc-automation/releases/download/tools-0.9.0/release-package-{system}"))])]),
 	Task("release-package", [Use("release-build"), Run(["release-package"])]),
-	Task("release-test", [Use("release-test"), Run(["roc-stable", "scripts/release_test.roc", "--"])]),
+	Task("release-test", [Use("release-test"), Run(["roc-stable", "scripts/release_test.roc"])]),
 	Environment("cross-build", [Extend("scripts"), Expect(["roc", "python3", "curl"])]),
 	Task("cross-build", [Use("cross-build"), Run(["roc-stable", "scripts/cross_build.roc"])]),
 	Task("distribution", [Use("runtime"), Run(["roc-stable", "scripts/distribution.roc"])]),
@@ -101,28 +103,28 @@ config = [
 
 	Shell("default", [Use("dev")]),
 	Environment("source-check", [Extend("scripts"), Expect(["roc"])]),
-	Task("check-source", [Use("source-check"), Run(["roc-stable", "scripts/check_all.roc", "--", "--prebuilt-host"])]),
+	Task("check-source", [Use("source-check"), Run(["roc-stable", "scripts/check_all.roc", "--prebuilt-host"])]),
 	Environment("release-control", [Extend("scripts"), Expect(["gh"])]),
-	Task("release-request", [Use("release-control"), Run(["roc-stable", "scripts/release.roc", "--", "request"])]),
-	Task("check", [Use("release-build"), Run(["roc-stable", "scripts/check_all.roc", "--"])]),
+	Task("release-request", [Use("release-control"), Run(["roc-stable", "scripts/release.roc", "request"])]),
+	Task("check", [Use("release-build"), Run(["roc-stable", "scripts/check_all.roc"])]),
 	Environment("host", [Extend("scripts"), Programs([zig_program]), Expect(["sha256sum"])]),
 	Task("host-fingerprint", [Use("host"), Run(["roc-stable", "scripts/host_fingerprint.roc"])]),
 	Task("host-test", [Use("host"), Run(["zig", "build", "test"])]),
 	Task("build-host", [Use("host"), Run(["zig", "build", "-Doptimize=ReleaseSmall"])]),
-	Task("glue", [Use("dev"), Run(["roc-stable", "scripts/glue.roc", "--"])]),
-	Environment("sbom-adapter", [Extend("dev"), Programs([Fetch("automation-sbom-sidecars", |system| if system == "x86_64-linux" Archive("https://github.com/lukewilliamboswell/roc-automation/archive/8afe656ea7de5586233683088eb6972b770f6832.tar.gz", TarGz, "roc-automation-8afe656ea7de5586233683088eb6972b770f6832/actions/sbom-sidecars/sbom_sidecars.py") else Unavailable)]), Expect(["python3", "realpath"])]),
-	Task("sbom-sidecars", [Use("sbom-adapter"), Run(["roc-stable", "scripts/sidecars.roc", "--"])]),
-	Task("sbom-suppliers", [Use("sbom-adapter"), Run(["roc-stable", "scripts/sidecars.roc", "--", "--suppliers"])]),
+	Task("glue", [Use("dev"), Run(["roc-stable", "scripts/glue.roc"])]),
+	Environment("sbom-adapter", [Extend("dev"), Programs([Fetch("automation-sbom-sidecars", |system| if (system == "x86_64-linux") Archive("https://github.com/lukewilliamboswell/roc-automation/archive/2b0ffc9c556f465759ca81055bb819c7e15624eb.tar.gz", TarGz, "roc-automation-2b0ffc9c556f465759ca81055bb819c7e15624eb/actions/sbom-sidecars/sbom_sidecars.py") else Unavailable)]), Expect(["python3", "realpath"])]),
+	Task("sbom-sidecars", [Use("sbom-adapter"), Run(["roc-stable", "scripts/sidecars.roc"])]),
+	Task("sbom-suppliers", [Use("sbom-adapter"), Run(["roc-stable", "scripts/sidecars.roc", "--suppliers"])]),
 
-	Task("sbom", [Use("dev"), Run(["roc-stable", "scripts/sbom.roc", "--"])]),
-	Task("release", [Use("release-build"), Run(["roc-stable", "scripts/release.roc", "--"])]),
-	Task("bundle", [Use("dev"), Run(["roc-stable", "scripts/bundle.roc", "--"])]),
+	Task("sbom", [Use("dev"), Run(["roc-stable", "scripts/sbom.roc"])]),
+	Task("release", [Use("release-build"), Run(["roc-stable", "scripts/release.roc"])]),
+	Task("bundle", [Use("dev"), Run(["roc-stable", "scripts/bundle.roc"])]),
 	Task("format-scripts", [Use("scripts"), Run(["roc-stable", "fmt", "scripts", "Blueprint.roc"])]),
 	Task("tooling-version", [Use("scripts"), Run(["roc-stable", "version"])]),
 ]
 
 # Both the fetched script compiler and the policy check read this value.
-tooling = { compiler: "nightly-2026-10-09-258ab27" }
+tooling = { compiler: "nightly-2026-11-25-d5a4f1e" }
 
 repository_policy = {
 	schema_version: 1,

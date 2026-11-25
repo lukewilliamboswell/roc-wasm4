@@ -44,7 +44,7 @@ platform ""
 			import_memory: Zeroed,
 			minimum_memory: 65536,
 			maximum_memory: 65536,
-			initial_stack_size: 14752,
+			initial_stack_size: 8192,
 			global_base: wasm4_program_memory_base,
 		},
 	}

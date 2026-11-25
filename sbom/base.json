@@ -4,7 +4,7 @@
     {
       "id": "tool-roc-stable",
       "name": "roc",
-      "version": "nightly-2026-10-09-258ab27",
+      "version": "nightly-2026-11-25-d5a4f1e",
       "producer": "Organization: Roc contributors",
       "license": "UPL-1.0",
       "license_url": "",
@@ -481,14 +481,24 @@
       "reason": "External test tool; not contained in the deliverable"
     },
     {
-      "input": "roc-package:CZsY7tYZwR3rj9kYbpaCfxki2yVAaRL8bBwMLvB2xkbA",
+      "input": "roc-package:7brgwR8YUqfeGrkdfF1V4GPPN7DnP7ftqub9KcrTEZtr",
       "component": "",
-      "reason": "Content-addressed basic-cli 0.25.0 runs repository automation only; it is not a platform dependency or shipped source"
+      "reason": "Content-addressed basic-cli 0.28.1 runs repository automation only; it is not a platform dependency or shipped source"
     },
     {
-      "input": "build-source:roc-CZsY7tYZwR3rj9kYbpaCfxki2yVAaRL8bBwMLvB2xkbA",
+      "input": "build-source:roc-7brgwR8YUqfeGrkdfF1V4GPPN7DnP7ftqub9KcrTEZtr",
       "component": "",
-      "reason": "Content-addressed basic-cli 0.25.0 runs repository automation only; it is not a platform dependency or shipped source"
+      "reason": "Content-addressed basic-cli 0.28.1 runs repository automation only; it is not a platform dependency or shipped source"
+    },
+    {
+      "input": "roc-package:6ZUwqYhCS8PU9Mo6MF7oV82ET2o7KYb57CLKDq4cq4sS",
+      "component": "",
+      "reason": "HTTP 1.0.0 is a transitive dependency of the repository tooling platform and is absent from the shipped platform"
+    },
+    {
+      "input": "build-source:roc-6ZUwqYhCS8PU9Mo6MF7oV82ET2o7KYb57CLKDq4cq4sS",
+      "component": "",
+      "reason": "HTTP 1.0.0 is a transitive dependency of the repository tooling platform and is absent from the shipped platform"
     },
     {
       "input": "program:roc-stable:aarch64-linux",
@@ -695,7 +705,7 @@
   "unavailable_sboms": [
     {
       "component": "tool-roc-stable",
-      "reason": "The supplier publishes no .spdx.json or .cdx.json beside this locked roc nightly-2026-10-09-258ab27 asset; checked during migration on 2026-11-02. The file digest remains locked and dependency coverage is incomplete.",
+      "reason": "The supplier publishes no .spdx.json or .cdx.json beside this locked Roc nightly-2026-11-25-d5a4f1e asset. The file digest remains locked and dependency coverage is incomplete.",
       "contact": "https://github.com/lukewilliamboswell/roc-wasm4/security/policy"
     },
     {

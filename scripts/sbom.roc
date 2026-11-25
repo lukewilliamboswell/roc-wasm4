@@ -1,7 +1,7 @@
 #!/usr/bin/env roc-stable
 app [main!] {
-	cli: platform "https://github.com/roc-lang/basic-cli/releases/download/0.25.0/CZsY7tYZwR3rj9kYbpaCfxki2yVAaRL8bBwMLvB2xkbA.tar.zst",
-	roc: "nightly-2026-10-09-258ab27",
+	cli: platform "https://github.com/roc-lang/basic-cli/releases/download/0.28.1/7brgwR8YUqfeGrkdfF1V4GPPN7DnP7ftqub9KcrTEZtr.tar.zst",
+	roc: "nightly-2026-11-25-d5a4f1e",
 }
 
 import cli.OsStr
@@ -93,7 +93,7 @@ prepare! = |version| {
 				name = file_name.drop_suffix(".ttf")
 				digest = hash!(".docs-out/site/_roc-docs/fonts/${name}.ttf")?
 				font_base = component("font-${name}", name, "sha256-${digest}", "OFL-1.1", "urn:roc-wasm4:font:${name}:${digest}", "NOASSERTION", digest, "Exact original font input extracted by the locked roc-docs binary; the PDF embeds transformed/subset data")
-				producer = if name.starts_with("Inter-") "Organization: The Inter Project Authors" else if name.starts_with("FiraCode-") "Organization: The Fira Code Project Authors" else if name.starts_with("Merriweather-") "Organization: The Merriweather Project Authors" else return Err("review the upstream producer for new font ${name}")
+				producer = if (name.starts_with("Inter-")) "Organization: The Inter Project Authors" else if (name.starts_with("FiraCode-")) "Organization: The Fira Code Project Authors" else if (name.starts_with("Merriweather-")) "Organization: The Merriweather Project Authors" else return Err("review the upstream producer for new font ${name}")
 				font = { ..font_base, producer }
 				$components = $components.append(font)
 				$edges = $edges.append(edge("Subject", "font-${name}", "dependsOn", "build", "Manual rendering uses this exact font input; the complete original font file is not asserted to be contained in the PDF"))

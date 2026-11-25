@@ -1,7 +1,7 @@
 #!/usr/bin/env roc-stable
 app [main!] {
-	cli: platform "https://github.com/roc-lang/basic-cli/releases/download/0.25.0/CZsY7tYZwR3rj9kYbpaCfxki2yVAaRL8bBwMLvB2xkbA.tar.zst",
-	roc: "nightly-2026-10-09-258ab27",
+	cli: platform "https://github.com/roc-lang/basic-cli/releases/download/0.28.1/7brgwR8YUqfeGrkdfF1V4GPPN7DnP7ftqub9KcrTEZtr.tar.zst",
+	roc: "nightly-2026-11-25-d5a4f1e",
 }
 
 import cli.Cmd
@@ -55,12 +55,12 @@ adapter! = || {
 }
 
 run! = |script, entries| {
-	var $command = Cmd.new_str("python3").args_str([script]).env("PYTHONDONTWRITEBYTECODE", "1")
+	var $command = Cmd.new("python3").args([OsStr.from_str(script)]).env("PYTHONDONTWRITEBYTECODE", "1")
 	for (name, value) in entries {
 		$command = $command.env(OsStr.from_str(name), OsStr.from_str(value))
 	}
-	code = $command.exec_exit_code!().map_err(|_| "shared SBOM adapter did not complete")?
-	if code == 0 Ok({}) else Err("shared SBOM adapter rejected the candidate")
+	output = $command.inherit_stdio().run!().map_err(|_| "shared SBOM adapter did not complete")?
+	if (output.status == Exited(0)) Ok({}) else Err("shared SBOM adapter rejected the candidate")
 }
 
 common! = || {
