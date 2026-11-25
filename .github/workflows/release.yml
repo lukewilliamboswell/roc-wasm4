@@ -30,7 +30,7 @@ jobs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       with:
         persist-credentials: false
-    - uses: lukewilliamboswell/roc-automation/actions/setup-blueprint@8afe656ea7de5586233683088eb6972b770f6832
+    - uses: lukewilliamboswell/roc-automation/actions/setup-blueprint@2b0ffc9c556f465759ca81055bb819c7e15624eb
       with:
         cache: true
         cache-workload: release-control
@@ -71,7 +71,7 @@ jobs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       with:
         persist-credentials: false
-    - uses: lukewilliamboswell/roc-automation/actions/setup-blueprint@8afe656ea7de5586233683088eb6972b770f6832
+    - uses: lukewilliamboswell/roc-automation/actions/setup-blueprint@2b0ffc9c556f465759ca81055bb819c7e15624eb
       with:
         cache: true
         cache-workload: release-build
@@ -119,7 +119,7 @@ jobs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       with:
         persist-credentials: false
-    - uses: lukewilliamboswell/roc-automation/actions/setup-blueprint@8afe656ea7de5586233683088eb6972b770f6832
+    - uses: lukewilliamboswell/roc-automation/actions/setup-blueprint@2b0ffc9c556f465759ca81055bb819c7e15624eb
       with:
         cache: true
         cache-workload: release-test
@@ -155,7 +155,7 @@ jobs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       with:
         persist-credentials: false
-    - uses: lukewilliamboswell/roc-automation/actions/setup-blueprint@8afe656ea7de5586233683088eb6972b770f6832
+    - uses: lukewilliamboswell/roc-automation/actions/setup-blueprint@2b0ffc9c556f465759ca81055bb819c7e15624eb
       with:
         cache: true
         cache-workload: compiler-host-${{ runner.os }}-${{ runner.arch }}
@@ -180,7 +180,7 @@ jobs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       with:
         repository: lukewilliamboswell/roc-automation
-        ref: 8afe656ea7de5586233683088eb6972b770f6832
+        ref: 2b0ffc9c556f465759ca81055bb819c7e15624eb
         path: .roc-automation
         persist-credentials: false
     - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
@@ -237,7 +237,7 @@ jobs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       with:
         repository: lukewilliamboswell/roc-automation
-        ref: 8afe656ea7de5586233683088eb6972b770f6832
+        ref: 2b0ffc9c556f465759ca81055bb819c7e15624eb
         path: .roc-automation
         persist-credentials: false
     - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333

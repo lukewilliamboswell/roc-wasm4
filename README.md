@@ -13,7 +13,7 @@ roc-wasm4 gives Roc apps a high-level `W4` API for drawing, input, audio, disk p
 ## Quick Start
 
 Copy the [basic example](examples/basic/main.roc) into your own application directory.
-Checkout examples use the local platform and need [Blueprint](https://github.com/lukewilliamboswell/roc-blueprint/releases/tag/0.11.0) to build its host. For a standalone game, select an
+Checkout examples use the local platform and need [Blueprint](https://github.com/lukewilliamboswell/roc-blueprint/releases/tag/0.15.0-rc.1) to build its host. For a standalone game, select an
 immutable platform bundle from GitHub Releases and follow that release’s
 compiler requirements.
 

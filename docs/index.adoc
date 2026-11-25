@@ -8,7 +8,7 @@ include::release.adoc[]
 == Build a game
 
 Install a current Roc nightly and the WASM-4 CLI (`w4`).
-For a checkout, install https://github.com/lukewilliamboswell/roc-blueprint/releases[Blueprint 0.11.0],
+For a checkout, install https://github.com/lukewilliamboswell/roc-blueprint/releases/tag/0.15.0-rc.1[Blueprint 0.15.0-rc.1],
 then build the host and a cart:
 
 [source,shell]

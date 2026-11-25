@@ -1,6 +1,6 @@
 # Contributing
 
-Install a current official Roc nightly as `roc` and [Blueprint 0.11.0](https://github.com/lukewilliamboswell/roc-blueprint/releases/tag/0.11.0).
+Install a current official Roc nightly as `roc` and [Blueprint 0.15.0-rc.1](https://github.com/lukewilliamboswell/roc-blueprint/releases/tag/0.15.0-rc.1).
 Blueprint verifies the fixed `roc-stable` script compiler, Zig and declared tools.
 The platform and games use the `roc` on PATH.
 

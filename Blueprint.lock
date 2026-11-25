@@ -203,10 +203,10 @@
 		(name "automation-sbom-sidecars")
 		(obtained Computed)
 		(served ("codeload.github.com"))
-		(sha256 "b10e8bcd3e6c0e09bbca769571ed28e08867ecea2aa1de98215ed70b23a51367")
-		(size 928722)
+		(sha256 "33848770bac95d441148f3945e612fff1d877402861824f7e76870ddb490930d")
+		(size 1023092)
 		(system "x86_64-linux")
-		(urls ("https://github.com/lukewilliamboswell/roc-automation/archive/8afe656ea7de5586233683088eb6972b770f6832.tar.gz"))
+		(urls ("https://github.com/lukewilliamboswell/roc-automation/archive/2b0ffc9c556f465759ca81055bb819c7e15624eb.tar.gz"))
 		(witness ""))))
 	(format (
 		(major 2)

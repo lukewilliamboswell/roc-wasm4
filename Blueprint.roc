@@ -1,5 +1,5 @@
 # Tools run on a fixed compiler; the platform uses the nightly roc on PATH.
-app [config] { pf: platform "https://github.com/lukewilliamboswell/roc-blueprint/releases/download/0.11.0/EuSPs8vc71qJNFg29YzegvVRL1bR9pKqUYDHFiSCPTQ1.tar.zst" }
+app [config] { pf: platform "https://github.com/lukewilliamboswell/roc-blueprint/releases/download/0.15.0-rc.1/FwWWY6PczB7QsUoWKgaLTuBGGajLjfA4MhaLD36sJxrN.tar.zst" }
 
 import pf.Recipes
 
@@ -112,7 +112,7 @@ config = [
 	Task("host-test", [Use("host"), Run(["zig", "build", "test"])]),
 	Task("build-host", [Use("host"), Run(["zig", "build", "-Doptimize=ReleaseSmall"])]),
 	Task("glue", [Use("dev"), Run(["roc-stable", "scripts/glue.roc"])]),
-	Environment("sbom-adapter", [Extend("dev"), Programs([Fetch("automation-sbom-sidecars", |system| if (system == "x86_64-linux") Archive("https://github.com/lukewilliamboswell/roc-automation/archive/8afe656ea7de5586233683088eb6972b770f6832.tar.gz", TarGz, "roc-automation-8afe656ea7de5586233683088eb6972b770f6832/actions/sbom-sidecars/sbom_sidecars.py") else Unavailable)]), Expect(["python3", "realpath"])]),
+	Environment("sbom-adapter", [Extend("dev"), Programs([Fetch("automation-sbom-sidecars", |system| if (system == "x86_64-linux") Archive("https://github.com/lukewilliamboswell/roc-automation/archive/2b0ffc9c556f465759ca81055bb819c7e15624eb.tar.gz", TarGz, "roc-automation-2b0ffc9c556f465759ca81055bb819c7e15624eb/actions/sbom-sidecars/sbom_sidecars.py") else Unavailable)]), Expect(["python3", "realpath"])]),
 	Task("sbom-sidecars", [Use("sbom-adapter"), Run(["roc-stable", "scripts/sidecars.roc"])]),
 	Task("sbom-suppliers", [Use("sbom-adapter"), Run(["roc-stable", "scripts/sidecars.roc", "--suppliers"])]),
 
